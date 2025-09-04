@@ -1,0 +1,69 @@
+# ============================================
+# EXERSIO MONO-REPO - GITIGNORE PRINCIPAL
+# ============================================
+
+# Node.js Dependencies (ALL PROJECTS)
+**/node_modules/
+**/.pnp
+**/.pnp.js
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Environment files (CRITICAL - Never commit)
+**/.env
+**/.env.local
+**/.env.production
+**/.env.development
+**/.env.staging
+**/.env.test
+
+# Build outputs
+**/dist/
+**/build/
+**/.next/
+**/coverage/
+
+# Logs
+**/logs/
+**/*.log
+**/lerna-debug.log*
+
+# Cache directories
+**/.cache/
+**/.parcel-cache/
+**/.temp/
+**/tmp/
+
+# IDE and editors
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+**/.vs/
+
+# OS files
+.DS_Store
+Thumbs.db
+**/.DS_Store
+
+# Database
+**/prisma/migrations/*/migration.sql
+**/prisma/dev.db*
+
+# Docker
+**/Dockerfile.local
+**/.dockerignore
+
+# Capacitor (Mobile)
+**/ios/
+**/android/App/
+**/capacitor.config.json.backup
+
+# Kubernetes secrets
+**/k8s/secrets/
+**/k8s/**/*secret*.yaml
+
+# Deployment artifacts
+**/deployment-config.json
+**/docker-compose.override.yml

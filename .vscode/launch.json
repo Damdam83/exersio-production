@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Backend (Debug)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/exersio-back/dist/src/main.js",
+      "cwd": "${workspaceFolder}/exersio-back",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "preLaunchTask": "build-backend",
+      "outFiles": ["${workspaceFolder}/exersio-back/dist/**/*.js"],
+      "sourceMaps": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Launch Frontend (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/exersio-front/src",
+      "preLaunchTask": "start-frontend"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Launch Full Stack",
+      "configurations": [
+        "Launch Backend (Debug)",
+        "Launch Frontend (Chrome)"
+      ],
+      "preLaunchTask": "start-all-services"
+    },
+    {
+      "name": "Launch Full Stack + Database",
+      "configurations": [
+        "Launch Backend (Debug)",
+        "Launch Frontend (Chrome)"
+      ],
+      "preLaunchTask": "start-full-stack-with-db"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(grep:*)",
+      "Bash(curl:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(git checkout:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run start:dev:*)",
+      "Bash(npm run mobile:sync:*)",
+      "Bash(npm run mobile:build:*)",
+      "Bash(./gradlew:*)",
+      "Bash(npx @capacitor/assets generate:*)",
+      "Bash(copy:*)",
+      "Read(c:\\PROJETS\\Exersio\\front\\exersio-front\\src\\services/**)",
+      "Bash(wsl:*)",
+      "Bash(pkill:*)",
+      "Bash(cat:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(timeout:*)",
+      "Bash(docker compose:*)",
+      "Bash(start http://localhost:5173)"
+    ],
+    "additionalDirectories": [
+      "C:\\c\\PROJETS\\Exersio\\front"
+    ]
+  }
+}

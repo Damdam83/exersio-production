@@ -1,0 +1,267 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  coach
+  assistant
+  admin
+}
+
+enum SessionStatus {
+  planned
+  completed
+  cancelled
+  in_progress
+}
+
+enum InvitationStatus {
+  pending
+  accepted
+  declined
+  expired
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(coach)
+  avatar       String?
+  // Relation membre d'un club (nommée "ClubMembers")
+  clubId       String?
+  club         Club?    @relation("ClubMembers", fields: [clubId], references: [id])
+  createdAt    DateTime @default(now())
+  
+  // Champs pour la confirmation d'email
+  emailVerified       Boolean   @default(false)
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
+  
+  // Champs pour la réinitialisation de mot de passe
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+
+  // Relation propriétaire de club(s) (nommée "ClubOwner")
+  ownedClubs   Club[]   @relation("ClubOwner")
+
+  // Autres relations déjà nommées
+  exercises    Exercise[] @relation("ExerciseCreatedBy")
+  sessions     Session[]  @relation("SessionCreatedBy")
+  invitations  Invitation[] @relation("InvitedByUser")
+  favorites    UserExerciseFavorite[]
+  
+  // Relations notifications
+  notifications          Notification[]
+  notificationSettings   UserNotificationSettings?
+  pushTokens            UserPushToken[]
+}
+
+model Club {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  logo        String?
+
+  // Propriétaire
+  ownerId     String
+  owner       User        @relation("ClubOwner", fields: [ownerId], references: [id])
+
+  createdAt   DateTime    @default(now())
+
+  // Membres
+  users       User[]      @relation("ClubMembers")
+
+  exercises   Exercise[]
+  sessions    Session[]
+  invitations Invitation[]
+}
+
+model ExerciseCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  color     String?
+  icon      String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exercises Exercise[]
+}
+
+model AgeCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  minAge    Int?
+  maxAge    Int?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exercises Exercise[]
+}
+
+model Exercise {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  duration    Int
+  
+  // Garder les anciens champs (renommés pour la migration)
+  category    String
+  ageCategory String
+  
+  // Relations vers les nouvelles tables de catégories
+  categoryId    String?
+  categoryRef      ExerciseCategory? @relation(fields: [categoryId], references: [id])
+  ageCategoryId String?
+  ageCategoryRef   AgeCategory?      @relation(fields: [ageCategoryId], references: [id])
+  
+  sport       String
+  instructions Json
+  fieldData   Json?
+  successCriteria Json?
+  createdById String
+  createdBy   User     @relation("ExerciseCreatedBy", fields: [createdById], references: [id])
+  clubId      String?
+  club        Club?    @relation(fields: [clubId], references: [id])
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  level       String?
+  intensity   String?
+  playersMin  Int?
+  playersMax  Int?
+  notes       String?
+  tags        Json?
+
+  sessions    SessionExercise[]
+  favorites   UserExerciseFavorite[]
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  date        DateTime
+  duration    Int
+  objectives  Json?
+  createdById String
+  createdBy   User     @relation("SessionCreatedBy", fields: [createdById], references: [id])
+  clubId      String?
+  club        Club?    @relation(fields: [clubId], references: [id])
+  sport       String?
+  ageCategory String?
+  level       String?
+  status      SessionStatus @default(planned)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  exercises   SessionExercise[]
+}
+
+model Invitation {
+  id           String   @id @default(cuid())
+  email        String
+  role         Role     @default(coach)
+  status       InvitationStatus @default(pending)
+  clubId       String
+  club         Club     @relation(fields: [clubId], references: [id])
+  invitedById  String
+  invitedBy    User     @relation("InvitedByUser", fields: [invitedById], references: [id])
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+}
+
+model SessionExercise {
+  sessionId  String
+  exerciseId String
+  order      Int      @default(0)
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, exerciseId])
+  @@index([exerciseId])
+}
+
+model UserExerciseFavorite {
+  id         String   @id @default(cuid())
+  userId     String
+  exerciseId String
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, exerciseId])
+  @@index([userId])
+  @@index([exerciseId])
+}
+
+enum NotificationType {
+  session_reminder
+  exercise_added_to_club
+  system_notification
+}
+
+model UserNotificationSettings {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Settings par type de notification
+  sessionReminders     Boolean @default(true)
+  exerciseNotifications Boolean @default(true)
+  systemNotifications  Boolean @default(true)
+  
+  // Timing pour rappels séances (en heures avant)
+  reminderHours        Int     @default(24)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?    // Metadata (sessionId, exerciseId, clubId, etc.)
+  
+  isRead    Boolean  @default(false)
+  isSent    Boolean  @default(false)
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+  
+  @@index([userId, isRead])
+  @@index([type, isSent])
+  @@index([createdAt])
+}
+
+model UserPushToken {
+  id       String @id @default(cuid()) 
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token    String @unique
+  platform String // 'android' | 'ios' | 'web'
+  
+  isActive  Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, platform])
+  @@index([token, isActive])
+}

@@ -1,0 +1,496 @@
+/* =================================
+   OPTIMISATIONS MOBILE POUR EXERSIO
+   ================================= */
+
+/* Variables mobile */
+:root {
+  --mobile-padding: 1rem;
+  --mobile-margin: 0.75rem;
+  --mobile-header-height: 4rem;
+  --mobile-nav-height: 4rem;
+  --mobile-safe-area-top: env(safe-area-inset-top, 0px);
+  --mobile-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Base mobile responsive */
+@media (max-width: 768px) {
+  
+  /* Empêcher le débordement horizontal */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+  }
+  
+  /* Conteneur racine */
+  #root {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+  }
+  /* Container principal */
+  .container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl {
+    max-width: 100% !important;
+    padding-left: var(--mobile-padding) !important;
+    padding-right: var(--mobile-padding) !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Headers et titres */
+  h1 {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 1rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Espacement général réduit */
+  .p-8, .px-8, .py-8 {
+    padding: 1rem !important;
+  }
+
+  .p-6, .px-6, .py-6 {
+    padding: 0.75rem !important;
+  }
+
+  .p-4, .px-4, .py-4 {
+    padding: 0.5rem !important;
+  }
+
+  .m-8, .mx-8, .my-8 {
+    margin: 1rem !important;
+  }
+
+  .m-6, .mx-6, .my-6 {
+    margin: 0.75rem !important;
+  }
+
+  .m-4, .mx-4, .my-4 {
+    margin: 0.5rem !important;
+  }
+
+  /* Grilles responsive */
+  .grid-cols-2, .grid-cols-3, .grid-cols-4, .grid-cols-5, .grid-cols-6 {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Flex layouts */
+  .flex-row {
+    flex-direction: column !important;
+  }
+
+  .space-x-4 > * {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .space-x-6 > * {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  /* Boutons mobile */
+  button, .btn {
+    min-height: 2.75rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+    touch-action: manipulation;
+  }
+
+  /* Inputs et formulaires */
+  input, textarea, select {
+    font-size: 1rem !important;
+    padding: 0.75rem !important;
+    min-height: 2.75rem !important;
+  }
+
+  /* Cards et panels */
+  .bg-white, .bg-gray-50, .bg-slate-900, .bg-slate-800 {
+    margin-bottom: 0.75rem !important;
+    border-radius: 0.5rem !important;
+  }
+
+  /* Tables responsive */
+  table {
+    font-size: 0.875rem !important;
+  }
+
+  thead th {
+    padding: 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  tbody td {
+    padding: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Modals et dialogs */
+  .modal, .dialog, [role="dialog"] {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 1rem !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Navigation */
+  nav {
+    padding: 0.5rem var(--mobile-padding) !important;
+    height: var(--mobile-nav-height) !important;
+  }
+
+  /* Sidebar/Menu */
+  .sidebar, .menu-panel {
+    width: 100vw !important;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 50 !important;
+  }
+
+  /* Safe areas pour les smartphones */
+  .safe-top {
+    padding-top: var(--mobile-safe-area-top) !important;
+  }
+
+  .safe-bottom {
+    padding-bottom: var(--mobile-safe-area-bottom) !important;
+  }
+
+  /* Fix pour les éléments qui débordent */
+  * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Corrections spécifiques pour les débordements courants */
+  .text-4xl {
+    font-size: 1.75rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem !important;
+  }
+
+  .text-xl {
+    font-size: 1.125rem !important;
+  }
+
+  /* Grilles qui causent des débordements */
+  .grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .grid-cols-1,
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4,
+  .sm\:grid-cols-2,
+  .md\:grid-cols-3,
+  .lg\:grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Fix pour les cards qui débordent */
+  .card, [data-card] {
+    margin: 0.5rem 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Flex items qui débordent */
+  .flex {
+    flex-wrap: wrap !important;
+  }
+
+  .flex-nowrap {
+    flex-wrap: wrap !important;
+  }
+
+  /* Tables qui débordent */
+  .table-container, table {
+    overflow-x: auto !important;
+    display: block !important;
+    white-space: nowrap !important;
+  }
+
+  /* Fix pour les badges et pills */
+  .badge, .pill {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Fix pour les stats et métriques */
+  .stat-card, .metric-card {
+    min-width: auto !important;
+    flex: 1 1 auto !important;
+  }
+
+  /* Corrections pour les largeurs fixes problématiques */
+  .w-64, .w-72, .w-80, .w-96 {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Navigation et header adjustments */
+  .header, .navbar {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Content containers */
+  .content, .main-content {
+    padding: 1rem !important;
+    margin: 0 !important;
+  }
+
+  /* HomePage specific - reduce excessive margins */
+  .space-y-8 > * + * {
+    margin-top: 1rem !important;
+  }
+
+  .space-y-6 > * + * {
+    margin-top: 0.75rem !important;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 0.5rem !important;
+  }
+
+  /* HomePage cards and sections */
+  .bg-white\/10, .bg-slate-800\/50, [class*="bg-white/"], [class*="bg-slate-"] {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* HomePage stats grid */
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  /* HomePage achievement badges */
+  .flex.gap-2 {
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* HomePage session items */
+  .space-y-3 > * + * {
+    margin-top: 0.5rem !important;
+  }
+
+  /* HomePage specific improvements */
+  /* Réduire marges principales HomePage */
+  div[style*="max-width: 7xl"] {
+    max-width: 100% !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* HomePage cards réduites */
+  div[class*="bg-white/"][class*="backdrop-blur"] {
+    margin: 0.5rem 0 !important;
+    padding: 1rem !important;
+  }
+
+  /* Section tendances centrée */
+  div[style*="display: 'flex'"][style*="justify-content: center"] {
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0 !important;
+  }
+
+  /* Stats grid HomePage responsive */
+  div[style*="display: 'grid'"][style*="grid-cols: 4"] {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+    margin: 0.75rem 0 !important;
+  }
+
+  /* Achievements et badges */
+  div[class*="flex"][class*="gap-2"] {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Sessions à venir liste */
+  div[class*="space-y-"] > * {
+    margin-top: 0.5rem !important;
+  }
+
+  /* Tendances section centrage */
+  .text-center {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Pages avec styles inline problématiques - SessionsPage, HistoryPage */
+  div[style*="maxWidth: '1400px'"], 
+  div[style*="max-width: 1400px"] {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0.5rem !important;
+  }
+
+  /* Containers avec largeurs fixes */
+  div[style*="padding: '5px'"] {
+    padding: 0.75rem !important;
+  }
+
+  /* Headers avec backdrop-filter */
+  header[style*="backdropFilter"],
+  div[style*="backdropFilter"],
+  div[style*="backdrop-filter"] {
+    margin: 0 0.5rem !important;
+    padding: 1rem !important;
+    border-radius: 1rem !important;
+  }
+
+  /* Filtres et barres d'outils */
+  div[style*="gap: '16px'"] {
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Grilles de cartes */
+  div[style*="display: 'grid'"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Cartes de sessions et historique */
+  div[style*="border: '1px solid"] {
+    margin: 0.5rem 0 !important;
+    padding: 1rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  /* Boutons d'actions */
+  div[style*="gap: '12px'"] {
+    gap: 0.5rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Headers avec padding trop large */
+  header[style*="padding: '5px 35px'"] {
+    padding: 1rem 0.75rem !important;
+  }
+
+  /* Statistiques et métriques */
+  div[style*="display: 'flex'"][style*="gap: '24px'"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Cards avec flex et gap */
+  div[style*="display: 'flex'"][style*="gap: '20px'"] {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Fixe pour tous les conteneurs avec largeur excessive */
+  div[style*="maxWidth: '1400px'"],
+  div[style*="max-width: 1400px"],
+  div[style*="maxWidth: 1400"],
+  div[style*="max-width: 1400"] {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Sessions et History pages - conteneur principal */
+  div[style*="minHeight: '100vh'"][style*="padding: '5px'"] {
+    padding: 0.5rem !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Images responsive */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Scrolling amélioré */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Text wrapping */
+  .whitespace-nowrap {
+    white-space: normal !important;
+  }
+
+  /* Réduction des animations sur mobile pour les performances */
+  * {
+    transition-duration: 0.15s !important;
+  }
+}
+
+/* Corrections spécifiques pour les très petits écrans */
+@media (max-width: 375px) {
+  :root {
+    --mobile-padding: 0.75rem;
+    --mobile-margin: 0.5rem;
+  }
+
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  button, .btn {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+/* Mode landscape sur mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .container {
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+  }
+  
+  nav {
+    height: 3rem !important;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+  }
+}
