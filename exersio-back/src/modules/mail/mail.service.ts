@@ -32,7 +32,7 @@ export class MailService {
     const smtpHost = this.configService.get<string>('SMTP_HOST', 'smtp.gmail.com');
     const smtpPort = this.configService.get<number>('SMTP_PORT', 587);
     const smtpUser = this.configService.get<string>('SMTP_USER');
-    const smtpPassword = this.configService.get<string>('SMTP_PASSWORD');
+    const smtpPassword = this.configService.get<string>('SMTP_PASS');
 
     // En développement, utiliser Ethereal Email pour tester
     if (!smtpUser || !smtpPassword) {
