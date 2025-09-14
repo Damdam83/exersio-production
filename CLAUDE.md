@@ -286,6 +286,18 @@ docker compose down        # Arrêter la DB
 - ✅ **Optimisations performances** : lazy loading, memoization, bundle analysis intégrés
 - ✅ **Audit sécurité complet** : Plan de test 3 phases avec priorités CRITIQUE/IMPORTANT/OPTIONNEL
 
+### Session du 14/09/2025 - DÉPLOIEMENT PRODUCTION COMPLET
+- ✅ **Backend Render** : https://exersio-production.onrender.com/api
+- ✅ **Frontend Vercel** : https://exersio-frontend.vercel.app
+- ✅ **PostgreSQL Render** : Base de données configurée et schéma appliqué
+- ✅ **Résolution CORS** : Configuration avec origine correcte (sans slash final)
+- ✅ **Correction Docker** : Alpine → Debian pour compatibilité OpenSSL
+- ✅ **Variables d'environnement** : Configuration production complète
+- ✅ **Endpoint setup admin** : /api/setup/admin pour création compte administrateur
+- ⚠️ **Modules temporairement désactivés** : SessionsModule, NotificationsModule, API Retry
+- ⚠️ **Tables DB manquantes** : ExerciseCategory, AgeCategory (requêtes pending)
+- 🎯 **Application fonctionnelle** : Authentification + CRUD exercices opérationnels
+
 ---
 
 ## 📱 Déploiement mobile (Capacitor)
@@ -360,6 +372,13 @@ import { SessionsModule } from './modules/sessions/sessions.module';
 # 2. Restaurer injection dans exercises.service.ts
 # 3. Fix problème crypto.randomUUID() (Node.js 18+ ou polyfill)
 # 4. Test + commit + push
+```
+
+#### Phase 3 : API Retry System
+```bash
+# 1. Dans src/services/apiInterceptor.ts
+const MAX_RETRY_ATTEMPTS = 3; // Restaurer de 0 à 3
+# 2. Test + commit + push
 ```
 
 ### 🔧 PROBLÈMES RÉSOLUS POUR DÉPLOIEMENT
