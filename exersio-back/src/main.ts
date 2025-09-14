@@ -9,17 +9,22 @@ import { WrapResponseInterceptor } from './common/interceptors/wrap-response.int
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
+  const corsOrigins = process.env.CORS_ORIGIN
+    ? [process.env.CORS_ORIGIN, 'http://localhost:5173', 'http://192.168.0.110:5173']
+    : [
+        'http://localhost:5173',
+        'http://192.168.0.110:5173',
+        'http://10.0.2.2:5173',
+        'capacitor://localhost',
+        'http://localhost',
+        'https://localhost'
+      ];
+
+  console.log('🔧 CORS Origins configured:', corsOrigins);
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN
-      ? [process.env.CORS_ORIGIN, 'http://localhost:5173', 'http://192.168.0.110:5173']
-      : [
-          'http://localhost:5173',
-          'http://192.168.0.110:5173',
-          'http://10.0.2.2:5173',
-          'capacitor://localhost',
-          'http://localhost',
-          'https://localhost'
-        ],
+    origin: corsOrigins,
+    credentials: true,
   });
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new WrapResponseInterceptor());
