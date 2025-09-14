@@ -3,6 +3,7 @@
 ## 📋 Étapes de Déploiement Production
 
 ### ✅ Étape 1: Git Repository (Terminé)
+
 - [x] Fichiers .gitignore créés
 - [x] Repository Git initialisé avec commit initial
 
@@ -26,6 +27,7 @@ Après création du projet :
 
 1. **Aller dans** : Settings → Database
 2. **Noter ces informations** :
+
    ```
    Database URL: postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres
    ```
@@ -41,6 +43,7 @@ Après création du projet :
 ### 2.3 Configurer les variables d'environnement
 
 1. **Copier** le fichier `.env.production` :
+
    ```bash
    cd exersio-back
    cp .env.production .env.prod
@@ -51,6 +54,7 @@ Après création du projet :
 ### 2.4 Migrer le schéma vers Supabase
 
 1. **Arrêter** votre base locale :
+
    ```bash
    # Dans WSL
    cd ~/exersio
@@ -58,23 +62,24 @@ Après création du projet :
    ```
 
 2. **Configurer** Prisma pour Supabase :
+
    ```bash
    cd exersio-back
-   
+
    # Backup de votre .env local
    cp .env .env.local.backup
-   
+
    # Utiliser la config Supabase temporairement
    cp .env.prod .env
-   
+
    # Générer le client Prisma
    npx prisma generate
-   
+
    # Appliquer le schéma à Supabase
-   npx prisma db push
    ```
 
 3. **Vérifier** la migration dans Supabase :
+
    - Aller dans Database → Tables
    - Vérifier que toutes vos tables sont présentes
 
@@ -86,6 +91,7 @@ Après création du projet :
 ### 2.5 Test de connexion (optionnel)
 
 Pour tester la connexion Supabase :
+
 ```bash
 # Temporary test avec Supabase
 npm run start:dev
@@ -110,6 +116,7 @@ npm run start:dev
 ### 3.3 Configurer les variables email
 
 Dans `.env.prod` :
+
 ```env
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
@@ -132,6 +139,7 @@ SMTP_PASS="[le-mot-de-passe-app-généré]"
 ### 4.2 Configuration automatique Railway
 
 Railway détecte automatiquement :
+
 - **Runtime** : Node.js (package.json détecté)
 - **Build Command** : `npm run build`
 - **Start Command** : `npm start`
@@ -172,6 +180,7 @@ CORS_ORIGIN=https://[YOUR-APP].vercel.app
 Une fois déployé, il faut appliquer le schéma à Supabase :
 
 1. **Option 1 - Local avec DB prod** :
+
    ```bash
    cd exersio-back
    # Utiliser temporairement la DB prod
@@ -181,13 +190,14 @@ Une fois déployé, il faut appliquer le schéma à Supabase :
    ```
 
 2. **Option 2 - Railway CLI** (recommandé) :
+
    ```bash
    # Installer Railway CLI
    npm install -g @railway/cli
-   
+
    # Se connecter
    railway login
-   
+
    # Exécuter Prisma sur Railway
    railway run npx prisma db push
    ```
@@ -235,6 +245,7 @@ VITE_DEBUG=false
 Une fois Vercel déployé, il faut autoriser le domaine dans Railway :
 
 **Dans Railway** → Variables → Modifier :
+
 ```env
 CORS_ORIGIN=https://[YOUR-APP].vercel.app
 ```
@@ -242,6 +253,7 @@ CORS_ORIGIN=https://[YOUR-APP].vercel.app
 ### 5.5 Configuration domaine personnalisé (optionnel)
 
 Si vous avez un domaine :
+
 1. **Vercel** → Settings → Domains
 2. **Add Domain** → Saisir votre domaine
 3. **Configurer DNS** selon instructions Vercel
@@ -253,18 +265,21 @@ Si vous avez un domaine :
 ### 6.1 Choix du domaine
 
 **Option 1: URLs gratuites (recommandé) ✅**
-- Frontend : `https://[votre-app].vercel.app`  
+
+- Frontend : `https://[votre-app].vercel.app`
 - Backend : `https://[votre-app].railway.app`
 - ✅ Gratuit, HTTPS automatique, prêt immédiatement
 
 **Option 2: Domaine personnalisé 💰**
+
 - Frontend : `https://exersio.com`
-- Backend : `https://api.exersio.com`  
+- Backend : `https://api.exersio.com`
 - 💰 ~10-15€/an + configuration DNS
 
 ### 6.2 Si domaine personnalisé - Acheter le domaine
 
 Registrars recommandés :
+
 - **Namecheap** : https://www.namecheap.com (€9-12/an)
 - **Cloudflare** : https://www.cloudflare.com (€8-10/an)
 - **OVH** : https://www.ovh.com (€10-15/an)
@@ -272,11 +287,13 @@ Registrars recommandés :
 ### 6.3 Configuration DNS
 
 **Pour le frontend (Vercel) :**
+
 1. **Vercel Dashboard** → Settings → Domains
 2. **Add Domain** → Saisir `exersio.com`
 3. **Suivre** les instructions DNS (CNAME ou A record)
 
 **Pour le backend (Railway) :**
+
 1. **Railway Dashboard** → Settings → Domains
 2. **Custom Domain** → Saisir `api.exersio.com`
 3. **Configurer** CNAME chez votre registrar
@@ -292,6 +309,7 @@ CNAME   api         [your-app].railway.app
 ### 6.5 Mettre à jour les variables après domaine
 
 **Variables à changer :**
+
 - Railway `CORS_ORIGIN` → `https://exersio.com`
 - Vercel `VITE_API_URL` → `https://api.exersio.com/api`
 
@@ -321,17 +339,20 @@ CNAME   api         [your-app].railway.app
 ## 🚨 Points d'Attention
 
 ### Performance
+
 - **Free tiers** : Railway (500h/mois), Vercel (100GB bandwidth)
 - **Base Supabase** : 500MB storage, 2GB bandwidth
 
 ### Monitoring
+
 - Surveiller les quotas des services gratuits
 - Logs disponibles dans chaque dashboard
 
 ### Backup
+
 - Supabase : backup automatique 7 jours sur free tier
 - Code : sauvegardé sur GitHub
 
 ---
 
-*Guide généré automatiquement - Mis à jour lors du déploiement*
+_Guide généré automatiquement - Mis à jour lors du déploiement_
