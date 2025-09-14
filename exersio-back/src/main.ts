@@ -1,5 +1,15 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { randomUUID } from 'crypto';
+
+// Polyfill pour crypto.randomUUID() si non disponible
+if (typeof crypto === 'undefined') {
+  global.crypto = {
+    randomUUID: randomUUID
+  } as any;
+} else if (typeof crypto.randomUUID === 'undefined') {
+  crypto.randomUUID = randomUUID;
+}
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
