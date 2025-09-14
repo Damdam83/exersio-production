@@ -50,5 +50,5 @@ prisma/migrations/*/migration.sql
 uploads/
 public/uploads/
 
-# Sessions
-sessions/
+# Sessions (data files only, not source code)
+# sessions/
