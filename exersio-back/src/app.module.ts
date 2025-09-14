@@ -14,7 +14,7 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { AppVersionModule } from './modules/app/app.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { SetupController } from './setup-admin.controller';
+// import { SetupController } from './setup-admin.controller';
 
 @Module({
   imports: [
@@ -32,7 +32,7 @@ import { SetupController } from './setup-admin.controller';
     // NotificationsModule,
     AppVersionModule,
   ],
-  controllers: [SetupController],
+  controllers: [/* SetupController */],
   providers: [
     {
       provide: APP_INTERCEPTOR,
