@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:18-bullseye-slim AS builder
 
 WORKDIR /app
 
@@ -20,12 +20,17 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:18-bullseye-slim AS production
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install required system dependencies
+RUN apt-get update && apt-get install -y \
+    dumb-init \
+    libssl1.1 \
+    openssl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
@@ -45,8 +50,8 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 RUN mkdir -p logs
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001 -G nodejs
+RUN groupadd --gid 1001 nodejs && \
+    useradd --uid 1001 --gid nodejs --shell /bin/bash --create-home nestjs
 
 # Change ownership of app directory
 RUN chown -R nestjs:nodejs /app
