@@ -10,14 +10,16 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
   app.enableCors({
-    origin: [
-      'http://localhost:5173',
-      'http://192.168.0.110:5173',
-      'http://10.0.2.2:5173',
-      'capacitor://localhost',
-      'http://localhost',
-      'https://localhost'
-    ],
+    origin: process.env.CORS_ORIGIN
+      ? [process.env.CORS_ORIGIN, 'http://localhost:5173', 'http://192.168.0.110:5173']
+      : [
+          'http://localhost:5173',
+          'http://192.168.0.110:5173',
+          'http://10.0.2.2:5173',
+          'capacitor://localhost',
+          'http://localhost',
+          'https://localhost'
+        ],
   });
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new WrapResponseInterceptor());

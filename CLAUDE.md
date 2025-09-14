@@ -324,6 +324,64 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 
 ---
 
+## 🚨 SESSION DÉPLOIEMENT 14/09/2025 - ACTIONS DE SUIVI
+
+### ✅ RÉUSSI : Backend + Database déployés
+- **Backend URL** : https://exersio-production.onrender.com/api
+- **PostgreSQL** : `postgresql://exersiodb_user:TkgpftoZbGFWdHVsKKLdqVtRMUIh2mnY@dpg-d338f9emcj7s73a5hl60-a/exersiodb`
+- **Status** : 🟢 EN LIGNE et fonctionnel
+
+### 🔄 MODULES TEMPORAIREMENT DÉSACTIVÉS (À RÉACTIVER)
+**IMPORTANT** : Ces modules ont été commentés pour résoudre les problèmes de déploiement et doivent être réactivés :
+
+1. **SessionsModule** - Commenté dans `src/app.module.ts:9,27`
+   - Gestion des séances d'entraînement
+   - **Priorité** : CRITIQUE - fonctionnalité principale
+
+2. **NotificationsModule** - Complètement supprimé
+   - Commenté dans `src/app.module.ts:13,31`
+   - Supprimé de `src/modules/exercises/exercises.module.ts:5,8`
+   - Injection supprimée de `src/modules/exercises/exercises.service.ts:3,9`
+   - Appel supprimé dans `src/modules/exercises/exercises.service.ts:103-110`
+
+### 🛠️ ÉTAPES DE RÉACTIVATION (SESSION SUIVANTE)
+
+#### Phase 1 : SessionsModule
+```bash
+# 1. Décommenter dans app.module.ts
+import { SessionsModule } from './modules/sessions/sessions.module';
+# 2. Ajouter dans imports: [SessionsModule,]
+# 3. Test + commit + push
+```
+
+#### Phase 2 : NotificationsModule
+```bash
+# 1. Réactiver import dans app.module.ts + exercises.module.ts
+# 2. Restaurer injection dans exercises.service.ts
+# 3. Fix problème crypto.randomUUID() (Node.js 18+ ou polyfill)
+# 4. Test + commit + push
+```
+
+### 🔧 PROBLÈMES RÉSOLUS POUR DÉPLOIEMENT
+- ✅ NestJS CLI en dependencies (pas devDependencies)
+- ✅ Types TypeScript en dependencies
+- ✅ Dockerfile Alpine → Debian (OpenSSL 1.1)
+- ✅ Prisma binaryTargets: ["native", "linux-musl", "debian-openssl-1.1.x"]
+- ✅ Variables environnement Render configurées
+
+### 📦 DÉPLOIEMENT CONFIGURATION
+**Render** :
+- Service : Backend NestJS
+- Database : PostgreSQL (exersiodb)
+- Variables : DATABASE_URL, NODE_ENV=production, JWT_SECRET
+
+**Vercel** (en cours) :
+- Service : Frontend React/Vite
+- Variable : VITE_API_URL=https://exersio-production.onrender.com/api
+- Root Directory : exersio-front
+
+---
+
 ## 📋 TODOs à venir (par priorité)
 
 ### 🔥 Priorité Haute
