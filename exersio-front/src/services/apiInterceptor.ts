@@ -72,7 +72,7 @@ interface RetryableRequest {
 }
 
 // Configuration du retry
-const MAX_RETRY_ATTEMPTS = 0; // TEMPORAIRE - désactivé pour déploiement
+const MAX_RETRY_ATTEMPTS = 3; // Réactivé après déploiement
 const RETRY_DELAY_BASE = 1000; // 1 seconde
 
 // Queue des requêtes en attente pendant le refresh du token
