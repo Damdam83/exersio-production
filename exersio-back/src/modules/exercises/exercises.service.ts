@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { NotificationsService } from '../notifications/notifications.service';
+// import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ExercisesService {
   constructor(
-    private prisma: PrismaService,
-    private notificationsService: NotificationsService
+    private prisma: PrismaService
+    // private notificationsService: NotificationsService
   ) {}
 
   async list(query: any, page = 1, limit = 10, userId?: string) {
@@ -100,15 +100,14 @@ export class ExercisesService {
       }
     });
 
-    // Déclencher les notifications si l'exercice est ajouté à un club
-    if (exercise.clubId) {
-      try {
-        await this.notificationsService.createExerciseAddedNotification(exercise.id, exercise.clubId);
-      } catch (error) {
-        // Log l'erreur mais ne pas empêcher la création de l'exercice
-        console.error('Error creating exercise notification:', error);
-      }
-    }
+    // TEMPORAIREMENT désactivé pour déploiement
+    // if (exercise.clubId) {
+    //   try {
+    //     await this.notificationsService.createExerciseAddedNotification(exercise.id, exercise.clubId);
+    //   } catch (error) {
+    //     console.error('Error creating exercise notification:', error);
+    //   }
+    // }
 
     return exercise;
   }
