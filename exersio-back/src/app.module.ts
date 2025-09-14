@@ -10,7 +10,7 @@ import { ExercisesModule } from './modules/exercises/exercises.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
+// import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AppVersionModule } from './modules/app/app.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -28,7 +28,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     InvitationsModule,
     CategoriesModule,
     FavoritesModule,
-    NotificationsModule,
+    // NotificationsModule,
     AppVersionModule,
   ],
   providers: [
