@@ -25,7 +25,9 @@
       "Bash(npm run test:run:*)",
       "Bash(timeout:*)",
       "Bash(docker compose:*)",
-      "Bash(start http://localhost:5173)"
+      "Bash(start http://localhost:5173)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "additionalDirectories": [
       "C:\\c\\PROJETS\\Exersio\\front"
