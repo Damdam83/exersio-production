@@ -20,7 +20,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
   const corsOrigins = process.env.CORS_ORIGIN
-    ? [process.env.CORS_ORIGIN, 'http://localhost:5173', 'http://192.168.0.110:5173']
+    ? [...process.env.CORS_ORIGIN.split(','), 'http://localhost:5173', 'http://192.168.0.110:5173']
     : [
         'http://localhost:5173',
         'http://192.168.0.110:5173',
