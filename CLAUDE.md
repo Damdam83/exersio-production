@@ -2,8 +2,8 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 14/09/2025
-**Session actuelle :** DÉPLOIEMENT PRODUCTION COMPLET - Application en ligne
+**Dernière mise à jour :** 16/09/2025
+**Session actuelle :** APP MOBILE ANDROID + CONFIGURATION PRODUCTION
 
 ---
 
@@ -211,6 +211,13 @@ C:\PROJETS\Exersio\front/
   - **Impact** : Impossible de créer des exercices avec schémas tactiques
   - **Priorité** : CRITIQUE - bloque la fonctionnalité principale
 
+### 🚨 ACTION REQUISE RENDER - Variables d'Environnement
+**Il faut ajouter dans Render Dashboard :**
+```
+CORS_ORIGIN=https://exersio-frontend.vercel.app,capacitor://localhost
+```
+**Raison :** App mobile utilise scheme `capacitor://localhost` (standard production)
+
 ### 🔧 Optimisations futures
 - [ ] **Performance monitoring** : Alertes Render, métriques de performance
 - [ ] **CI/CD automatisé** : Pipeline de déploiement automatique
@@ -409,10 +416,10 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 
 ## 🎯 Recommandations pour prochaine session
 
-1. **🔄 Système version mobile** - Implémentation check version obligatoire/optionnelle au démarrage
-2. **📧 Configuration SMTP production** - Remplacer Ethereal par Gmail/SendGrid pour prod
-3. **🧪 Exécution tests complets** - Lancer suite de tests créée (backend Jest + frontend Vitest)
-4. **🚀 Déploiement production** - Setup CI/CD + containerisation Docker
+1. **🚨 PRIORITÉ 1** : Ajouter `CORS_ORIGIN` dans Render (app mobile bloquée sinon)
+2. **🎯 Réparer éditeur de terrain** - Fonctionnalité critique cassée
+3. **🔄 Système version mobile** - Check version obligatoire/optionnelle au démarrage
+4. **🧪 Exécution tests complets** - Lancer suite de tests créée (backend Jest + frontend Vitest)
 5. **📈 Analytics utilisateur** - Métriques usage et comportements
 6. **🎨 Mode sombre** - Implémentation thème sombre/clair
 
@@ -438,6 +445,14 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 - `frontend-documentation-fonctionnelle.md` + `backend-documentation-fonctionnelle.md`
 - `plan-de-test-complet.md` - Infrastructure et stratégie de tests 3 phases
 - `AUDIT_FRONTEND_COMPLET.md` + `audit-backend-complet.md` - Analyses de nettoyage
+
+### Session du 16/09/2025 - App Mobile Android + Configuration Production
+- ✅ **Branche development créée** : Workflow sécurisé sans déploiements automatiques
+- ✅ **Configuration Capacitor production** : Scheme `capacitor://localhost` (standard)
+- ✅ **APK Android fonctionnelle** : Build avec API production Render
+- ✅ **Documentation environnements** : README-ENVIRONMENTS.md complet
+- 🚨 **Variable Render manquante** : `CORS_ORIGIN=https://exersio-frontend.vercel.app,capacitor://localhost`
+- 📱 **APK prête** : `android/app/build/outputs/apk/debug/app-debug.apk` (10MB)
 
 ---
 

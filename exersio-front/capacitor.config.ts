@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Exersio',
   webDir: 'dist',
   server: {
-    androidScheme: 'http'
+    androidScheme: 'capacitor'
   },
   plugins: {
     SplashScreen: {
