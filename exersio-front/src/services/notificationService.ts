@@ -1,5 +1,4 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { PushNotifications, PushNotificationSchema, ActionPerformed, Token } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { api } from './api';
 
@@ -34,17 +33,8 @@ class NotificationService {
       const localResult = await LocalNotifications.requestPermissions();
       console.log('Local notifications permission:', localResult.display);
 
-      // Demander les permissions pour les notifications push
-      const pushResult = await PushNotifications.requestPermissions();
-      console.log('Push notifications permission:', pushResult.receive);
-
-      if (pushResult.receive === 'granted') {
-        // Enregistrer pour recevoir les notifications push
-        await PushNotifications.register();
-
-        // Écouter les événements
-        this.setupListeners();
-      }
+      // TODO: Push notifications désactivées temporairement (problème Firebase)
+      console.log('Push notifications disabled - using local notifications only');
 
       this.isInitialized = true;
     } catch (error) {
@@ -53,31 +43,8 @@ class NotificationService {
   }
 
   private setupListeners() {
-    // Événement: Token reçu
-    PushNotifications.addListener('registration', (token: Token) => {
-      console.log('Push registration token:', token.value);
-      this.pushToken = token.value;
-      this.registerTokenOnServer(token.value);
-    });
-
-    // Événement: Erreur d'enregistrement
-    PushNotifications.addListener('registrationError', (error) => {
-      console.error('Push registration error:', error);
-    });
-
-    // Événement: Notification reçue (app en arrière-plan)
-    PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
-      console.log('Push notification received:', notification);
-      // On pourrait afficher une notification locale personnalisée ici
-    });
-
-    // Événement: Notification touchée
-    PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
-      console.log('Push notification action performed:', action);
-      
-      // Router vers l'écran approprié selon le type de notification
-      this.handleNotificationTap(action.notification.data);
-    });
+    // Push notifications désactivées temporairement
+    console.log('Push notifications listeners disabled');
   }
 
   private async registerTokenOnServer(token: string) {
@@ -216,14 +183,11 @@ class NotificationService {
       };
     }
 
-    const [localPerms, pushPerms] = await Promise.all([
-      LocalNotifications.checkPermissions(),
-      PushNotifications.checkPermissions()
-    ]);
+    const localPerms = await LocalNotifications.checkPermissions();
 
     return {
       local: localPerms.display,
-      push: pushPerms.receive
+      push: 'disabled' // Push notifications temporairement désactivées
     };
   }
 
