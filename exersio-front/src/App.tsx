@@ -69,7 +69,7 @@ function AppContent() {
       // Les exercices et favoris seront chargés seulement quand l'utilisateur navigue vers la page exercices
       sesActions.loadSessions();
       
-      // Initialiser les notifications push
+      // Initialiser les notifications (seulement locales, pas de Firebase)
       notificationService.initialize().catch(error => {
         console.error('Error initializing notifications:', error);
       });
