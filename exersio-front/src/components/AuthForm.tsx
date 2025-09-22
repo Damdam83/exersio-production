@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { ExersioLogo } from './ExersioLogo';
 import { api } from '../services/api';
 import type { ApiError } from '../types/api';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface AuthFormProps {
   onLogin: (credentials: { email: string; password: string }) => Promise<void>;
@@ -16,6 +17,7 @@ interface AuthFormProps {
 type AuthMode = 'login' | 'register' | 'forgot-password' | 'confirm-email' | 'reset-password';
 
 export function AuthForm({ onLogin, onRegister, isLoading = false, error }: AuthFormProps) {
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -467,8 +469,8 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
             )}
           </div>
 
-          {/* Information de développement - Seulement en mode login/register */}
-          {(mode === 'login' || mode === 'register') && (
+          {/* Information de développement - Seulement en mode login/register et masqué sur mobile */}
+          {(mode === 'login' || mode === 'register') && !isMobile && (
             <div className="mt-6 p-4 bg-[#00d4aa]/10 border border-[#00d4aa]/20 rounded-lg">
               <p className="text-xs text-[#00d4aa] text-center">
                 <strong>Mode développement :</strong> Utilisez n'importe quel email et mot de passe pour vous connecter

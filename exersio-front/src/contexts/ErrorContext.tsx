@@ -45,11 +45,24 @@ export const ErrorProvider: React.FC<ErrorProviderProps> = ({ children }) => {
 
     setErrors(prev => [...prev, error]);
 
-    // Auto-dismiss info messages after 5 seconds
-    if (type === 'info') {
+    // Auto-dismiss messages based on type
+    let duration = 0;
+    switch (type) {
+      case 'error':
+        duration = 8000; // 8 seconds for errors
+        break;
+      case 'warning':
+        duration = 6000; // 6 seconds for warnings
+        break;
+      case 'info':
+        duration = 4000; // 4 seconds for info
+        break;
+    }
+
+    if (duration > 0) {
       setTimeout(() => {
         dismissError(error.id);
-      }, 5000);
+      }, duration);
     }
   };
 

@@ -1,0 +1,47 @@
+/* Styles personnalisés Exersio */
+
+.bg-primary-btn {
+  background: linear-gradient(to right, #3b82f6, #10b981);
+  border: none;
+  border-radius: 18px;
+  padding: 20px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.bg-primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.3);
+}
+
+.bg-glass-btn {
+  background: linear-gradient(to right, #00d4aa, #00b894);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  color: #1e2731;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bg-glass-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.bg-glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+}

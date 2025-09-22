@@ -141,27 +141,10 @@ export function SessionsPage() {
 
   if (isLoading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundImage: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
-        backgroundAttachment: 'fixed',
-        color: '#ffffff',
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            border: '2px solid rgba(59, 130, 246, 0.2)',
-            borderTop: '2px solid #3b82f6',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }}></div>
-          <p style={{ color: '#94a3b8' }}>Chargement des séances...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Chargement des séances...</p>
         </div>
       </div>
     );
@@ -365,153 +348,75 @@ export function SessionsPage() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      backgroundAttachment: 'fixed',
-      color: '#ffffff',
-      position: 'relative',
-      padding: '5px'
-    }}>
+    <div className="min-h-screen text-white relative p-1">
       {/* Background effects */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: `
-          radial-gradient(circle at 15% 85%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-          radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.1) 0%, transparent 50%)
-        `,
-        pointerEvents: 'none',
-        zIndex: -1
-      }}></div>
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute inset-0 bg-gradient-radial from-blue-500/15 via-transparent to-transparent"
+             style={{ backgroundPosition: '15% 85%' }}></div>
+        <div className="absolute inset-0 bg-gradient-radial from-emerald-500/10 via-transparent to-transparent"
+             style={{ backgroundPosition: '85% 15%' }}></div>
+      </div>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+      <div className="max-w-[1400px] mx-auto relative z-10">
         {/* Header */}
-        <header style={{
-          // background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(20px)',
-          // border: '1px solid rgba(255, 255, 255, 0.12)',
-          // borderRadius: '24px',
-          padding: '5px 35px',
-          marginBottom: '30px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          // boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-        }}>
+        <header className="backdrop-blur-xl px-4 lg:px-9 py-4 lg:py-1 mb-4 lg:mb-8 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 lg:gap-0">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>
-              <button onClick={() => navigate('home')} style={{ color: '#3b82f6', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+              <button onClick={() => navigate('home')} className="text-blue-400 hover:text-blue-300 bg-transparent border-none cursor-pointer">
                 🏠 Dashboard
               </button>
               <span>›</span>
               <span>Séances</span>
             </div>
-            <div className="flex justify-center items-center">
-            <h1 style={{
-              fontSize: '28px',
-              fontWeight: '800',
-              background: 'linear-gradient(135deg, #ffffff, #94a3b8)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-             
-            }}>
-              📅
-            </h1><h1 style={{
-              fontSize: '28px',
-              fontWeight: '800',
-              background: 'linear-gradient(135deg, #ffffff, #94a3b8)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              Gestion des Séances
-            </h1>
+            <div className="flex flex-col lg:justify-center items-start lg:items-center gap-1">
+              <h1 className="text-xl lg:text-3xl font-extrabold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent flex items-center gap-2">
+                <span>📅</span>
+                <span className="hidden lg:inline">Gestion des </span>Séances
+              </h1>
             </div>
-            
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button style={{
-              padding: '12px 20px',
-              borderRadius: '14px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+          <div className="flex gap-2 lg:gap-3 flex-wrap lg:flex-nowrap">
+            <button className="hidden lg:flex px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer bg-white/8 text-white border border-white/12 items-center gap-2 hover:bg-white/12 transition-colors">
               📤 Exporter
             </button>
-            <button style={{
-              padding: '12px 20px',
-              borderRadius: '14px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+            <button className="hidden lg:flex px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer bg-white/8 text-white border border-white/12 items-center gap-2 hover:bg-white/12 transition-colors">
               📋 Dupliquer
             </button>
-            <button 
+            <button
               onClick={() => navigate('session-create')}
-              style={{
-                padding: '12px 20px',
-                borderRadius: '14px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                border: 'none',
-                background: 'linear-gradient(135deg, #3b82f6, #10b981)',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
+              className="lg:px-5 lg:py-3 p-2 lg:rounded-2xl rounded-full text-sm lg:text-sm font-semibold cursor-pointer border-none bg-gradient-to-r from-blue-500 to-emerald-500 text-white flex items-center justify-center gap-0 lg:gap-2 w-10 h-10 lg:w-auto lg:h-auto hover:opacity-90 transition-opacity"
+              title="Nouvelle séance"
             >
-              ➕ Nouvelle séance
+              <span>➕</span>
+              <span className="hidden lg:inline">Nouvelle séance</span>
             </button>
           </div>
         </header>
 
         {/* Contrôles et filtres */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '20px',
-          padding: '25px',
-          marginBottom: '30px'
-        }}>
+        <div className="bg-white/8 backdrop-blur-xl border border-white/12 rounded-3xl p-4 lg:p-6 mb-4 lg:mb-8">
           <div style={{
             display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
             justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px'
+            alignItems: isMobile ? 'stretch' : 'center',
+            marginBottom: isMobile ? '16px' : '20px',
+            gap: isMobile ? '12px' : '0'
           }}>
             <div style={{
               display: 'flex',
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '12px',
               padding: '4px',
-              gap: '4px'
+              gap: '4px',
+              alignSelf: isMobile ? 'flex-start' : 'auto'
             }}>
               <button
                 onClick={() => setActiveView('list')}
                 style={{
-                  padding: '8px 16px',
+                  padding: isMobile ? '6px 12px' : '8px 16px',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize: isMobile ? '12px' : '14px',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -525,9 +430,9 @@ export function SessionsPage() {
               <button
                 onClick={() => setActiveView('calendar')}
                 style={{
-                  padding: '8px 16px',
+                  padding: isMobile ? '6px 12px' : '8px 16px',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize: isMobile ? '12px' : '14px',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -539,15 +444,15 @@ export function SessionsPage() {
                 📅 Calendrier
               </button>
             </div>
-            
-            <div style={{ position: 'relative', width: '300px' }}>
+
+            <div style={{ position: 'relative', width: isMobile ? '100%' : '300px' }}>
               <div style={{
                 position: 'absolute',
                 left: '16px',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: '#94a3b8',
-                fontSize: '16px'
+                fontSize: isMobile ? '14px' : '16px'
               }}>🔍</div>
               <input
                 type="text"
@@ -556,12 +461,12 @@ export function SessionsPage() {
                 placeholder="Rechercher une séance..."
                 style={{
                   width: '100%',
-                  padding: '12px 20px 12px 45px',
+                  padding: isMobile ? '10px 16px 10px 40px' : '12px 20px 12px 45px',
                   background: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '14px',
                   color: 'white',
-                  fontSize: '14px',
+                  fontSize: isMobile ? '14px' : '14px',
                   outline: 'none',
                   transition: 'all 0.3s ease'
                 }}
@@ -994,46 +899,6 @@ export function SessionsPage() {
         )}
       </div>
 
-      {/* CSS pour les animations et effets hover */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        .session-card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(59, 130, 246, 0.3);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .control-btn:hover {
-          background: rgba(59, 130, 246, 0.15) !important;
-          border-color: rgba(59, 130, 246, 0.3) !important;
-          color: #3b82f6 !important;
-        }
-        
-        .control-btn.primary:hover {
-          transform: scale(1.05);
-        }
-        
-        select option {
-          background-color: #1e293b !important;
-          color: white !important;
-        }
-        
-        @media (max-width: 768px) {
-          .session-content {
-            grid-template-columns: 1fr !important;
-          }
-          
-          .session-header {
-            flex-direction: column !important;
-            gap: 8px !important;
-            align-items: flex-start !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

@@ -34,90 +34,111 @@ export function Navigation({ isMobile, onLogout }: NavigationProps) {
   if (isMobile) {
     return (
       <>
-        {/* Header mobile avec logo + user + hamburger */}
-        <nav className="flex items-center justify-between p-4 bg-gray-900 text-white relative z-50">
-          {/* Logo */}
+        {/* Header mobile avec logo + notifications + hamburger - Modern style */}
+        <nav className="flex items-center justify-between p-4 bg-slate-900/90 backdrop-blur-xl border-b border-white/20 text-white relative z-50">
+          {/* Logo + Nom Exersio */}
           <div className="flex items-center gap-3">
+            <img
+              src="/assets/logo_exersio_mobile.png"
+              alt="Exersio"
+              className="w-8 h-8 object-contain flex-shrink-0"
+            />
             <span className="font-bold text-lg">
               {currentClub ? currentClub.name : "Exersio"}
             </span>
           </div>
-          
-          {/* User info + Notifications + Hamburger */}
-          <div className="flex items-center gap-3">
-            {currentUser && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center font-bold text-sm">
-                  {currentUser?.firstName?.[0] || currentUser?.name?.[0] || "C"}
-                  {currentUser?.lastName?.[0] || "M"}
-                </div>
-              </div>
-            )}
+
+          {/* Notifications + Hamburger */}
+          <div className="flex items-center gap-2">
             <NotificationBadge
               onClick={() => setNotificationCenterOpen(true)}
-              className="text-white hover:bg-gray-800"
+              className="text-white hover:bg-white/10"
             />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-gray-800"
+              className="p-2 rounded-xl hover:bg-white/10 transition-all duration-200"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </nav>
 
-        {/* Menu hamburger overlay */}
+        {/* Menu hamburger overlay - Modern glassmorphism style */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-40 bg-gray-900 bg-opacity-95">
+          <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm">
             <div className="flex flex-col h-full pt-20 px-4">
               {menuItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleNavigate(item.id)}
-                  className={`flex items-center gap-4 px-4 py-4 rounded-lg mb-2 text-lg ${
+                  className={`flex items-center gap-4 px-4 py-4 rounded-2xl mb-3 text-lg transition-all duration-200 ${
                     currentPage === item.id
-                      ? "bg-[#00d4aa] text-white"
-                      : "text-gray-300 hover:bg-gray-800"
+                      ? "bg-gradient-to-r from-blue-500 to-emerald-500 text-white shadow-lg"
+                      : "text-gray-300 hover:bg-white/10 bg-white/5 backdrop-blur-xl border border-white/10"
                   }`}
                 >
                   {item.icon}
                   <span>{item.label}</span>
                 </button>
               ))}
-              
-              <div className="mt-auto mb-8 p-4 border-t border-gray-700">
+
+              <div className="mt-auto mb-8 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
                 {currentUser && (
-                  <p className="text-gray-300 mb-4">Connecté en tant que {currentUser.name}</p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center font-bold text-sm">
+                      {currentUser?.firstName?.[0] || currentUser?.name?.[0] || "C"}
+                      {currentUser?.lastName?.[0] || "M"}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-300 text-sm">Connecté en tant que</p>
+                      <p className="text-white font-medium">{currentUser.name}</p>
+                    </div>
+                    <button
+                      onClick={onLogout}
+                      className="p-2 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all duration-200"
+                      title="Déconnexion"
+                    >
+                      <LogOut size={20} />
+                    </button>
+                  </div>
                 )}
-                <button
-                  onClick={onLogout}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:bg-red-900/20 rounded-lg"
-                >
-                  <LogOut size={18} />
-                  <span>Déconnexion</span>
-                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Navigation bottom bar mobile - ALWAYS visible */}
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 z-50">
-          <div className="flex justify-around items-center py-2">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNavigate(item.id)}
-                className={`flex flex-col items-center gap-1 p-3 rounded-lg min-w-0 flex-1 ${
-                  currentPage === item.id
-                    ? "text-[#00d4aa]"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {item.icon}
-                <span className="text-xs truncate">{item.label}</span>
-              </button>
-            ))}
+        {/* Navigation bottom bar mobile - Modern glassmorphism style */}
+        <div className="fixed bottom-0 left-0 right-0 z-50">
+          {/* Backdrop blur container */}
+          <div className="bg-white/10 backdrop-blur-xl border-t border-white/20">
+            <div className="flex justify-around items-center py-3 px-2">
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigate(item.id)}
+                  className={`relative flex flex-col items-center gap-1 p-3 rounded-2xl transition-all duration-200 min-w-0 flex-1 ${
+                    currentPage === item.id
+                      ? "bg-gradient-to-r from-blue-500 to-emerald-500 text-white shadow-lg transform -translate-y-1"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <div className={`transition-all duration-200 ${
+                    currentPage === item.id ? "scale-110" : ""
+                  }`}>
+                    {React.cloneElement(item.icon, { size: currentPage === item.id ? 20 : 18 })}
+                  </div>
+                  <span className={`text-xs truncate font-medium transition-all duration-200 ${
+                    currentPage === item.id ? "text-white" : ""
+                  }`}>
+                    {item.label}
+                  </span>
+                  {/* Active indicator dot */}
+                  {currentPage === item.id && (
+                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full"></div>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

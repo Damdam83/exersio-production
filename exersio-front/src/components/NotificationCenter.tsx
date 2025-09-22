@@ -254,7 +254,8 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ onClick, c
   useEffect(() => {
     const loadUnreadCount = async () => {
       try {
-        const data = await notificationService.getNotifications(true, 1);
+        // Mode silencieux pour éviter les popups de loading
+        const data = await notificationService.getNotifications(true, 1, 0, true);
         setUnreadCount(data.unreadCount || 0);
       } catch (error) {
         console.error('Error loading unread count:', error);
@@ -262,10 +263,10 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ onClick, c
     };
 
     loadUnreadCount();
-    
-    // Refresh every 30 seconds
-    const interval = setInterval(loadUnreadCount, 30000);
-    return () => clearInterval(interval);
+
+    // Polling supprimé - plus de requêtes automatiques
+    // const interval = setInterval(loadUnreadCount, 30000);
+    // return () => clearInterval(interval);
   }, []);
 
   return (

@@ -218,7 +218,7 @@ export function ExercisesPage() {
               >
                 {/* Terrain de visualisation mobile */}
                 <div className="h-32 bg-gradient-to-br from-slate-700 to-slate-600 relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-30">
+                  <div className="absolute inset-0 opacity-30 scale-90 origin-center">
                     {createCourtDiagram(exercise)}
                   </div>
                   <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-400 px-2 py-1 rounded text-xs font-semibold">
@@ -325,116 +325,42 @@ export function ExercisesPage() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      color: '#ffffff',
-      position: 'relative'
-    }}>
+    <div className="min-h-screen text-white relative">
       {/* Background effects */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: `
-          radial-gradient(circle at 15% 85%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-          radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.1) 0%, transparent 50%)
-        `,
-        pointerEvents: 'none',
-        zIndex: -1
-      }}></div>
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute inset-0 bg-gradient-radial from-blue-500/15 via-transparent to-transparent"
+             style={{ backgroundPosition: '15% 85%' }}></div>
+        <div className="absolute inset-0 bg-gradient-radial from-emerald-500/10 via-transparent to-transparent"
+             style={{ backgroundPosition: '85% 15%' }}></div>
+      </div>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '5px', position: 'relative', zIndex: 1 }}>
+      <div className="max-w-[1400px] mx-auto p-1 relative z-10">
         {/* Header */}
-        <header className="exercise-page-header" style={{
-          // background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(20px)',
-          // border: '1px solid rgba(255, 255, 255, 0.12)',
-          // borderRadius: '24px',
-          padding: '5px 35px',
-          marginBottom: '30px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          // boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-        }}>
+        <header className="backdrop-blur-xl px-9 py-1 mb-8 flex justify-between items-center">
           <div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              fontSize: '14px', 
-              color: '#94a3b8', 
-              marginBottom: '8px' 
-            }}>
-              <button 
-                onClick={() => navigate('home')} 
-                style={{ color: '#3b82f6', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer' }}
-              >
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+              <button onClick={() => navigate('home')} className="text-blue-400 hover:text-blue-300 bg-transparent border-none cursor-pointer">
                 🏠 Dashboard
               </button>
               <span>›</span>
               <span>Base d'exercices</span>
             </div>
-            <div className='flex justify-center items-center gap-3'>
+            <div className="flex justify-center items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-md flex items-center justify-center">
-                  <ScrollText className="w-4 h-4 text-white" />
+                <ScrollText className="w-4 h-4 text-white" />
               </div>
-              <h1 style={{
-              fontSize: '28px',
-              fontWeight: '800',
-              background: 'linear-gradient(135deg, #ffffff, #94a3b8)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>
-              Base d'Exercices
-            </h1>
+              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                Base d'Exercices
+              </h1>
             </div>
-            
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button style={{
-              padding: '12px 20px',
-              borderRadius: '14px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+          <div className="flex gap-3">
+            <button className="px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer transition-all bg-white/8 border border-white/12 text-white flex items-center gap-2 hover:bg-white/12">
               📤 Exporter
             </button>
-            <button 
+            <button
               onClick={() => navigate('exercise-create')}
-              style={{
-                padding: '12px 20px',
-                borderRadius: '14px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                border: 'none',
-                background: 'linear-gradient(135deg, #3b82f6, #10b981)',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
+              className="px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer transition-all border-none bg-gradient-to-r from-blue-500 to-emerald-500 text-white flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30"
             >
               ➕ Nouvel exercice
             </button>
@@ -442,14 +368,7 @@ export function ExercisesPage() {
         </header>
 
         {/* Filtres et recherche */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '20px',
-          padding: '25px',
-          marginBottom: '30px'
-        }}>
+        <div className="bg-white/8 backdrop-blur-xl border border-white/12 rounded-3xl p-6 mb-8">
           <div className="exercise-filters-top" style={{ display: 'flex', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <div className="exercise-search-box" style={{ flex: '1', minWidth: '300px', position: 'relative' }}>
               <div style={{

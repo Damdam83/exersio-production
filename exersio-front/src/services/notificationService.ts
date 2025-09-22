@@ -102,7 +102,7 @@ class NotificationService {
   }
 
   // API calls pour les notifications
-  async getNotifications(unreadOnly = false, limit = 20, offset = 0) {
+  async getNotifications(unreadOnly = false, limit = 20, offset = 0, silent = false) {
     try {
       const params = new URLSearchParams({
         limit: limit.toString(),
@@ -110,7 +110,10 @@ class NotificationService {
         ...(unreadOnly && { unreadOnly: 'true' })
       });
 
-      const response = await api.get(`/notifications?${params}`);
+      const response = await api.get(`/notifications?${params}`, {
+        // Mode silencieux pour éviter les spinners de loading
+        skipGlobalLoading: silent
+      });
       return response;
     } catch (error) {
       console.error('Error fetching notifications:', error);
