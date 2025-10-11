@@ -1,6 +1,7 @@
 import React from 'react';
 import { Player, Arrow, Ball, Zone } from '../../constants/exerciseEditor';
 import { SportType, SPORTS_CONFIG } from '../../constants/sportsConfig';
+import { CourtBackgroundImage } from './CourtBackgroundImage';
 
 interface SportCourtProps {
   sport: SportType;
@@ -310,7 +311,7 @@ export function SportCourt({
           position: 'relative',
           width: '100%',
           aspectRatio: sportConfig.fieldDimensions.aspectRatio,
-          background: sportConfig.fieldColor,
+          backgroundColor: sportConfig.fieldColor, // Fallback si image ne charge pas
           borderRadius: '8px',
           border: '3px solid #ffffff',
           cursor: selectedTool === 'select' ? 'default' : 'crosshair',
@@ -326,7 +327,11 @@ export function SportCourt({
         onMouseUp={onCourtPointerUp}
         onTouchEnd={onCourtPointerUp}
       >
-        {/* Pattern de terrain spécifique */}
+        {/* Image de fond du terrain (z-index: 0) */}
+        {/* usePlaceholder=true temporairement en attendant vraies images */}
+        <CourtBackgroundImage sport={sport} loading="eager" usePlaceholder={true} />
+
+        {/* Pattern de terrain spécifique (désactivé, remplacé par images) */}
         {sportConfig.fieldPattern === 'grass' && (
           <div style={{
             position: 'absolute',
