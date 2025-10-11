@@ -328,32 +328,18 @@ export function SportCourt({
         onTouchEnd={onCourtPointerUp}
       >
         {/* Image de fond du terrain (z-index: 0) */}
-        {/* usePlaceholder=true temporairement en attendant vraies images */}
-        <CourtBackgroundImage sport={sport} loading="eager" usePlaceholder={true} />
+        <CourtBackgroundImage sport={sport} loading="eager" />
 
-        {/* Pattern de terrain spécifique (désactivé, remplacé par images) */}
-        {sportConfig.fieldPattern === 'grass' && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: `repeating-linear-gradient(
-              90deg,
-              transparent,
-              transparent 20px,
-              rgba(255, 255, 255, 0.05) 20px,
-              rgba(255, 255, 255, 0.05) 22px
-            )`
-          }} />
-        )}
+        {/* Pattern de terrain spécifique - DÉSACTIVÉ (remplacé par images) */}
+        {/* Ancien système CSS patterns - commenté car images le gèrent maintenant */}
 
         {/* Grille */}
         {renderGrid()}
 
-        {/* Lignes du terrain SVG */}
-        <svg
+        {/* Lignes du terrain SVG - DÉSACTIVÉES (incluses dans les images) */}
+        {/* Ancien système de lignes - commenté car images les contiennent déjà */}
+        {/*
+      <svg
           style={{
             position: 'absolute',
             top: 0,
@@ -365,56 +351,57 @@ export function SportCourt({
           preserveAspectRatio="none"
           viewBox="0 0 100 100"
         >
-          {/* Lignes volleyball */}
+          {*\/ Lignes volleyball \/*}
           {sport === 'volleyball' && (
             <>
-              {/* Ligne centrale */}
+              {*\/ Ligne centrale \/*}
               <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="rgba(255, 255, 255, 0.8)" strokeWidth="0.3" />
-              {/* Lignes de fond */}
+              {*\/ Lignes de fond \/*}
               <line x1="0%" y1="5%" x2="100%" y2="5%" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
               <line x1="0%" y1="95%" x2="100%" y2="95%" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Lignes latérales */}
+              {*\/ Lignes latérales \/*}
               <line x1="5%" y1="0%" x2="5%" y2="100%" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
               <line x1="95%" y1="0%" x2="95%" y2="100%" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Ligne d'attaque */}
+              {*\/ Ligne d'attaque \/*}
               <line x1="5%" y1="25%" x2="95%" y2="25%" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" strokeDasharray="2,2" />
               <line x1="5%" y1="75%" x2="95%" y2="75%" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" strokeDasharray="2,2" />
             </>
           )}
           
-          {/* Lignes basketball */}
+          {*\/ Lignes basketball \/*}
           {sport === 'basketball' && (
             <>
-              {/* Ligne centrale */}
+              {*\/ Ligne centrale \/*}
               <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="rgba(255, 255, 255, 0.8)" strokeWidth="0.3" />
-              {/* Contour du terrain */}
+              {*\/ Contour du terrain \/*}
               <rect x="5%" y="5%" width="90%" height="90%" fill="none" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Cercle central */}
+              {*\/ Cercle central \/*}
               <circle cx="50%" cy="50%" r="8%" fill="none" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Zones restrictives */}
+              {*\/ Zones restrictives \/*}
               <rect x="5%" y="30%" width="15%" height="40%" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" />
               <rect x="80%" y="30%" width="15%" height="40%" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" />
             </>
           )}
           
-          {/* Lignes football */}
+          {*\/ Lignes football \/*}
           {sport === 'football' && (
             <>
-              {/* Ligne centrale */}
+              {*\/ Ligne centrale \/*}
               <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="rgba(255, 255, 255, 0.8)" strokeWidth="0.3" />
-              {/* Contour du terrain */}
+              {*\/ Contour du terrain \/*}
               <rect x="2%" y="5%" width="96%" height="90%" fill="none" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Cercle central */}
+              {*\/ Cercle central \/*}
               <circle cx="50%" cy="50%" r="8%" fill="none" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Surfaces de réparation */}
+              {*\/ Surfaces de réparation \/*}
               <rect x="2%" y="25%" width="18%" height="50%" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" />
               <rect x="80%" y="25%" width="18%" height="50%" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" />
             </>
           )}
         </svg>
 
-        {/* Éléments spécifiques du sport */}
+        {*\/ Éléments spécifiques du sport \/*}
         {renderSportSpecificElements()}
+      */}
 
         {/* Zones */}
         {zones.map((zone) => (

@@ -22,23 +22,29 @@ export function CourtBackgroundImage({
   usePlaceholder = false // Temporairement true en attendant les vraies images
 }: CourtBackgroundImageProps) {
 
+  console.log('🎨 CourtBackgroundImage RENDU - Sport:', sport);
+
   const [imageError, setImageError] = useState(false);
 
-  // Mapping sport → nom fichier image
+  // Mapping sport → chemin image (organisé par dossier sport)
   const courtImages: Record<SportType, string> = {
-    volleyball: 'volleyball-court-dark',
-    football: 'football-field-dark',
-    tennis: 'tennis-court-dark',
-    handball: 'handball-court-dark',
-    basketball: 'basketball-court-dark'
+    volleyball: 'volleyball/volleyball-court-dark',
+    football: 'football/football-court-dark',
+    tennis: 'tennis/tennis-court-dark',
+    handball: 'handball/handball-court-dark',
+    basketball: 'basketball/basketball-court-dark'
   };
 
-  const imageName = courtImages[sport];
-  const webpPath = `/assets/courts/${imageName}.webp`;
-  const pngPath = `/assets/courts/${imageName}.png`;
+  const imagePath = courtImages[sport];
+  const webpPath = `/assets/courts/${imagePath}.webp`;
+  const pngPath = `/assets/courts/${imagePath}.png`;
+
+  // DEBUG: Log les chemins d'images
+  console.log(`🏟️ CourtBackgroundImage - Sport: ${sport}, WebP: ${webpPath}, PNG: ${pngPath}`);
 
   // Si placeholder forcé OU erreur de chargement → afficher SVG
   if (usePlaceholder || imageError) {
+    console.log(`⚠️ Using placeholder for ${sport} - usePlaceholder: ${usePlaceholder}, imageError: ${imageError}`);
     return <CourtPlaceholderSVG sport={sport} className={className} />;
   }
 
@@ -52,19 +58,23 @@ export function CourtBackgroundImage({
         src={pngPath}
         alt={`${sport} court background`}
         loading={loading}
-        className="w-full h-full object-cover"
+        className="w-full h-full"
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover', // cover pour remplir tout l'espace
+          objectPosition: 'center center', // centré horizontalement et verticalement
           zIndex: 0,
-          pointerEvents: 'none', // Pas d'interférence avec les clics
+          pointerEvents: 'none',
           userSelect: 'none'
         }}
         draggable={false}
-        onError={() => setImageError(true)} // Fallback sur SVG si image non trouvée
+        onError={() => setImageError(true)}
       />
     </picture>
   );

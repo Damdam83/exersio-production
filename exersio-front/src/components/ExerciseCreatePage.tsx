@@ -7,7 +7,9 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 
 import { Toolbar } from './ExerciseEditor/Toolbar';
-import { VolleyballCourt } from './ExerciseEditor/VolleyballCourt';
+import { SportCourt } from './ExerciseEditor/SportCourt';
+import { SportType } from '../constants/sportsConfig';
+import { SportSelectionModal } from './SportSelectionModal';
 
 import { Arrow, Ball, FIELD_AGE_CATEGORIES, FIELD_CATEGORIES, FIELD_INTENSITIES, roleLabels as importedRoleLabels, Player, PlayerDisplayMode, TAG_SUGGESTIONS, Zone } from '../constants/exerciseEditor';
 import { convertToFieldData, getEventPosition, initializeArrows, initializeBalls, initializePlayers, initializeZones } from '../utils/exerciseEditorHelpers';
@@ -116,7 +118,10 @@ export function ExerciseCreatePage() {
   
   // Properties modal
   const [showPropertiesModal, setShowPropertiesModal] = useState(false);
-  
+
+  // Sport selection
+  const [selectedSport, setSelectedSport] = useState<SportType>(sourceExercise?.sport as SportType || 'volleyball');
+  const [showSportModal, setShowSportModal] = useState(false);
 
   const courtRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
@@ -507,7 +512,7 @@ export function ExerciseCreatePage() {
         duration: exerciseData.duration,
         category: (exerciseData.categories.length > 0 ? exerciseData.categories[0] : 'attaque') as Exercise['category'],
         ageCategory: exerciseData.ageCategory as Exercise['ageCategory'],
-        sport: 'volleyball',
+        sport: selectedSport,
         instructions: exerciseData.steps.filter(Boolean),
         fieldData,
         createdById: sourceExercise?.createdById || auth.user?.id || 'anonymous',
@@ -775,16 +780,16 @@ export function ExerciseCreatePage() {
                 Schéma tactique
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button 
-                  onClick={() => {}}
-                  style={{ 
-                    padding: '6px 10px', 
-                    background: 'rgba(59, 130, 246, 0.2)', 
-                    border: '1px solid rgba(59, 130, 246, 0.3)', 
-                    borderRadius: '6px', 
-                    color: '#60a5fa', 
-                    fontSize: '11px', 
-                    cursor: 'pointer' 
+                <button
+                  onClick={() => setShowSportModal(true)}
+                  style={{
+                    padding: '6px 10px',
+                    background: 'rgba(59, 130, 246, 0.2)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    borderRadius: '6px',
+                    color: '#60a5fa',
+                    fontSize: '11px',
+                    cursor: 'pointer'
                   }}
                 >
                   🔄 Sport
@@ -817,9 +822,10 @@ export function ExerciseCreatePage() {
                   )}
                 </div>
                 
-                {/* Terrain de volleyball en mode paysage */}
+                {/* Terrain sportif en mode paysage */}
                 <div style={{ flex: 1, position: 'relative', minHeight: '200px', maxHeight: 'calc(100vh - 120px)' }}>
-                  <VolleyballCourt
+                  <SportCourt
+                    sport={selectedSport}
                     courtRef={courtRef}
                     selectedTool={selectedTool}
                     showGrid={showGrid}
@@ -1182,7 +1188,7 @@ export function ExerciseCreatePage() {
               </div>
               
               <button
-                onClick={() => {}}
+                onClick={() => setShowSportModal(true)}
                 style={{
                   padding: '8px 16px',
                   background: 'rgba(59, 130, 246, 0.2)',
@@ -1252,7 +1258,8 @@ export function ExerciseCreatePage() {
               canRedo={canRedo}
             />
 
-            <VolleyballCourt
+            <SportCourt
+              sport={selectedSport}
               courtRef={courtRef}
               selectedTool={selectedTool}
               showGrid={showGrid}
@@ -1432,6 +1439,15 @@ export function ExerciseCreatePage() {
         </div>
       )}
 
+      {/* Sport Selection Modal */}
+      <SportSelectionModal
+        isOpen={showSportModal}
+        onSelect={(sport) => {
+          setSelectedSport(sport);
+          setShowSportModal(false);
+        }}
+        onClose={() => setShowSportModal(false)}
+      />
 
     </div>
   );
