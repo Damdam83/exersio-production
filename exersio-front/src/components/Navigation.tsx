@@ -1,8 +1,7 @@
+import { Dumbbell, History, Home, List, LogOut, Menu, User, X } from "lucide-react";
 import React, { useState } from "react";
-import { useNavigation } from "../contexts/NavigationContext";
 import { useAuth } from "../contexts/AuthContext";
-import { Button } from "./ui/button";
-import { Home, List, Dumbbell, History, User, Menu, X, LogOut } from "lucide-react";
+import { useNavigation } from "../contexts/NavigationContext";
 import { NotificationBadge, NotificationCenter } from "./NotificationCenter";
 
 interface NavigationProps {
@@ -152,48 +151,48 @@ export function Navigation({ isMobile, onLogout }: NavigationProps) {
   }
 
   // Navigation desktop (inchangée)
-  return (
-    <nav className="flex items-center justify-between p-4 bg-gray-900 text-white">
-      <div className="flex items-center gap-3">
-        <span className="font-bold text-lg">
-          {currentClub ? currentClub.name : "Exersio"}
-        </span>
-      </div>
+  // return (
+  //   <nav className="flex items-center justify-between p-4 bg-gray-900 text-white">
+  //     <div className="flex items-center gap-3">
+  //       <span className="font-bold text-lg">
+  //         {currentClub ? currentClub.name : "Exersio"}
+  //       </span>
+  //     </div>
 
-      <div className="flex gap-4">
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setCurrentPage(item.id as any)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-              currentPage === item.id
-                ? "bg-[#00d4aa] text-white"
-                : "hover:bg-gray-800 text-gray-300"
-            }`}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </div>
+  //     <div className="flex gap-4">
+  //       {menuItems.map((item) => (
+  //         <button
+  //           key={item.id}
+  //           onClick={() => setCurrentPage(item.id as any)}
+  //           className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+  //             currentPage === item.id
+  //               ? "bg-[#00d4aa] text-white"
+  //               : "hover:bg-gray-800 text-gray-300"
+  //           }`}
+  //         >
+  //           {item.icon}
+  //           <span>{item.label}</span>
+  //         </button>
+  //       ))}
+  //     </div>
 
-      <div className="flex items-center gap-3">
-        <NotificationBadge
-          onClick={() => setNotificationCenterOpen(true)}
-        />
-        {currentUser && (
-          <span className="text-sm text-gray-300">{currentUser.name}</span>
-        )}
-        <Button variant="outline" size="sm" onClick={onLogout}>
-          Déconnexion
-        </Button>
-      </div>
+  //     <div className="flex items-center gap-3">
+  //       <NotificationBadge
+  //         onClick={() => setNotificationCenterOpen(true)}
+  //       />
+  //       {currentUser && (
+  //         <span className="text-sm text-gray-300">{currentUser.name}</span>
+  //       )}
+  //       <Button variant="outline" size="sm" onClick={onLogout}>
+  //         Déconnexion
+  //       </Button>
+  //     </div>
 
-      {/* Notification Center */}
-      <NotificationCenter
-        isOpen={notificationCenterOpen}
-        onClose={() => setNotificationCenterOpen(false)}
-      />
-    </nav>
-  );
+  //     {/* Notification Center */}
+  //     <NotificationCenter
+  //       isOpen={notificationCenterOpen}
+  //       onClose={() => setNotificationCenterOpen(false)}
+  //     />
+  //   </nav>
+  // );
 }

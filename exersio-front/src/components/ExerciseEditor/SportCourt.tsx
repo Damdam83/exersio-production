@@ -1,7 +1,7 @@
 import React from 'react';
 import { Arrow, Ball, Player, Zone } from '../../constants/exerciseEditor';
 import { SPORTS_CONFIG, SportType } from '../../constants/sportsConfig';
-import { ARROW_TYPES, getArrowStyle, generateArrowMarkers } from '../../constants/arrowTypes';
+import { ARROW_TYPES, ArrowActionType, getArrowStyle, generateArrowMarkers } from '../../constants/arrowTypes';
 import { CourtBackgroundImage } from './CourtBackgroundImage';
 
 interface SportCourtProps {
@@ -50,6 +50,11 @@ export function SportCourt({
   const sportConfig = SPORTS_CONFIG[sport];
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 770;
   const isVerySmall = typeof window !== 'undefined' && window.innerWidth < 400;
+
+  // Calculate correct viewBox based on aspect ratio
+  const aspectRatio = sportConfig.fieldDimensions.aspectRatio;
+  const viewBoxWidth = 100 * aspectRatio;
+  const viewBox = `0 0 ${viewBoxWidth} 100`;
 
   // Scaling adaptatif selon taille écran
   const playerSize = isVerySmall ? 16 : (isMobile ? 20 : 32);
@@ -176,14 +181,14 @@ export function SportCourt({
       <svg
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          top: '3px',
+          left: '3px',
+          right: '3px',
+          bottom: '3px',
           pointerEvents: 'none'
         }}
         preserveAspectRatio="none"
-        viewBox="0 0 100 100"
+        viewBox={viewBox}
       >
         {gridLines}
       </svg>
@@ -191,34 +196,35 @@ export function SportCourt({
   };
 
   const renderPreviewArrow = () => {
-    if (!isCreating || selectedTool !== 'arrow' || !creationStart || !currentMousePos) return null;
+    if (!isCreating || !selectedTool.startsWith('arrow-') || !creationStart || !currentMousePos) return null;
+
+    // Get the action type from selectedTool (e.g., 'arrow-pass' -> 'pass')
+    const actionType = selectedTool.replace('arrow-', '') as ArrowActionType;
+    const arrowConfig = ARROW_TYPES[actionType];
 
     return (
       <svg
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          top: '3px',
+          left: '3px',
+          right: '3px',
+          bottom: '3px',
           pointerEvents: 'none'
         }}
         preserveAspectRatio="none"
-        viewBox="0 0 100 100"
+        viewBox={viewBox}
       >
         <defs>
           <marker
             id="preview-arrowhead"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
+            markerWidth="2"
+            markerHeight="2"
+            refX="1.5"
+            refY="1"
             orient="auto"
           >
-            <polygon
-              points="0 0, 10 3.5, 0 7"
-              fill="rgba(59, 130, 246, 0.8)"
-            />
+            <path d="M0,0 L0,2 L1.5,1 z" fill={arrowConfig.color} fillOpacity="0.7" />
           </marker>
         </defs>
         <line
@@ -226,9 +232,10 @@ export function SportCourt({
           y1={`${creationStart.y}%`}
           x2={`${currentMousePos.x}%`}
           y2={`${currentMousePos.y}%`}
-          stroke="rgba(59, 130, 246, 0.8)"
-          strokeWidth="2"
-          strokeDasharray="5,5"
+          stroke={arrowConfig.color}
+          strokeWidth={arrowConfig.width}
+          strokeDasharray={arrowConfig.dashArray === 'none' ? '1,0.5' : arrowConfig.dashArray}
+          strokeOpacity="0.7"
           markerEnd="url(#preview-arrowhead)"
         />
       </svg>
@@ -315,6 +322,7 @@ export function SportCourt({
 
       {/* Terrain de sport */}
       <div
+        id="actual-court"
         ref={courtRef}
         style={{
           position: 'relative',
@@ -354,14 +362,14 @@ export function SportCourt({
       <svg
           style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: '3px',
+            left: '3px',
+            right: '3px',
+            bottom: '3px',
             pointerEvents: 'none'
           }}
           preserveAspectRatio="none"
-          viewBox="0 0 100 100"
+          viewBox={viewBox}
         >
           {*\/ Lignes volleyball \/*}
           {sport === 'volleyball' && (
@@ -534,14 +542,14 @@ export function SportCourt({
         <svg
           style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: '3px',
+            left: '3px',
+            right: '3px',
+            bottom: '3px',
             pointerEvents: 'none'
           }}
           preserveAspectRatio="none"
-          viewBox="0 0 100 100"
+          viewBox={viewBox}
         >
           <defs>
             {/* Generate markers for each arrow type */}
@@ -552,6 +560,49 @@ export function SportCourt({
             const arrowActionType = arrow.actionType || 'pass';
             const arrowConfig = ARROW_TYPES[arrowActionType];
             const arrowStyle = getArrowStyle(arrowActionType);
+
+            // Courber automatiquement les flèches de type movement et dribble
+            const shouldCurve = arrowActionType === 'movement' || arrowActionType === 'dribble' || arrow.isCurved;
+
+            if (shouldCurve) {
+              // Calculer le point de contrôle pour la courbe
+              const startX = arrow.startPosition.x;
+              const startY = arrow.startPosition.y;
+              const endX = arrow.endPosition.x;
+              const endY = arrow.endPosition.y;
+
+              // Point de contrôle au milieu, décalé perpendiculairement
+              const midX = (startX + endX) / 2;
+              const midY = (startY + endY) / 2;
+              const dx = endX - startX;
+              const dy = endY - startY;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              const offset = distance * 0.15; // 15% de courbure
+
+              // Décalage perpendiculaire
+              const controlX = midX + (dy / distance) * offset;
+              const controlY = midY - (dx / distance) * offset;
+
+              return (
+                <path
+                  key={arrow.id}
+                  d={`M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`}
+                  fill="none"
+                  stroke={selectedElement === arrow.id ? '#00d4aa' : arrowStyle.stroke}
+                  strokeWidth={selectedElement === arrow.id ? arrowConfig.width + 1 : arrowConfig.width}
+                  strokeDasharray={arrowStyle.strokeDasharray}
+                  markerEnd={selectedElement === arrow.id ? 'url(#arrow-pass)' : arrowStyle.markerEnd}
+                  style={{
+                    filter: selectedElement === arrow.id ? 'drop-shadow(0 0 6px #00d4aa60)' : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                    cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onElementSelect(arrow.id);
+                  }}
+                />
+              );
+            }
 
             return (
               <line

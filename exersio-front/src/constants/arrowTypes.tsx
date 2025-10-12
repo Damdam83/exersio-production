@@ -1,5 +1,6 @@
 // Configuration des types de flèches avec styles visuels différenciés
 
+
 export type ArrowActionType = 'pass' | 'shot' | 'movement' | 'dribble' | 'defense';
 
 export interface ArrowTypeConfig {
@@ -18,7 +19,7 @@ export const ARROW_TYPES: Record<ArrowActionType, ArrowTypeConfig> = {
     id: 'pass',
     label: 'Passe',
     color: '#3b82f6',
-    width: 3,
+    width: 0.6,
     style: 'solid',
     dashArray: 'none',
     markerType: 'triangle',
@@ -28,7 +29,7 @@ export const ARROW_TYPES: Record<ArrowActionType, ArrowTypeConfig> = {
     id: 'shot',
     label: 'Tir',
     color: '#ef4444',
-    width: 4,
+    width: 0.6,
     style: 'solid',
     dashArray: 'none',
     markerType: 'large-triangle',
@@ -38,9 +39,9 @@ export const ARROW_TYPES: Record<ArrowActionType, ArrowTypeConfig> = {
     id: 'movement',
     label: 'Déplacement',
     color: '#10b981',
-    width: 2,
+    width: 0.6,
     style: 'dashed',
-    dashArray: '8,4',
+    dashArray: '1.5,0.8',
     markerType: 'circle',
     icon: '👟'
   },
@@ -48,9 +49,9 @@ export const ARROW_TYPES: Record<ArrowActionType, ArrowTypeConfig> = {
     id: 'dribble',
     label: 'Dribble',
     color: '#f59e0b',
-    width: 2,
+    width: 0.6,
     style: 'dotted',
-    dashArray: '2,4',
+    dashArray: '0.8,0.8',
     markerType: 'small-triangle',
     icon: '⚽'
   },
@@ -58,9 +59,9 @@ export const ARROW_TYPES: Record<ArrowActionType, ArrowTypeConfig> = {
     id: 'defense',
     label: 'Défense',
     color: '#8b5cf6',
-    width: 3,
+    width: 0.6,
     style: 'solid',
-    dashArray: '4,2',
+    dashArray: '1.2,0.6',
     markerType: 'cross',
     icon: '🛡️'
   }
@@ -89,14 +90,13 @@ export function generateArrowMarkers() {
           <marker
             key={id}
             id={`arrow-${id}`}
-            markerWidth="10"
-            markerHeight="10"
-            refX="9"
-            refY="3"
+            markerWidth="3"
+            markerHeight="3"
+            refX="2.5"
+            refY="1.5"
             orient="auto"
-            markerUnits="strokeWidth"
           >
-            <path d="M0,0 L0,6 L9,3 z" fill={color} />
+            <path d="M0,0 L0,3 L2.5,1.5 z" fill={color} />
           </marker>
         );
 
@@ -105,14 +105,13 @@ export function generateArrowMarkers() {
           <marker
             key={id}
             id={`arrow-${id}`}
-            markerWidth="14"
-            markerHeight="14"
-            refX="12"
-            refY="4"
+            markerWidth="4"
+            markerHeight="4"
+            refX="3.5"
+            refY="2"
             orient="auto"
-            markerUnits="strokeWidth"
           >
-            <path d="M0,0 L0,8 L12,4 z" fill={color} />
+            <path d="M0,0 L0,4 L3.5,2 z" fill={color} />
           </marker>
         );
 
@@ -121,13 +120,13 @@ export function generateArrowMarkers() {
           <marker
             key={id}
             id={`arrow-${id}`}
-            markerWidth="8"
-            markerHeight="8"
-            refX="4"
-            refY="4"
+            markerWidth="5"
+            markerHeight="5"
+            refX="2.5"
+            refY="2.5"
             orient="auto"
           >
-            <circle cx="4" cy="4" r="3" fill={color} />
+            <circle cx="2.5" cy="2.5" r="2" fill={color} />
           </marker>
         );
 
@@ -136,14 +135,13 @@ export function generateArrowMarkers() {
           <marker
             key={id}
             id={`arrow-${id}`}
-            markerWidth="8"
-            markerHeight="8"
-            refX="7"
-            refY="2.5"
+            markerWidth="3.5"
+            markerHeight="3.5"
+            refX="3"
+            refY="1.75"
             orient="auto"
-            markerUnits="strokeWidth"
           >
-            <path d="M0,0 L0,5 L7,2.5 z" fill={color} />
+            <path d="M0,0 L0,3.5 L3,1.75 z" fill={color} />
           </marker>
         );
 
@@ -152,13 +150,13 @@ export function generateArrowMarkers() {
           <marker
             key={id}
             id={`arrow-${id}`}
-            markerWidth="10"
-            markerHeight="10"
-            refX="5"
-            refY="5"
+            markerWidth="5"
+            markerHeight="5"
+            refX="2.5"
+            refY="2.5"
             orient="auto"
           >
-            <path d="M2,2 L8,8 M2,8 L8,2" stroke={color} strokeWidth="2" />
+            <path d="M0.5,0.5 L4.5,4.5 M0.5,4.5 L4.5,0.5" stroke={color} strokeWidth="1.2" />
           </marker>
         );
 

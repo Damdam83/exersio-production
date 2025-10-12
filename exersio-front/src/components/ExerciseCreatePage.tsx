@@ -80,7 +80,7 @@ export function ExerciseCreatePage() {
   // éditeur
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<string>('select');
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [newStep, setNewStep] = useState('');
   const [newCriterion, setNewCriterion] = useState('');
@@ -228,6 +228,8 @@ export function ExerciseCreatePage() {
     if (!courtRef.current || selectedTool === 'select') return;
     const { x, y } = getEventPosition(e, courtRef);
 
+    console.log('🖱️ CLICK START:', selectedTool, 'Position:', x.toFixed(1), y.toFixed(1));
+
     if (selectedTool.startsWith('player-')) {
       // Parse tool format: "player-role" or "player-role-number"
       const toolParts = selectedTool.split('-');
@@ -318,9 +320,11 @@ export function ExerciseCreatePage() {
       setTimeout(saveToHistory, 0);
       return;
     }
-    
+
     // Handle creation
     if (!isCreating || !creationStart || !currentMousePos) return;
+
+    console.log('🖱️ RELEASE:', selectedTool, 'End position:', currentMousePos.x.toFixed(1), currentMousePos.y.toFixed(1));
 
     if (selectedTool.startsWith('arrow-')) {
       const deltaX = currentMousePos.x - creationStart.x;
@@ -336,6 +340,12 @@ export function ExerciseCreatePage() {
           type: 'movement', // Deprecated field for backwards compatibility
           actionType: actionType // New field for styled arrows
         };
+
+        console.log('✅ ARROW CREATED:', {
+          start: `${creationStart.x.toFixed(1)}, ${creationStart.y.toFixed(1)}`,
+          end: `${currentMousePos.x.toFixed(1)}, ${currentMousePos.y.toFixed(1)}`
+        });
+
         setArrows(prev => [...prev, newArrow]);
 
         // Save to history after adding element
@@ -864,6 +874,8 @@ export function ExerciseCreatePage() {
                   balls={balls}
                   zones={zones}
                   selectedElement={selectedElement}
+                  onElementSelect={setSelectedElement}
+                  displayMode={displayMode}
                   isCreating={isCreating}
                   creationStart={creationStart}
                   currentMousePos={currentMousePos}
@@ -871,7 +883,6 @@ export function ExerciseCreatePage() {
                   onCourtPointerMove={handleCourtPointerMove}
                   onCourtPointerUp={handleCourtPointerUp}
                   onElementPointerDown={handleElementPointerDown}
-                  onElementSelect={setSelectedElement}
                 />
               </div>
             </div>
@@ -1308,6 +1319,8 @@ export function ExerciseCreatePage() {
               balls={balls}
               zones={zones}
               selectedElement={selectedElement}
+              onElementSelect={setSelectedElement}
+              displayMode={displayMode}
               isCreating={isCreating}
               creationStart={creationStart}
               currentMousePos={currentMousePos}
@@ -1315,7 +1328,6 @@ export function ExerciseCreatePage() {
               onCourtPointerMove={handleCourtPointerMove}
               onCourtPointerUp={handleCourtPointerUp}
               onElementPointerDown={handleElementPointerDown}
-              onElementSelect={setSelectedElement}
             />
             
             {/* Bouton propriétés sous le terrain */}
