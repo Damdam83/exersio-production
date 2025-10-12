@@ -1,5 +1,6 @@
 import { Grid3X3, Move, Redo, RotateCcw, Trash2, Undo } from 'lucide-react';
-import { displayModes, PlayerDisplayMode, roleColors, roleLabels } from '../../constants/exerciseEditor';
+import { displayModes, PlayerDisplayMode } from '../../constants/exerciseEditor';
+import { SPORTS_CONFIG, SportType } from '../../constants/sportsConfig';
 
 interface ToolbarProps {
   selectedTool: string;
@@ -15,14 +16,15 @@ interface ToolbarProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  sport?: SportType;
 }
 
-export function Toolbar({ 
-  selectedTool, 
-  onToolChange, 
-  showGrid, 
-  onToggleGrid, 
-  selectedElement, 
+export function Toolbar({
+  selectedTool,
+  onToolChange,
+  showGrid,
+  onToggleGrid,
+  selectedElement,
   onDeleteElement,
   onClearField,
   displayMode = 'role',
@@ -30,9 +32,15 @@ export function Toolbar({
   onUndo,
   onRedo,
   canUndo = false,
-  canRedo = false
+  canRedo = false,
+  sport = 'volleyball'
 }: ToolbarProps) {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 770;
+
+  // Obtenir les rôles et couleurs selon le sport sélectionné
+  const sportConfig = SPORTS_CONFIG[sport];
+  const roleColors = sportConfig.roleColors;
+  const roleLabels = sportConfig.playerRoles;
 
   return (
     <div style={{
@@ -150,12 +158,12 @@ export function Toolbar({
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
-                title={displayMode === 'number' 
-                  ? `Joueur ${index + 1}` 
-                  : `${role} (${roleLabels[role as keyof typeof roleLabels]})`
+                title={displayMode === 'number'
+                  ? `Joueur ${index + 1}`
+                  : `${role} - ${roleLabels[role]}`
                 }
               >
-                {displayMode === 'number' ? (index + 1).toString() : roleLabels[role as keyof typeof roleLabels]}
+                {displayMode === 'number' ? (index + 1).toString() : role}
               </button>
             ))}
           </div>

@@ -803,6 +803,7 @@ export function ExerciseCreatePage() {
             {/* Éditeur disponible en portrait et paysage */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
               <Toolbar
+                sport={selectedSport}
                 selectedTool={selectedTool}
                 onToolChange={setSelectedTool}
                 showGrid={showGrid}
@@ -1232,6 +1233,7 @@ export function ExerciseCreatePage() {
             </div>
 
             <Toolbar
+              sport={selectedSport}
               selectedTool={selectedTool}
               onToolChange={setSelectedTool}
               showGrid={showGrid}

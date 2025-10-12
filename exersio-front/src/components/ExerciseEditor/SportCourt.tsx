@@ -48,9 +48,13 @@ export function SportCourt({
 }: SportCourtProps) {
   const sportConfig = SPORTS_CONFIG[sport];
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 770;
-  const playerSize = isMobile ? 20 : 32;
-  const ballSize = isMobile ? 12 : 20;
-  const fontSize = isMobile ? 10 : 12;
+  const isVerySmall = typeof window !== 'undefined' && window.innerWidth < 400;
+
+  // Scaling adaptatif selon taille écran
+  const playerSize = isVerySmall ? 16 : (isMobile ? 20 : 32);
+  const ballSize = isVerySmall ? 10 : (isMobile ? 12 : 20);
+  const fontSize = isVerySmall ? 8 : (isMobile ? 10 : 12);
+  const borderWidth = isVerySmall ? 1 : (isMobile ? 2 : 3);
 
   const renderSportSpecificElements = () => {
     const elements = [];
@@ -322,6 +326,9 @@ export function SportCourt({
           overflow: 'hidden',
           userSelect: 'none',
           touchAction: 'none',
+          // Scaling automatique des éléments enfants sur très petit écran
+          transform: isVerySmall ? 'scale(0.95)' : 'scale(1)',
+          transformOrigin: 'center center',
           ...style
         }}
         onMouseDown={onCourtPointerDown}
@@ -456,7 +463,7 @@ export function SportCourt({
                 width: `${playerSize}px`,
                 height: `${playerSize}px`,
                 background: roleColor,
-                border: `${isMobile ? '2px' : '3px'} solid ${selectedElement === player.id ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'}`,
+                border: `${borderWidth}px solid ${selectedElement === player.id ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'}`,
                 borderRadius: '50%',
                 cursor: selectedTool === 'select' ? 'pointer' : 'crosshair',
                 display: 'flex',
