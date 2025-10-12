@@ -140,37 +140,66 @@ export function Toolbar({
             flexWrap: 'wrap',
             maxWidth: isMobile ? '100%' : 'none'
           }}>
-            {Object.entries(roleColors).map(([role, color], index) => (
-              <button
-                key={role}
-                onClick={() => onToolChange(displayMode === 'number' ? `player-${role}-${index + 1}` : `player-${role}`)}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '8px',
-                  border: (selectedTool === `player-${role}` || (displayMode === 'number' && selectedTool === `player-${role}-${index + 1}`))
-                    ? '2px solid #00d4aa' 
-                    : '1px solid rgba(255, 255, 255, 0.2)',
-                  background: (selectedTool === `player-${role}` || (displayMode === 'number' && selectedTool === `player-${role}-${index + 1}`))
-                    ? 'rgba(0, 212, 170, 0.3)'
-                    : 'rgba(255, 255, 255, 0.08)',
-                  color: displayMode === 'number' ? '#ffffff' : color,
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                title={displayMode === 'number'
-                  ? `Joueur ${index + 1}`
-                  : `${role} - ${roleLabels[role]}`
-                }
-              >
-                {displayMode === 'number' ? (index + 1).toString() : role}
-              </button>
-            ))}
+            {displayMode === 'number'
+              ? // Mode numéro : afficher de 1 à maxPlayers
+                Array.from({ length: sportConfig.maxPlayers }, (_, index) => (
+                  <button
+                    key={`player-${index + 1}`}
+                    onClick={() => onToolChange(`player-number-${index + 1}`)}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '8px',
+                      border: selectedTool === `player-number-${index + 1}`
+                        ? '2px solid #00d4aa'
+                        : '1px solid rgba(255, 255, 255, 0.2)',
+                      background: selectedTool === `player-number-${index + 1}`
+                        ? 'rgba(0, 212, 170, 0.3)'
+                        : 'rgba(255, 255, 255, 0.08)',
+                      color: '#ffffff',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    title={`Joueur ${index + 1}`}
+                  >
+                    {index + 1}
+                  </button>
+                ))
+              : // Mode rôle : afficher les rôles disponibles
+                Object.entries(roleColors).map(([role, color]) => (
+                  <button
+                    key={role}
+                    onClick={() => onToolChange(`player-${role}`)}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '8px',
+                      border: selectedTool === `player-${role}`
+                        ? '2px solid #00d4aa'
+                        : '1px solid rgba(255, 255, 255, 0.2)',
+                      background: selectedTool === `player-${role}`
+                        ? 'rgba(0, 212, 170, 0.3)'
+                        : 'rgba(255, 255, 255, 0.08)',
+                      color: color,
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    title={`${role} - ${roleLabels[role]}`}
+                  >
+                    {role}
+                  </button>
+                ))
+            }
           </div>
         </div>
 
