@@ -6,9 +6,9 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 
-import { Toolbar } from './ExerciseEditor/Toolbar';
-import { SportCourt } from './ExerciseEditor/SportCourt';
 import { SportType } from '../constants/sportsConfig';
+import { SportCourt } from './ExerciseEditor/SportCourt';
+import { Toolbar } from './ExerciseEditor/Toolbar';
 import { SportSelectionModal } from './SportSelectionModal';
 
 import { Arrow, Ball, FIELD_AGE_CATEGORIES, FIELD_CATEGORIES, FIELD_INTENSITIES, roleLabels as importedRoleLabels, Player, PlayerDisplayMode, TAG_SUGGESTIONS, Zone } from '../constants/exerciseEditor';
@@ -26,9 +26,9 @@ const backupRoleLabels = {
 
 const roleLabels = importedRoleLabels || backupRoleLabels;
 
+import { useAuth } from '../contexts/AuthContext';
 import { useExercises } from '../contexts/ExercisesContext';
 import { useNavigation } from '../contexts/NavigationContext';
-import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useOrientation } from '../hooks/useOrientation';
 import { MobileHeader } from './MobileHeader';
@@ -756,7 +756,7 @@ export function ExerciseCreatePage() {
             </div>
           </div>
 
-          {/* Terrain mobile - mode paysage ou portrait */}
+          {/* Terrain mobile - mode portrait et paysage */}
           <div style={{
             background: 'rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(20px)',
@@ -774,7 +774,7 @@ export function ExerciseCreatePage() {
             display: isLandscape ? 'flex' : 'block',
             flexDirection: isLandscape ? 'column' : 'initial'
           }}>
-            <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: isLandscape ? 'space-between' : 'flex-start' }}>
+            <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent:'space-between'  }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>🏐</div>
                 Schéma tactique
@@ -799,53 +799,68 @@ export function ExerciseCreatePage() {
                 )}
               </div>
             </div>
-            
-            {isPortrait ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px', border: '2px dashed rgba(255, 255, 255, 0.2)', borderRadius: '12px', color: '#94a3b8' }}>
-                <div style={{ fontSize: '32px', marginBottom: '12px' }}>📱</div>
-                <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>Éditeur tactique</div>
-                <div style={{ fontSize: '12px' }}>Retournez l'écran en mode paysage pour accéder à l'éditeur de terrain</div>
-                <button onClick={() => { if (window.screen && window.screen.orientation && window.screen.orientation.lock) { window.screen.orientation.lock('landscape').catch(() => {}); } }} style={{ marginTop: '16px', padding: '10px 16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', border: 'none', borderRadius: '8px', color: 'white', fontSize: '12px', cursor: 'pointer' }}>🔄 Mode paysage</button>
+
+            {/* Éditeur disponible en portrait et paysage */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
+              <Toolbar
+                selectedTool={selectedTool}
+                onToolChange={setSelectedTool}
+                showGrid={showGrid}
+                onToggleGrid={() => setShowGrid(!showGrid)}
+                selectedElement={selectedElement}
+                onDeleteElement={handleDeleteElement}
+                displayMode={displayMode}
+                onDisplayModeChange={(mode) => {
+                  setDisplayMode(mode);
+                  setPlayers(prev => prev.map((player, index) => ({
+                    ...player,
+                    displayMode: mode,
+                    label: mode === 'number'
+                      ? (index + 1).toString()
+                      : (roleLabels[player.role as keyof typeof roleLabels] || 'A'),
+                    playerNumber: mode === 'number' ? (index + 1) : undefined
+                  })));
+                  if (mode === 'number') {
+                    setPlayerCounter(players.length + 1);
+                  } else {
+                    setPlayerCounter(1);
+                  }
+                }}
+                onClearField={() => {
+                  setPlayers([]); setArrows([]); setBalls([]); setZones([]);
+                  setSelectedElement(null); setIsCreating(false); setCreationStart(null); setCurrentMousePos(null);
+                  setPlayerCounter(1);
+                  setTimeout(saveToHistory, 0);
+                }}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                canUndo={canUndo}
+                canRedo={canRedo}
+              />
+
+              {/* Terrain sportif pleine hauteur */}
+              <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+                <SportCourt
+                  sport={selectedSport}
+                  courtRef={courtRef}
+                  selectedTool={selectedTool}
+                  showGrid={showGrid}
+                  players={players}
+                  arrows={arrows}
+                  balls={balls}
+                  zones={zones}
+                  selectedElement={selectedElement}
+                  isCreating={isCreating}
+                  creationStart={creationStart}
+                  currentMousePos={currentMousePos}
+                  onCourtPointerDown={handleCourtPointerDown}
+                  onCourtPointerMove={handleCourtPointerMove}
+                  onCourtPointerUp={handleCourtPointerUp}
+                  onElementPointerDown={handleElementPointerDown}
+                  onElementSelect={setSelectedElement}
+                />
               </div>
-            ) : (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                {/* Toolbar mobile simple */}
-                <div style={{ marginBottom: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {['select', 'player-attaque', 'arrow', 'ball', 'zone'].map(tool => (
-                    <button key={tool} onClick={() => setSelectedTool(tool)} style={{ padding: '8px 12px', background: selectedTool === tool ? 'linear-gradient(135deg, #00d4aa, #00b894)' : 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', color: 'white', fontSize: '11px', cursor: 'pointer', minWidth: '60px' }}>
-                      {tool === 'select' ? '🎯' : tool === 'player-attaque' ? '👤' : tool === 'arrow' ? '➡️' : tool === 'ball' ? '🏐' : '🟨'} {tool === 'player-attaque' ? 'Joueur' : tool.charAt(0).toUpperCase() + tool.slice(1)}
-                    </button>
-                  ))}
-                  <button onClick={() => setShowGrid(!showGrid)} style={{ padding: '8px 12px', background: showGrid ? 'linear-gradient(135deg, #00d4aa, #00b894)' : 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', color: 'white', fontSize: '11px', cursor: 'pointer' }}>🔲 Grille</button>
-                  {selectedElement && (
-                    <button onClick={() => handleDeleteElement(selectedElement)} style={{ padding: '8px 12px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', color: '#ef4444', fontSize: '11px', cursor: 'pointer' }}>🗑️ Suppr.</button>
-                  )}
-                </div>
-                
-                {/* Terrain sportif en mode paysage */}
-                <div style={{ flex: 1, position: 'relative', minHeight: '200px', maxHeight: 'calc(100vh - 120px)' }}>
-                  <SportCourt
-                    sport={selectedSport}
-                    courtRef={courtRef}
-                    selectedTool={selectedTool}
-                    showGrid={showGrid}
-                    players={players}
-                    arrows={arrows}
-                    balls={balls}
-                    zones={zones}
-                    selectedElement={selectedElement}
-                    isCreating={isCreating}
-                    creationStart={creationStart}
-                    currentMousePos={currentMousePos}
-                    onCourtPointerDown={handleCourtPointerDown}
-                    onCourtPointerMove={handleCourtPointerMove}
-                    onCourtPointerUp={handleCourtPointerUp}
-                    onElementPointerDown={handleElementPointerDown}
-                    onElementSelect={setSelectedElement}
-                  />
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

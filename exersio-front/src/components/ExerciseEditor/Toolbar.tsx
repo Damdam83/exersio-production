@@ -1,7 +1,5 @@
-import React from 'react';
-import { Button } from '../ui/button';
-import { Move, Grid3X3, Trash2, RotateCcw, Hash, Tag, Plus, Undo, Redo } from 'lucide-react';
-import { roleColors, roleLabels, displayModes, PlayerDisplayMode } from '../../constants/exerciseEditor';
+import { Grid3X3, Move, Redo, RotateCcw, Trash2, Undo } from 'lucide-react';
+import { displayModes, PlayerDisplayMode, roleColors, roleLabels } from '../../constants/exerciseEditor';
 
 interface ToolbarProps {
   selectedTool: string;
@@ -34,14 +32,16 @@ export function Toolbar({
   canUndo = false,
   canRedo = false
 }: ToolbarProps) {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 770;
+
   return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.08)',
       backdropFilter: 'blur(20px)',
       border: '1px solid rgba(255, 255, 255, 0.12)',
       borderRadius: '16px',
-      margin: '16px',
-      padding: '16px',
+      margin: isMobile ? '0' : '16px',
+      padding: isMobile ? '8px' : '16px',
       marginBottom: '0'
     }}>
       {/* Header */}

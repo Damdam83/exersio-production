@@ -3,7 +3,7 @@
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
 **Dernière mise à jour :** 16/09/2025
-**Session actuelle :** APP MOBILE ANDROID + CONFIGURATION PRODUCTION
+**Session actuelle :** ÉDITEUR DE TERRAIN MULTI-SPORT - CORRECTIONS MAJEURES
 
 ---
 
@@ -203,13 +203,24 @@ C:\PROJETS\Exersio\front/
 - **Tests structurés** : Jest backend + Vitest frontend avec >80% couverture
 - **Codebase optimisé** : Nettoyage complet (-35% bundle, code mort supprimé)
 
-### 🚨 PROBLÈME MAJEUR RESTANT
-- [ ] **🎯 Éditeur de terrain cassé** - Suite aux modifications multi-sport, l'éditeur de terrain n'est plus fonctionnel :
-  - Les outils de sélection ne fonctionnent plus correctement
-  - L'interaction joueur/flèche/ballon/zone est défaillante
-  - Besoin de restaurer complètement l'ancien FieldEditor fonctionnel
-  - **Impact** : Impossible de créer des exercices avec schémas tactiques
-  - **Priorité** : CRITIQUE - bloque la fonctionnalité principale
+### ✅ Éditeur de terrain multi-sport restauré (16/09/2025)
+**Problèmes résolus :**
+- ✅ **Bouton changement de sport** : ExerciseCreatePage utilisait VolleyballCourt au lieu de SportCourt
+- ✅ **Images de fond** : Integration SportCourt avec images /assets/courts/ (WebP + PNG fallback)
+- ✅ **Centrage images** : object-fit: cover + objectPosition: 'center center' pour remplissage correct
+- ✅ **Modal responsive** : Utilisation useIsMobile() avec layout adaptatif
+- ✅ **Breakpoint responsive** : Changé de xl: (1280px) à lg: (1024px) pour meilleur UX
+- ✅ **Images réelles terrains** : SportSelectionModal affiche vraies images de terrains au lieu de CSS
+
+**Fichiers modifiés :**
+- `ExerciseCreatePage.tsx` : Integration SportCourt, gestion selectedSport, breakpoint lg:
+- `CourtBackgroundImage.tsx` : Fix centrage images (cover + center)
+- `SportSelectionModal.tsx` : Vraies images terrains, responsive mobile
+
+**Issues différées (non-bloquantes) :**
+- Mode portrait mobile non fonctionnel (paysage requis pour édition)
+- Modal parfois non-responsive sur mobile tactile
+- Bouton bascule paysage non fonctionnel
 
 ### 🚨 ACTION REQUISE RENDER - Variables d'Environnement
 **Il faut ajouter dans Render Dashboard :**
@@ -417,11 +428,12 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 ## 🎯 Recommandations pour prochaine session
 
 1. **🚨 PRIORITÉ 1** : Ajouter `CORS_ORIGIN` dans Render (app mobile bloquée sinon)
-2. **🎯 Réparer éditeur de terrain** - Fonctionnalité critique cassée
-3. **🔄 Système version mobile** - Check version obligatoire/optionnelle au démarrage
-4. **🧪 Exécution tests complets** - Lancer suite de tests créée (backend Jest + frontend Vitest)
-5. **📈 Analytics utilisateur** - Métriques usage et comportements
-6. **🎨 Mode sombre** - Implémentation thème sombre/clair
+2. **✅ COMPLÉTÉ** : ~~Réparer éditeur de terrain~~ - Desktop 100% fonctionnel, mobile paysage OK
+3. **📱 Amélioration mobile** : Édition terrain en mode portrait (déférée, non-bloquante)
+4. **🔄 Système version mobile** - Check version obligatoire/optionnelle au démarrage
+5. **🧪 Exécution tests complets** - Lancer suite de tests créée (backend Jest + frontend Vitest)
+6. **📈 Analytics utilisateur** - Métriques usage et comportements
+7. **🎨 Mode sombre** - Implémentation thème sombre/clair
 
 ## 🗂️ Fichiers critiques récents
 
@@ -446,13 +458,30 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 - `plan-de-test-complet.md` - Infrastructure et stratégie de tests 3 phases
 - `AUDIT_FRONTEND_COMPLET.md` + `audit-backend-complet.md` - Analyses de nettoyage
 
-### Session du 16/09/2025 - App Mobile Android + Configuration Production
+### Session 16/09/2025 (matin) - App Mobile Android + Configuration Production
 - ✅ **Branche development créée** : Workflow sécurisé sans déploiements automatiques
 - ✅ **Configuration Capacitor production** : Scheme `capacitor://localhost` (standard)
 - ✅ **APK Android fonctionnelle** : Build avec API production Render
 - ✅ **Documentation environnements** : README-ENVIRONMENTS.md complet
 - 🚨 **Variable Render manquante** : `CORS_ORIGIN=https://exersio-frontend.vercel.app,capacitor://localhost`
 - 📱 **APK prête** : `android/app/build/outputs/apk/debug/app-debug.apk` (10MB)
+
+### Session 16/09/2025 (soir) - Correction Éditeur Multi-Sport
+- ✅ **Problème majeur résolu** : Éditeur de terrain multi-sport complètement fonctionnel
+- ✅ **5 corrections critiques** : Sport selection, images terrain, centrage, modal, responsive
+- ✅ **Branche feat/improve-field-editor** : 13 fichiers modifiés, 171 insertions, 191 deletions
+- ✅ **Commit créé** : "feat: implement multi-sport field editor with real court images"
+- ✅ **Desktop fonctionnel** : Tous les sports avec vrais terrains et édition complète
+- ⚠️ **Mobile partiel** : Édition en paysage fonctionnelle, portrait différé
+- 🎯 **Décisions techniques** :
+  - Breakpoint lg: (1024px) au lieu de xl: (1280px) pour meilleure UX
+  - object-fit: cover pour images terrains (remplissage sans distorsion)
+  - WebP avec PNG fallback pour compatibilité maximale
+  - Conditional styling avec useIsMobile() pour responsive
+- 📁 **Fichiers modifiés** :
+  - `src/components/ExerciseCreatePage.tsx` : Integration SportCourt + selectedSport state + breakpoint lg:
+  - `src/components/ExerciseEditor/CourtBackgroundImage.tsx` : Fix centrage (object-fit: cover)
+  - `src/components/ExerciseEditor/SportSelectionModal.tsx` : Vraies images + responsive mobile
 
 ---
 

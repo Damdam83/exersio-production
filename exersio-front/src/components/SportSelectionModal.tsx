@@ -12,6 +12,7 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
   if (!isOpen) return null;
 
   const isMobile = useIsMobile();
+  const isVerySmall = typeof window !== 'undefined' && window.innerWidth < 480;
 
   const handleSportSelect = (sport: SportType) => {
     onSelect(sport);
@@ -19,15 +20,16 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
   };
 
   return (
-    <div 
+    <div
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0, 0, 0, 0.8)',
+        background: 'transparent',
         backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -40,10 +42,12 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
         }
       }}
     >
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.08)',
+      <div
+        style={{
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.18)',
         borderRadius: isMobile ? '16px' : '24px',
         maxWidth: isMobile ? '100%' : '900px',
         width: '100%',
@@ -122,8 +126,9 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
         }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: isMobile ? '12px' : '20px'
+            gridTemplateColumns: isVerySmall ? '1fr' : 'repeat(auto-fill, minmax(220px, 220px))',
+            gap: isMobile ? '12px' : '20px',
+            justifyContent: 'center'
           }}>
             {Object.values(SPORTS_CONFIG).map((sport) => (
               <div
@@ -131,29 +136,31 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
                 onClick={() => handleSportSelect(sport.id)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
-                  border: '2px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: isMobile ? '12px' : '16px',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '18px',
                   padding: isMobile ? '16px' : '24px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   textAlign: 'center',
-                  minHeight: isMobile ? 'auto' : '280px',
+                  width: isVerySmall ? '100%' : '220px',
+                  minHeight: isVerySmall ? 'auto' : '280px',
+                  maxWidth: isVerySmall ? '100%' : '220px',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.borderColor = '#00d4aa';
-                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 212, 170, 0.3)';
-                  e.currentTarget.style.background = 'rgba(0, 212, 170, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 }}
               >
@@ -224,14 +231,14 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
                     <h3 style={{
-                      fontSize: isMobile ? '16px' : '18px',
+                      fontSize: isVerySmall ? '16px' : '18px',
                       fontWeight: '700',
                       color: '#ffffff',
                       margin: '0 0 6px 0'
                     }}>
                       {sport.name}
                     </h3>
-                    {!isMobile && (
+                    {!isVerySmall && (
                       <p style={{
                         fontSize: '13px',
                         color: '#94a3b8',

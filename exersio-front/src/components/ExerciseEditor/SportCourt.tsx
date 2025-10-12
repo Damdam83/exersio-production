@@ -1,6 +1,6 @@
 import React from 'react';
-import { Player, Arrow, Ball, Zone } from '../../constants/exerciseEditor';
-import { SportType, SPORTS_CONFIG } from '../../constants/sportsConfig';
+import { Arrow, Ball, Player, Zone } from '../../constants/exerciseEditor';
+import { SPORTS_CONFIG, SportType } from '../../constants/sportsConfig';
 import { CourtBackgroundImage } from './CourtBackgroundImage';
 
 interface SportCourtProps {
@@ -47,6 +47,10 @@ export function SportCourt({
   style = {}
 }: SportCourtProps) {
   const sportConfig = SPORTS_CONFIG[sport];
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 770;
+  const playerSize = isMobile ? 20 : 32;
+  const ballSize = isMobile ? 12 : 20;
+  const fontSize = isMobile ? 10 : 12;
 
   const renderSportSpecificElements = () => {
     const elements = [];
@@ -252,9 +256,9 @@ export function SportCourt({
   };
 
   return (
-    <div style={{ padding: '16px 32px 32px 32px' }}>
+    <div style={{ padding: isMobile ? '0' : '16px 32px 32px 32px' }}>
       {/* Zone d'information fixe */}
-      <div style={{ minHeight: '60px', marginBottom: '16px' }}>
+      <div style={{ minHeight: '60px', marginBottom: isMobile ? '8px' : '16px' }}>
         {isCreating && (
           <div style={{
             padding: '12px 16px',
@@ -449,16 +453,16 @@ export function SportCourt({
                 position: 'absolute',
                 left: `${player.position.x}%`,
                 top: `${player.position.y}%`,
-                width: '32px',
-                height: '32px',
+                width: `${playerSize}px`,
+                height: `${playerSize}px`,
                 background: roleColor,
-                border: `3px solid ${selectedElement === player.id ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'}`,
+                border: `${isMobile ? '2px' : '3px'} solid ${selectedElement === player.id ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'}`,
                 borderRadius: '50%',
                 cursor: selectedTool === 'select' ? 'pointer' : 'crosshair',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '12px',
+                fontSize: `${fontSize}px`,
                 fontWeight: '700',
                 color: '#ffffff',
                 textShadow: '0 1px 2px rgba(0, 0, 0, 0.7)',
@@ -491,8 +495,8 @@ export function SportCourt({
               position: 'absolute',
               left: `${ball.position.x}%`,
               top: `${ball.position.y}%`,
-              width: '20px',
-              height: '20px',
+              width: `${ballSize}px`,
+              height: `${ballSize}px`,
               background: sport === 'volleyball' ? '#ff6b35' : 
                           sport === 'football' ? '#000000' :
                           sport === 'basketball' ? '#ff8c00' :
