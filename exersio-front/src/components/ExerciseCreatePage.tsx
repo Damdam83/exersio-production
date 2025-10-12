@@ -261,7 +261,7 @@ export function ExerciseCreatePage() {
       
       // Save to history after adding element
       setTimeout(saveToHistory, 0);
-    } else if (selectedTool === 'arrow' || selectedTool === 'zone') {
+    } else if (selectedTool.startsWith('arrow-') || selectedTool === 'zone') {
       e.preventDefault();
       setIsCreating(true);
       setCreationStart({ x, y });
@@ -304,7 +304,7 @@ export function ExerciseCreatePage() {
     }
     
     // Handle creating elements - always update mouse position when creating
-    if ((selectedTool === 'arrow' || selectedTool === 'zone') && (isCreating || creationStart)) {
+    if ((selectedTool.startsWith('arrow-') || selectedTool === 'zone') && (isCreating || creationStart)) {
       setCurrentMousePos({ x, y });
       e.preventDefault();
     }
@@ -322,14 +322,22 @@ export function ExerciseCreatePage() {
     // Handle creation
     if (!isCreating || !creationStart || !currentMousePos) return;
 
-    if (selectedTool === 'arrow') {
+    if (selectedTool.startsWith('arrow-')) {
       const deltaX = currentMousePos.x - creationStart.x;
       const deltaY = currentMousePos.y - creationStart.y;
       const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       if (length > 3) {
-        const newArrow: Arrow = { id: Date.now().toString(), startPosition: creationStart, endPosition: currentMousePos, type: 'movement' };
+        // Extract action type from selectedTool (e.g., 'arrow-pass' -> 'pass')
+        const actionType = selectedTool.replace('arrow-', '') as 'pass' | 'shot' | 'movement' | 'dribble' | 'defense';
+        const newArrow: Arrow = {
+          id: Date.now().toString(),
+          startPosition: creationStart,
+          endPosition: currentMousePos,
+          type: 'movement', // Deprecated field for backwards compatibility
+          actionType: actionType // New field for styled arrows
+        };
         setArrows(prev => [...prev, newArrow]);
-        
+
         // Save to history after adding element
         setTimeout(saveToHistory, 0);
       }

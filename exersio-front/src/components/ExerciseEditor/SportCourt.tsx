@@ -1,6 +1,7 @@
 import React from 'react';
 import { Arrow, Ball, Player, Zone } from '../../constants/exerciseEditor';
 import { SPORTS_CONFIG, SportType } from '../../constants/sportsConfig';
+import { ARROW_TYPES, getArrowStyle, generateArrowMarkers } from '../../constants/arrowTypes';
 import { CourtBackgroundImage } from './CourtBackgroundImage';
 
 interface SportCourtProps {
@@ -543,40 +544,37 @@ export function SportCourt({
           viewBox="0 0 100 100"
         >
           <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon
-                points="0 0, 10 3.5, 0 7"
-                fill="rgba(255, 255, 255, 0.9)"
-              />
-            </marker>
+            {/* Generate markers for each arrow type */}
+            {generateArrowMarkers()}
           </defs>
-          {arrows.map((arrow) => (
-            <line
-              key={arrow.id}
-              x1={`${arrow.startPosition.x}%`}
-              y1={`${arrow.startPosition.y}%`}
-              x2={`${arrow.endPosition.x}%`}
-              y2={`${arrow.endPosition.y}%`}
-              stroke={selectedElement === arrow.id ? '#00d4aa' : 'rgba(255, 255, 255, 0.9)'}
-              strokeWidth={selectedElement === arrow.id ? "3" : "2"}
-              markerEnd="url(#arrowhead)"
-              style={{
-                filter: selectedElement === arrow.id ? 'drop-shadow(0 0 6px #00d4aa60)' : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
-                cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onElementSelect(arrow.id);
-              }}
-            />
-          ))}
+          {arrows.map((arrow) => {
+            // Get arrow type (use actionType if available, fallback to 'pass' for old arrows)
+            const arrowActionType = arrow.actionType || 'pass';
+            const arrowConfig = ARROW_TYPES[arrowActionType];
+            const arrowStyle = getArrowStyle(arrowActionType);
+
+            return (
+              <line
+                key={arrow.id}
+                x1={`${arrow.startPosition.x}%`}
+                y1={`${arrow.startPosition.y}%`}
+                x2={`${arrow.endPosition.x}%`}
+                y2={`${arrow.endPosition.y}%`}
+                stroke={selectedElement === arrow.id ? '#00d4aa' : arrowStyle.stroke}
+                strokeWidth={selectedElement === arrow.id ? arrowConfig.width + 1 : arrowConfig.width}
+                strokeDasharray={arrowStyle.strokeDasharray}
+                markerEnd={selectedElement === arrow.id ? 'url(#arrow-pass)' : arrowStyle.markerEnd}
+                style={{
+                  filter: selectedElement === arrow.id ? 'drop-shadow(0 0 6px #00d4aa60)' : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                  cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onElementSelect(arrow.id);
+                }}
+              />
+            );
+          })}
         </svg>
 
         {/* Aperçu de création */}

@@ -1,6 +1,7 @@
 import { Grid3X3, Move, Redo, RotateCcw, Trash2, Undo } from 'lucide-react';
 import { displayModes, PlayerDisplayMode } from '../../constants/exerciseEditor';
 import { SPORTS_CONFIG, SportType } from '../../constants/sportsConfig';
+import { ARROW_TYPES, ArrowActionType } from '../../constants/arrowTypes';
 
 interface ToolbarProps {
   selectedTool: string;
@@ -225,8 +226,8 @@ export function Toolbar({
                 width: '28px',
                 height: '28px',
                 borderRadius: '8px',
-                border: selectedTool === 'ball' 
-                  ? '2px solid #00d4aa' 
+                border: selectedTool === 'ball'
+                  ? '2px solid #00d4aa'
                   : '1px solid rgba(255, 255, 255, 0.2)',
                 background: selectedTool === 'ball'
                   ? 'rgba(0, 212, 170, 0.3)'
@@ -243,36 +244,13 @@ export function Toolbar({
               🏐
             </button>
             <button
-              onClick={() => onToolChange('arrow')}
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                border: selectedTool === 'arrow' 
-                  ? '2px solid #00d4aa' 
-                  : '1px solid rgba(255, 255, 255, 0.2)',
-                background: selectedTool === 'arrow'
-                  ? 'rgba(0, 212, 170, 0.3)'
-                  : 'rgba(255, 255, 255, 0.08)',
-                fontSize: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              title="Flèche"
-            >
-              ➡️
-            </button>
-            <button
               onClick={() => onToolChange('zone')}
               style={{
                 width: '28px',
                 height: '28px',
                 borderRadius: '8px',
-                border: selectedTool === 'zone' 
-                  ? '2px solid #00d4aa' 
+                border: selectedTool === 'zone'
+                  ? '2px solid #00d4aa'
                   : '1px solid rgba(255, 255, 255, 0.2)',
                 background: selectedTool === 'zone'
                   ? 'rgba(0, 212, 170, 0.3)'
@@ -290,7 +268,52 @@ export function Toolbar({
             </button>
           </div>
         </div>
-        
+
+        {/* Arrows Section */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: '600',
+            color: '#94a3b8',
+            whiteSpace: 'nowrap'
+          }}>
+            🏹 Flèches
+          </div>
+
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            {Object.values(ARROW_TYPES).map((arrowType) => (
+              <button
+                key={arrowType.id}
+                onClick={() => onToolChange(`arrow-${arrowType.id}`)}
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '8px',
+                  border: selectedTool === `arrow-${arrowType.id}`
+                    ? `2px solid ${arrowType.color}`
+                    : '1px solid rgba(255, 255, 255, 0.2)',
+                  background: selectedTool === `arrow-${arrowType.id}`
+                    ? `${arrowType.color}33`
+                    : 'rgba(255, 255, 255, 0.08)',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title={arrowType.label}
+              >
+                {arrowType.icon}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Tools Section */}
         <div style={{ 
           display: 'flex',
@@ -336,8 +359,8 @@ export function Toolbar({
                 width: '28px',
                 height: '28px',
                 borderRadius: '8px',
-                border: showGrid 
-                  ? '2px solid #00d4aa' 
+                border: showGrid
+                  ? '2px solid #00d4aa'
                   : '1px solid rgba(255, 255, 255, 0.2)',
                 background: showGrid
                   ? 'rgba(0, 212, 170, 0.3)'
