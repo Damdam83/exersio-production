@@ -123,6 +123,11 @@ export function ExerciseCreatePage() {
   const [selectedSport, setSelectedSport] = useState<SportType>(sourceExercise?.sport as SportType || 'volleyball');
   const [showSportModal, setShowSportModal] = useState(false);
 
+  // Debug: Log when modal state changes
+  useEffect(() => {
+    console.log('🔍 SportModal state changed:', showSportModal);
+  }, [showSportModal]);
+
   const courtRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
 
@@ -864,6 +869,16 @@ export function ExerciseCreatePage() {
             </div>
           </div>
         </div>
+
+        {/* Sport Selection Modal - Mobile */}
+        <SportSelectionModal
+          isOpen={showSportModal}
+          onSelect={(sport) => {
+            setSelectedSport(sport);
+            setShowSportModal(false);
+          }}
+          onClose={() => setShowSportModal(false)}
+        />
       </div>
     );
   }

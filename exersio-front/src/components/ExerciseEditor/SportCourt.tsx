@@ -451,7 +451,8 @@ export function SportCourt({
         {/* Joueurs */}
         {players.map((player) => {
           const roleColor = sportConfig.roleColors[player.role] || '#6b7280';
-          const roleLabel = sportConfig.playerRoles[player.role] || player.role.charAt(0).toUpperCase();
+          // Afficher l'abréviation (la clé) au lieu du nom complet (la valeur)
+          const roleLabel = player.role; // Ex: "G" au lieu de "Gardien"
           
           return (
             <div

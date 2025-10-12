@@ -133,8 +133,13 @@ export function Toolbar({
           }}>
             👥 Joueurs
           </div>
-          
-          <div style={{ display: 'flex', gap: '4px' }}>
+
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            flexWrap: 'wrap',
+            maxWidth: isMobile ? '100%' : 'none'
+          }}>
             {Object.entries(roleColors).map(([role, color], index) => (
               <button
                 key={role}

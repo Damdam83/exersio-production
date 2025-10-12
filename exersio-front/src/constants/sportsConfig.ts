@@ -39,14 +39,16 @@ export const SPORTS_CONFIG: Record<SportType, SportConfig> = {
       C: 'Central',
       R: 'Réceptionneur',
       L: 'Libéro',
-      P: 'Passeur'
+      P: 'Passeur',
+      E: 'Entraîneur'
     },
     roleColors: {
       A: '#ef4444',
       C: '#3b82f6',
       R: '#f59e0b',
       L: '#8b5cf6',
-      P: '#10b981'
+      P: '#10b981',
+      E: '#6b7280'
     },
     maxPlayers: 6,
     minPlayers: 1,
@@ -80,7 +82,8 @@ export const SPORTS_CONFIG: Record<SportType, SportConfig> = {
       MG: 'Milieu gauche',
       A: 'Attaquant',
       SA: 'Second attaquant',
-      AL: 'Ailier'
+      AL: 'Ailier',
+      E: 'Entraîneur'
     },
     roleColors: {
       G: '#ef4444',
@@ -94,7 +97,8 @@ export const SPORTS_CONFIG: Record<SportType, SportConfig> = {
       MG: '#f59e0b',
       A: '#dc2626',
       SA: '#f97316',
-      AL: '#8b5cf6'
+      AL: '#8b5cf6',
+      E: '#6b7280'
     },
     maxPlayers: 11,
     minPlayers: 1,
@@ -121,14 +125,16 @@ export const SPORTS_CONFIG: Record<SportType, SportConfig> = {
       R: 'Retourneur',
       V: 'Volleyer (filet)',
       B: 'Baselineur',
-      D: 'Joueur de double'
+      D: 'Joueur de double',
+      E: 'Entraîneur'
     },
     roleColors: {
       S: '#ef4444',
       R: '#3b82f6',
       V: '#10b981',
       B: '#f59e0b',
-      D: '#8b5cf6'
+      D: '#8b5cf6',
+      E: '#6b7280'
     },
     maxPlayers: 4,
     minPlayers: 1,
@@ -157,7 +163,8 @@ export const SPORTS_CONFIG: Record<SportType, SportConfig> = {
       DC: 'Demi-centre (meneur)',
       AG: 'Arrière gauche',
       AD: 'Arrière droit',
-      P: 'Pivot'
+      P: 'Pivot',
+      E: 'Entraîneur'
     },
     roleColors: {
       G: '#ef4444',
@@ -166,7 +173,8 @@ export const SPORTS_CONFIG: Record<SportType, SportConfig> = {
       DC: '#06b6d4',
       AG: '#8b5cf6',
       AD: '#f59e0b',
-      P: '#f97316'
+      P: '#f97316',
+      E: '#6b7280'
     },
     maxPlayers: 7,
     minPlayers: 1,
@@ -193,14 +201,16 @@ export const SPORTS_CONFIG: Record<SportType, SportConfig> = {
       A: 'Arrière',
       Ai: 'Ailier',
       AF: 'Ailier fort',
-      P: 'Pivot'
+      P: 'Pivot',
+      E: 'Entraîneur'
     },
     roleColors: {
       M: '#3b82f6',
       A: '#10b981',
       Ai: '#f59e0b',
       AF: '#8b5cf6',
-      P: '#ef4444'
+      P: '#ef4444',
+      E: '#6b7280'
     },
     maxPlayers: 5,
     minPlayers: 1,
