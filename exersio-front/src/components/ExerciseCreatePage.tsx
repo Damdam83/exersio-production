@@ -128,6 +128,7 @@ export function ExerciseCreatePage() {
 
   const courtRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
+  const lastPlacementTime = useRef<number>(0);
 
   // Initialize history with current state
   useEffect(() => {
@@ -229,6 +230,13 @@ export function ExerciseCreatePage() {
     if ('touches' in e) {
       e.preventDefault();
     }
+
+    // Throttle rapid calls to prevent duplication (100ms minimum between placements)
+    const now = Date.now();
+    if (now - lastPlacementTime.current < 100) {
+      return;
+    }
+    lastPlacementTime.current = now;
 
     const { x, y } = getEventPosition(e, courtRef);
 
