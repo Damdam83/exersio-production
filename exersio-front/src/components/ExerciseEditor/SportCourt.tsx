@@ -86,20 +86,35 @@ export function SportCourt({
       handleControlPointMove(e);
     };
 
-    const handleMouseUp = () => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        handleControlPointMove(e.touches[0]);
+      }
+    };
+
+    const handleEnd = () => {
       setDraggingControlPoint(null);
       // Désélectionner la flèche après le drag
       onElementSelect('');
     };
 
+    // Mouse events
     document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseup', handleEnd);
+
+    // Touch events
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleEnd);
+    document.addEventListener('touchcancel', handleEnd);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleEnd);
+      document.removeEventListener('touchcancel', handleEnd);
     };
-  }, [draggingControlPoint, handleControlPointMove]);
+  }, [draggingControlPoint, handleControlPointMove, onElementSelect]);
 
   // Calculate correct viewBox based on aspect ratio
   const aspectRatio = sportConfig.fieldDimensions.aspectRatio;
