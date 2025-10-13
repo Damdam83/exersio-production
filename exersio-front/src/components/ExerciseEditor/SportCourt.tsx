@@ -54,6 +54,9 @@ export function SportCourt({
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 770;
   const isVerySmall = typeof window !== 'undefined' && window.innerWidth < 400;
 
+  // Multiplicateur pour l'épaisseur des flèches sur mobile
+  const arrowWidthMultiplier = isMobile ? 2.5 : 1;
+
   // Handler pour gérer le drag du point de contrôle
   const handleControlPointMove = React.useCallback((e: React.MouseEvent | React.Touch) => {
     if (!draggingControlPoint || !courtRef.current || !onUpdateElement) return;
@@ -280,7 +283,7 @@ export function SportCourt({
           x2={`${currentMousePos.x}%`}
           y2={`${currentMousePos.y}%`}
           stroke={arrowConfig.color}
-          strokeWidth={arrowConfig.width}
+          strokeWidth={arrowConfig.width * arrowWidthMultiplier}
           strokeDasharray={arrowConfig.dashArray === 'none' ? '1,0.5' : arrowConfig.dashArray}
           strokeOpacity="0.7"
           markerEnd="url(#preview-arrowhead)"
@@ -627,17 +630,31 @@ export function SportCourt({
               const vbControlY = arrow.controlY;
 
               const isSelected = selectedElement === arrow.id;
-              return (
+              const visiblePath = (
                 <path
                   key={arrow.id}
                   d={`M ${vbStartX} ${vbStartY} Q ${vbControlX} ${vbControlY} ${vbEndX} ${vbEndY}`}
                   fill="none"
                   stroke={arrowStyle.stroke}
-                  strokeWidth={isSelected && draggingControlPoint ? arrowConfig.width + 0.2 : arrowConfig.width}
+                  strokeWidth={(isSelected && draggingControlPoint ? arrowConfig.width + 0.2 : arrowConfig.width) * arrowWidthMultiplier}
                   strokeDasharray={arrowStyle.strokeDasharray}
                   markerEnd={arrowStyle.markerEnd}
                   style={{
                     filter: isSelected && draggingControlPoint ? `drop-shadow(0 0 4px ${arrowConfig.color}80)` : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                    cursor: selectedTool === 'select' ? 'pointer' : 'crosshair',
+                    pointerEvents: 'none'
+                  }}
+                />
+              );
+
+              const hitArea = (
+                <path
+                  key={`${arrow.id}-hit`}
+                  d={`M ${vbStartX} ${vbStartY} Q ${vbControlX} ${vbControlY} ${vbEndX} ${vbEndY}`}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={isMobile ? 3 : 2}
+                  style={{
                     cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
                   }}
                   onMouseDown={(e) => {
@@ -658,11 +675,18 @@ export function SportCourt({
                   }}
                 />
               );
+
+              return (
+                <React.Fragment key={arrow.id}>
+                  {visiblePath}
+                  {hitArea}
+                </React.Fragment>
+              );
             }
 
             // Flèche droite
             const isSelected = selectedElement === arrow.id;
-            return (
+            const visibleLine = (
               <line
                 key={arrow.id}
                 x1={`${arrow.startPosition.x}%`}
@@ -670,11 +694,27 @@ export function SportCourt({
                 x2={`${arrow.endPosition.x}%`}
                 y2={`${arrow.endPosition.y}%`}
                 stroke={arrowStyle.stroke}
-                strokeWidth={isSelected && draggingControlPoint ? arrowConfig.width + 0.2 : arrowConfig.width}
+                strokeWidth={(isSelected && draggingControlPoint ? arrowConfig.width + 0.2 : arrowConfig.width) * arrowWidthMultiplier}
                 strokeDasharray={arrowStyle.strokeDasharray}
                 markerEnd={arrowStyle.markerEnd}
                 style={{
                   filter: isSelected && draggingControlPoint ? `drop-shadow(0 0 4px ${arrowConfig.color}80)` : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                  cursor: selectedTool === 'select' ? 'pointer' : 'crosshair',
+                  pointerEvents: 'none'
+                }}
+              />
+            );
+
+            const hitLine = (
+              <line
+                key={`${arrow.id}-hit`}
+                x1={`${arrow.startPosition.x}%`}
+                y1={`${arrow.startPosition.y}%`}
+                x2={`${arrow.endPosition.x}%`}
+                y2={`${arrow.endPosition.y}%`}
+                stroke="transparent"
+                strokeWidth={isMobile ? 3 : 2}
+                style={{
                   cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
                 }}
                 onMouseDown={(e) => {
@@ -694,6 +734,13 @@ export function SportCourt({
                   onElementSelect(arrow.id);
                 }}
               />
+            );
+
+            return (
+              <React.Fragment key={arrow.id}>
+                {visibleLine}
+                {hitLine}
+              </React.Fragment>
             );
           })}
         </svg>
