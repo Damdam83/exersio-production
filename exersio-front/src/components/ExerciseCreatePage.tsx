@@ -231,9 +231,7 @@ export function ExerciseCreatePage() {
     // This prevents both touch+mouse duplicate events and rapid-fire clicks
     const now = Date.now();
     const timeSinceLastPlacement = now - lastPlacementTime.current;
-    console.log('handleCourtPointerDown called, timeSinceLast:', timeSinceLastPlacement, 'eventType:', 'touches' in e ? 'touch' : 'mouse');
     if (timeSinceLastPlacement < 150 && timeSinceLastPlacement > 0) {
-      console.log('THROTTLED - ignoring duplicate event');
       return;
     }
     lastPlacementTime.current = now;
