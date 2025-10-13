@@ -91,8 +91,9 @@ export function ExerciseCreatePage() {
   // Drag functionality for select tool
   const [draggedElement, setDraggedElement] = useState<{
     id: string;
-    type: 'player' | 'ball' | 'zone';
+    type: 'player' | 'ball' | 'zone' | 'arrow';
     startPos: { x: number; y: number };
+    arrowOffset?: { startX: number; startY: number; endX: number; endY: number }; // Pour les flèches
   } | null>(null);
   
   // Undo/Redo functionality
@@ -288,11 +289,39 @@ export function ExerciseCreatePage() {
             : b
         ));
       } else if (draggedElement.type === 'zone') {
-        setZones(prev => prev.map(z => 
-          z.id === draggedElement.id 
+        setZones(prev => prev.map(z =>
+          z.id === draggedElement.id
             ? { ...z, position: { x: Math.max(-20, Math.min(120, x)), y: Math.max(-20, Math.min(120, y)) } }
             : z
         ));
+      } else if (draggedElement.type === 'arrow' && draggedElement.arrowOffset) {
+        // Déplacer la flèche entière (start et end)
+        setArrows(prev => prev.map(a => {
+          if (a.id === draggedElement.id) {
+            const newStartX = x + draggedElement.arrowOffset!.startX;
+            const newStartY = y + draggedElement.arrowOffset!.startY;
+            const newEndX = x + draggedElement.arrowOffset!.endX;
+            const newEndY = y + draggedElement.arrowOffset!.endY;
+
+            return {
+              ...a,
+              startPosition: {
+                x: Math.max(-30, Math.min(130, newStartX)),
+                y: Math.max(-30, Math.min(130, newStartY))
+              },
+              endPosition: {
+                x: Math.max(-30, Math.min(130, newEndX)),
+                y: Math.max(-30, Math.min(130, newEndY))
+              },
+              // Si la flèche a un point de contrôle, le déplacer aussi
+              ...(a.controlX !== undefined && a.controlY !== undefined ? {
+                controlX: a.controlX + deltaX,
+                controlY: a.controlY + deltaY
+              } : {})
+            };
+          }
+          return a;
+        }));
       }
       
       e.preventDefault();
@@ -357,19 +386,38 @@ export function ExerciseCreatePage() {
     setCurrentMousePos(null);
   }, [isCreating, creationStart, currentMousePos, selectedTool, zones.length, draggedElement, saveToHistory]);
 
-  const handleElementPointerDown = (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone') => {
+  const handleElementPointerDown = (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone' | 'arrow') => {
     if (selectedTool !== 'select') return;
     e.stopPropagation();
-    
+
     if (!courtRef.current) return;
     const { x, y } = getEventPosition(e, courtRef);
-    
+
     setSelectedElement(elementId);
-    setDraggedElement({
-      id: elementId,
-      type: elementType,
-      startPos: { x, y }
-    });
+
+    // Pour les flèches, calculer l'offset entre le point cliqué et les positions start/end
+    if (elementType === 'arrow') {
+      const arrow = arrows.find(a => a.id === elementId);
+      if (arrow) {
+        setDraggedElement({
+          id: elementId,
+          type: elementType,
+          startPos: { x, y },
+          arrowOffset: {
+            startX: arrow.startPosition.x - x,
+            startY: arrow.startPosition.y - y,
+            endX: arrow.endPosition.x - x,
+            endY: arrow.endPosition.y - y
+          }
+        });
+      }
+    } else {
+      setDraggedElement({
+        id: elementId,
+        type: elementType,
+        startPos: { x, y }
+      });
+    }
   };
 
   const handleDeleteElement = (elementId: string) => {

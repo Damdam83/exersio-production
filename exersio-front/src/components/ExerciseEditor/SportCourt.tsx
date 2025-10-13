@@ -20,7 +20,7 @@ interface SportCourtProps {
   onCourtPointerDown: (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => void;
   onCourtPointerMove: (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => void;
   onCourtPointerUp: () => void;
-  onElementPointerDown: (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone') => void;
+  onElementPointerDown: (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone' | 'arrow') => void;
   onElementSelect: (elementId: string) => void;
   onUpdateElement?: (elementId: string, updates: Partial<Arrow>) => void;
   displayMode?: 'role' | 'number';
@@ -640,6 +640,18 @@ export function SportCourt({
                     filter: isSelected && draggingControlPoint ? `drop-shadow(0 0 4px ${arrowConfig.color}80)` : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
                     cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
                   }}
+                  onMouseDown={(e) => {
+                    if (selectedTool === 'select') {
+                      e.stopPropagation();
+                      onElementPointerDown(e, arrow.id, 'arrow');
+                    }
+                  }}
+                  onTouchStart={(e) => {
+                    if (selectedTool === 'select') {
+                      e.stopPropagation();
+                      onElementPointerDown(e, arrow.id, 'arrow');
+                    }
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onElementSelect(arrow.id);
@@ -664,6 +676,18 @@ export function SportCourt({
                 style={{
                   filter: isSelected && draggingControlPoint ? `drop-shadow(0 0 4px ${arrowConfig.color}80)` : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
                   cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
+                }}
+                onMouseDown={(e) => {
+                  if (selectedTool === 'select') {
+                    e.stopPropagation();
+                    onElementPointerDown(e, arrow.id, 'arrow');
+                  }
+                }}
+                onTouchStart={(e) => {
+                  if (selectedTool === 'select') {
+                    e.stopPropagation();
+                    onElementPointerDown(e, arrow.id, 'arrow');
+                  }
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
