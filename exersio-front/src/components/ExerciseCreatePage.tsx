@@ -834,16 +834,7 @@ export function ExerciseCreatePage() {
             border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '16px',
             padding: '20px',
-            position: isLandscape ? 'fixed' : 'relative',
-            top: isLandscape ? '0' : 'auto',
-            left: isLandscape ? '0' : 'auto',
-            right: isLandscape ? '0' : 'auto',
-            bottom: isLandscape ? '0' : 'auto',
-            zIndex: isLandscape ? 1000 : 'auto',
-            height: isLandscape ? '100vh' : 'auto',
-            width: isLandscape ? '100vw' : 'auto',
-            display: isLandscape ? 'flex' : 'block',
-            flexDirection: isLandscape ? 'column' : 'initial'
+            marginBottom: '16px'
           }}>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent:'space-between'  }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -865,14 +856,11 @@ export function ExerciseCreatePage() {
                 >
                   🔄 Sport
                 </button>
-                {isLandscape && (
-                  <button onClick={() => { if (window.screen && window.screen.orientation && window.screen.orientation.unlock) { window.screen.orientation.unlock(); } }} style={{ padding: '8px 12px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', color: 'white', fontSize: '12px', cursor: 'pointer' }}>🔄 Portrait</button>
-                )}
               </div>
             </div>
 
             {/* Éditeur disponible en portrait et paysage */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Toolbar
                 sport={selectedSport}
                 selectedTool={selectedTool}
@@ -910,8 +898,8 @@ export function ExerciseCreatePage() {
                 canRedo={canRedo}
               />
 
-              {/* Terrain sportif pleine hauteur */}
-              <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+              {/* Terrain sportif */}
+              <div style={{ position: 'relative' }}>
                 <SportCourt
                   sport={selectedSport}
                   courtRef={courtRef}
