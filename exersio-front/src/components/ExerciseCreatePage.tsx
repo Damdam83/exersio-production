@@ -94,6 +94,7 @@ export function ExerciseCreatePage() {
     type: 'player' | 'ball' | 'zone' | 'arrow';
     startPos: { x: number; y: number };
     arrowOffset?: { startX: number; startY: number; endX: number; endY: number }; // Pour les flèches
+    controlOffset?: { x: number; y: number }; // Offset du point de contrôle pour flèches courbées
   } | null>(null);
   
   // Undo/Redo functionality
@@ -313,10 +314,10 @@ export function ExerciseCreatePage() {
                 x: Math.max(-30, Math.min(130, newEndX)),
                 y: Math.max(-30, Math.min(130, newEndY))
               },
-              // Si la flèche a un point de contrôle, le déplacer aussi
-              ...(a.controlX !== undefined && a.controlY !== undefined ? {
-                controlX: a.controlX + deltaX,
-                controlY: a.controlY + deltaY
+              // Si la flèche a un point de contrôle, le déplacer aussi en utilisant l'offset
+              ...(a.controlX !== undefined && a.controlY !== undefined && draggedElement.controlOffset ? {
+                controlX: Math.max(-30, Math.min(130, x + draggedElement.controlOffset.x)),
+                controlY: Math.max(-30, Math.min(130, y + draggedElement.controlOffset.y))
               } : {})
             };
           }
@@ -408,7 +409,12 @@ export function ExerciseCreatePage() {
             startY: arrow.startPosition.y - y,
             endX: arrow.endPosition.x - x,
             endY: arrow.endPosition.y - y
-          }
+          },
+          // Si la flèche a un point de contrôle, calculer aussi son offset
+          controlOffset: (arrow.controlX !== undefined && arrow.controlY !== undefined) ? {
+            x: arrow.controlX - x,
+            y: arrow.controlY - y
+          } : undefined
         });
       }
     } else {
