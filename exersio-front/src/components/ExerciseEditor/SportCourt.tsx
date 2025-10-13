@@ -22,6 +22,7 @@ interface SportCourtProps {
   onCourtPointerUp: () => void;
   onElementPointerDown: (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone') => void;
   onElementSelect: (elementId: string) => void;
+  onUpdateElement?: (elementId: string, updates: Partial<Arrow>) => void;
   displayMode?: 'role' | 'number';
   style?: React.CSSProperties;
 }
@@ -44,12 +45,56 @@ export function SportCourt({
   onCourtPointerUp,
   onElementPointerDown,
   onElementSelect,
+  onUpdateElement,
   displayMode = 'role',
   style = {}
 }: SportCourtProps) {
+  const [draggingControlPoint, setDraggingControlPoint] = React.useState<string | null>(null);
   const sportConfig = SPORTS_CONFIG[sport];
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 770;
   const isVerySmall = typeof window !== 'undefined' && window.innerWidth < 400;
+
+  // Handler pour gérer le drag du point de contrôle
+  const handleControlPointMove = React.useCallback((e: React.MouseEvent | React.Touch) => {
+    if (!draggingControlPoint || !courtRef.current || !onUpdateElement) return;
+
+    const rect = courtRef.current.getBoundingClientRect();
+    const borderWidth = 3;
+    const innerWidth = rect.width - (borderWidth * 2);
+    const innerHeight = rect.height - (borderWidth * 2);
+    const innerLeft = rect.left + borderWidth;
+    const innerTop = rect.top + borderWidth;
+
+    const x = ((e.clientX - innerLeft) / innerWidth) * 100;
+    const y = ((e.clientY - innerTop) / innerHeight) * 100;
+
+    // Mettre à jour le point de contrôle de la flèche
+    onUpdateElement(draggingControlPoint, {
+      controlX: Math.max(-30, Math.min(130, x)),
+      controlY: Math.max(-30, Math.min(130, y))
+    });
+  }, [draggingControlPoint, courtRef, onUpdateElement]);
+
+  // Listeners globaux pour le drag
+  React.useEffect(() => {
+    if (!draggingControlPoint) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleControlPointMove(e);
+    };
+
+    const handleMouseUp = () => {
+      setDraggingControlPoint(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [draggingControlPoint, handleControlPointMove]);
 
   // Calculate correct viewBox based on aspect ratio
   const aspectRatio = sportConfig.fieldDimensions.aspectRatio;
@@ -561,32 +606,20 @@ export function SportCourt({
             const arrowConfig = ARROW_TYPES[arrowActionType];
             const arrowStyle = getArrowStyle(arrowActionType);
 
-            // Courber automatiquement les flèches de type movement et dribble
-            const shouldCurve = arrowActionType === 'movement' || arrowActionType === 'dribble' || arrow.isCurved;
+            const startX = arrow.startPosition.x;
+            const startY = arrow.startPosition.y;
+            const endX = arrow.endPosition.x;
+            const endY = arrow.endPosition.y;
 
-            if (shouldCurve) {
-              // Calculer le point de contrôle pour la courbe
-              const startX = arrow.startPosition.x;
-              const startY = arrow.startPosition.y;
-              const endX = arrow.endPosition.x;
-              const endY = arrow.endPosition.y;
+            // Vérifier si la flèche a un point de contrôle (courbe personnalisée)
+            const isCurved = arrow.controlX !== undefined && arrow.controlY !== undefined;
 
-              // Point de contrôle au milieu, décalé perpendiculairement
-              const midX = (startX + endX) / 2;
-              const midY = (startY + endY) / 2;
-              const dx = endX - startX;
-              const dy = endY - startY;
-              const distance = Math.sqrt(dx * dx + dy * dy);
-              const offset = distance * 0.15; // 15% de courbure
-
-              // Décalage perpendiculaire
-              const controlX = midX + (dy / distance) * offset;
-              const controlY = midY - (dx / distance) * offset;
-
+            if (isCurved) {
+              // Flèche courbe avec point de contrôle personnalisé
               return (
                 <path
                   key={arrow.id}
-                  d={`M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`}
+                  d={`M ${startX} ${startY} Q ${arrow.controlX} ${arrow.controlY} ${endX} ${endY}`}
                   fill="none"
                   stroke={selectedElement === arrow.id ? '#00d4aa' : arrowStyle.stroke}
                   strokeWidth={selectedElement === arrow.id ? arrowConfig.width + 1 : arrowConfig.width}
@@ -627,6 +660,55 @@ export function SportCourt({
             );
           })}
         </svg>
+
+        {/* Point de contrôle pour courber la flèche sélectionnée */}
+        {selectedElement && arrows.find(a => a.id === selectedElement) && selectedTool === 'select' && (() => {
+          const selectedArrow = arrows.find(a => a.id === selectedElement);
+          if (!selectedArrow) return null;
+
+          const startX = selectedArrow.startPosition.x;
+          const startY = selectedArrow.startPosition.y;
+          const endX = selectedArrow.endPosition.x;
+          const endY = selectedArrow.endPosition.y;
+
+          // Point de contrôle au milieu par défaut (ligne droite)
+          const defaultControlX = (startX + endX) / 2;
+          const defaultControlY = (startY + endY) / 2;
+
+          // Utiliser le point de contrôle existant ou celui par défaut
+          const controlX = selectedArrow.controlX ?? defaultControlX;
+          const controlY = selectedArrow.controlY ?? defaultControlY;
+
+          return (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${controlX}%`,
+                top: `${controlY}%`,
+                width: '16px',
+                height: '16px',
+                background: '#00d4aa',
+                border: '2px solid #ffffff',
+                borderRadius: '50%',
+                cursor: 'move',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 150,
+                boxShadow: '0 2px 8px rgba(0, 212, 170, 0.4)',
+                transition: draggingControlPoint === selectedArrow.id ? 'none' : 'all 0.15s ease'
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                setDraggingControlPoint(selectedArrow.id);
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                if (e.touches.length > 0 && onUpdateElement) {
+                  setDraggingControlPoint(selectedArrow.id);
+                }
+              }}
+            />
+          );
+        })()}
 
         {/* Aperçu de création */}
         {renderPreviewArrow()}

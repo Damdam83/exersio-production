@@ -155,7 +155,6 @@ export function KonvaField({
               // TODO: Update player position
               const newX = toPercent(e.target.x(), 'width');
               const newY = toPercent(e.target.y(), 'height');
-              console.log('Player moved to:', newX, newY);
             }}
           />
           <Text
@@ -323,7 +322,6 @@ export function KonvaField({
               draggable
               onDragMove={(e) => {
                 // TODO: Update control point in real-time
-                console.log('Control point moved:', e.target.x(), e.target.y());
               }}
             />
           )}

@@ -68,7 +68,6 @@ export function ExercisesPage() {
   const shareWithClub = async (exercise: Exercise) => {
     try {
       await actions.shareWithClub(exercise.id);
-      console.log('Exercice partagé avec le club');
     } catch (error) {
       console.error('Erreur lors du partage:', error);
     }

@@ -390,6 +390,4 @@ export const setupGlobalErrorHandlers = () => {
 export const initializeApiInterceptors = () => {
   createApiInterceptor();
   setupGlobalErrorHandlers();
-  
-  console.log('API interceptors initialized');
 };

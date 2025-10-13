@@ -123,10 +123,6 @@ export function ExerciseCreatePage() {
   const [selectedSport, setSelectedSport] = useState<SportType>(sourceExercise?.sport as SportType || 'volleyball');
   const [showSportModal, setShowSportModal] = useState(false);
 
-  // Debug: Log when modal state changes
-  useEffect(() => {
-    console.log('🔍 SportModal state changed:', showSportModal);
-  }, [showSportModal]);
 
   const courtRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
@@ -228,8 +224,6 @@ export function ExerciseCreatePage() {
     if (!courtRef.current || selectedTool === 'select') return;
     const { x, y } = getEventPosition(e, courtRef);
 
-    console.log('🖱️ CLICK START:', selectedTool, 'Position:', x.toFixed(1), y.toFixed(1));
-
     if (selectedTool.startsWith('player-')) {
       // Parse tool format: "player-role" or "player-role-number"
       const toolParts = selectedTool.split('-');
@@ -324,8 +318,6 @@ export function ExerciseCreatePage() {
     // Handle creation
     if (!isCreating || !creationStart || !currentMousePos) return;
 
-    console.log('🖱️ RELEASE:', selectedTool, 'End position:', currentMousePos.x.toFixed(1), currentMousePos.y.toFixed(1));
-
     if (selectedTool.startsWith('arrow-')) {
       const deltaX = currentMousePos.x - creationStart.x;
       const deltaY = currentMousePos.y - creationStart.y;
@@ -340,11 +332,6 @@ export function ExerciseCreatePage() {
           type: 'movement', // Deprecated field for backwards compatibility
           actionType: actionType // New field for styled arrows
         };
-
-        console.log('✅ ARROW CREATED:', {
-          start: `${creationStart.x.toFixed(1)}, ${creationStart.y.toFixed(1)}`,
-          end: `${currentMousePos.x.toFixed(1)}, ${currentMousePos.y.toFixed(1)}`
-        });
 
         setArrows(prev => [...prev, newArrow]);
 
@@ -520,8 +507,6 @@ export function ExerciseCreatePage() {
 
   const handleSave = async () => {
     if (!canSave || isSaving) return;
-    
-    console.log('🚀 handleSave called - modes:', { isEditMode, isCopyMode, isDraftMode });
 
     setIsSaving(true);
     
@@ -875,6 +860,7 @@ export function ExerciseCreatePage() {
                   zones={zones}
                   selectedElement={selectedElement}
                   onElementSelect={setSelectedElement}
+                  onUpdateElement={handleUpdateElement}
                   displayMode={displayMode}
                   isCreating={isCreating}
                   creationStart={creationStart}
@@ -1068,10 +1054,7 @@ export function ExerciseCreatePage() {
                       value=""
                       onChange={e => {
                         const selectedValue = e.target.value;
-                        console.log('Selected value:', selectedValue);
-                        console.log('Current categories:', exerciseData.categories);
-                        console.log('Already includes?', exerciseData.categories.includes(selectedValue));
-                        
+
                         if (selectedValue && !exerciseData.categories.includes(selectedValue)) {
                           setExerciseData(p => ({ 
                             ...p, 
@@ -1320,6 +1303,7 @@ export function ExerciseCreatePage() {
               zones={zones}
               selectedElement={selectedElement}
               onElementSelect={setSelectedElement}
+              onUpdateElement={handleUpdateElement}
               displayMode={displayMode}
               isCreating={isCreating}
               creationStart={creationStart}

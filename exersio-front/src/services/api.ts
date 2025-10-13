@@ -75,15 +75,8 @@ export const apiRequest = async <T = any>(
   }, 30000);
 
   try {
-    console.log(`🚀 Making API request to: ${url}`);
-    console.log(`📤 Request config:`, config);
-    console.log(`🌐 API_BASE_URL:`, API_BASE_URL);
-    
     const response = await fetch(url, config);
     clearTimeout(timeoutId);
-    
-    console.log(`📥 Response status: ${response.status}`);
-    console.log(`📥 Response headers:`, Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
@@ -109,7 +102,6 @@ export const apiRequest = async <T = any>(
     }
 
     const result: ApiResponse<T> = await response.json();
-    console.log(`✅ API Success response:`, result);
     return result.data;
   } catch (error) {
     clearTimeout(timeoutId);

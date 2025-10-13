@@ -9,8 +9,6 @@ interface SportSelectionModalProps {
 }
 
 export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectionModalProps) {
-  console.log('🎯 SportSelectionModal render - isOpen:', isOpen);
-
   if (!isOpen) return null;
 
   const isMobile = useIsMobile();

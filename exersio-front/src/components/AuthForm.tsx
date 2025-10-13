@@ -190,11 +190,6 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
   };
 
   const displayError = (typeof error === 'string' ? error : error?.message) || localError;
-  
-  // Debug pour voir les erreurs
-  console.log('Auth error:', error);
-  console.log('Local error:', localError);
-  console.log('Display error:', displayError);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1e2731] via-[#2a3441] to-[#1e2731] flex items-center justify-center p-4 relative">

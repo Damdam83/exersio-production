@@ -68,7 +68,6 @@ function SessionDetailPageWrapper({ sessionId }: { sessionId?: string }) {
       onBack={() => setCurrentPage('sessions')}
       onUpdateSession={sessionsActions.updateSession}
       onExportSession={(session) => {
-        console.log('Export session:', session);
         // Ici on pourrait implémenter l'export
       }}
       onViewExercise={(exerciseId) => {
@@ -132,7 +131,7 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
             setCurrentPage('sessions');
           }}
           onToggleFavorite={() => {
-            console.log('Preview mode: cannot toggle favorite');
+            // Preview mode: favorites disabled
           }}
           isFavorite={false}
           contextInfo={contextInfo}
@@ -190,7 +189,7 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
         setCurrentPage('sessions');
       }}
       onToggleFavorite={() => {
-        console.log('Toggle favorite for exercise:', exerciseId);
+        // TODO: Implement toggle favorite
       }}
       isFavorite={false}
       contextInfo={contextInfo}

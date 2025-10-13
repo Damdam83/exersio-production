@@ -268,8 +268,6 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
   }, [state.filters]);
 
   const createExercise = async (exerciseData: Omit<Exercise, 'id' | 'createdAt'>): Promise<Exercise> => {
-    console.log('📝 createExercise called with:', exerciseData.name);
-    console.trace('📍 createExercise call stack');
     dispatch({ type: 'CREATE_START' });
     
     try {

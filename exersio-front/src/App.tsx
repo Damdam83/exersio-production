@@ -58,7 +58,6 @@ function AppContent() {
     
     // Initialiser l'analyse de performance (uniquement en dev)
     if (import.meta.env.DEV) {
-      console.log('🚀 Bundle analyzer initialized');
       // L'analyseur est automatiquement initialisé via son constructeur
     }
   }, [showError, startLoading, stopLoading]);
