@@ -272,12 +272,13 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
     
     try {
       const newExercise = await exercisesService.create(exerciseData);
-      
+
+      // TODO: Réactiver le système offline après initialisation
       // Sauvegarder en offline si en ligne (marqué comme 'synced')
-      if (navigator.onLine) {
-        await offlineStorage.saveExercise(newExercise, 'synced');
-      }
-      
+      // if (navigator.onLine) {
+      //   await offlineStorage.saveExercise(newExercise, 'synced');
+      // }
+
       dispatch({ type: 'CREATE_SUCCESS', payload: newExercise });
       return newExercise;
     } catch (error) {
@@ -309,15 +310,16 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
     try {
       await exercisesService.update(id, updates);
       
+      // TODO: Réactiver le système offline après initialisation
       // Mettre à jour le cache local
-      const currentExercise = state.exercises.data.find(ex => ex.id === id);
-      if (currentExercise) {
-        const updatedExercise = { ...currentExercise, ...updates, updatedAt: new Date().toISOString() };
-        if (navigator.onLine) {
-          await offlineStorage.saveExercise(updatedExercise, 'synced');
-        }
-      }
-      
+      // const currentExercise = state.exercises.data.find(ex => ex.id === id);
+      // if (currentExercise) {
+      //   const updatedExercise = { ...currentExercise, ...updates, updatedAt: new Date().toISOString() };
+      //   if (navigator.onLine) {
+      //     await offlineStorage.saveExercise(updatedExercise, 'synced');
+      //   }
+      // }
+
       dispatch({ type: 'UPDATE_SUCCESS', payload: { id, updates } });
     } catch (error) {
       console.error('Error updating exercise online:', error);
