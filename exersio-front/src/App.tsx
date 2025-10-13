@@ -18,6 +18,7 @@ import DynamicLoader from "./components/DynamicLoader";
 import { setGlobalErrorHandler, setGlobalLoadingHandler } from "./services/apiInterceptor";
 import { bundleAnalyzer } from "./utils/bundleAnalysis";
 import { notificationService } from "./services/notificationService";
+import { offlineStorage } from "./services/offlineStorage";
 
 function AppContent() {
   const { state: auth, actions: authActions } = useAuth();
@@ -55,7 +56,12 @@ function AppContent() {
       start: startLoading,
       stop: stopLoading
     });
-    
+
+    // Initialiser le système offline
+    offlineStorage.init().catch(error => {
+      console.error('Error initializing offline storage:', error);
+    });
+
     // Initialiser l'analyse de performance (uniquement en dev)
     if (import.meta.env.DEV) {
       // L'analyseur est automatiquement initialisé via son constructeur
