@@ -85,6 +85,8 @@ export function SportCourt({
 
     const handleMouseUp = () => {
       setDraggingControlPoint(null);
+      // Désélectionner la flèche après le drag
+      onElementSelect('');
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -591,7 +593,7 @@ export function SportCourt({
             left: '3px',
             right: '3px',
             bottom: '3px',
-            pointerEvents: 'none'
+            pointerEvents: selectedTool === 'select' ? 'auto' : 'none'
           }}
           preserveAspectRatio="none"
           viewBox={viewBox}
@@ -616,17 +618,26 @@ export function SportCourt({
 
             if (isCurved) {
               // Flèche courbe avec point de contrôle personnalisé
+              // Convertir les pourcentages en coordonnées viewBox
+              const vbStartX = (startX / 100) * viewBoxWidth;
+              const vbStartY = startY;
+              const vbEndX = (endX / 100) * viewBoxWidth;
+              const vbEndY = endY;
+              const vbControlX = (arrow.controlX / 100) * viewBoxWidth;
+              const vbControlY = arrow.controlY;
+
+              const isSelected = selectedElement === arrow.id;
               return (
                 <path
                   key={arrow.id}
-                  d={`M ${startX} ${startY} Q ${arrow.controlX} ${arrow.controlY} ${endX} ${endY}`}
+                  d={`M ${vbStartX} ${vbStartY} Q ${vbControlX} ${vbControlY} ${vbEndX} ${vbEndY}`}
                   fill="none"
-                  stroke={selectedElement === arrow.id ? '#00d4aa' : arrowStyle.stroke}
-                  strokeWidth={selectedElement === arrow.id ? arrowConfig.width + 1 : arrowConfig.width}
+                  stroke={arrowStyle.stroke}
+                  strokeWidth={isSelected && draggingControlPoint ? arrowConfig.width + 0.2 : arrowConfig.width}
                   strokeDasharray={arrowStyle.strokeDasharray}
-                  markerEnd={selectedElement === arrow.id ? 'url(#arrow-pass)' : arrowStyle.markerEnd}
+                  markerEnd={arrowStyle.markerEnd}
                   style={{
-                    filter: selectedElement === arrow.id ? 'drop-shadow(0 0 6px #00d4aa60)' : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                    filter: isSelected && draggingControlPoint ? `drop-shadow(0 0 4px ${arrowConfig.color}80)` : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
                     cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
                   }}
                   onClick={(e) => {
@@ -637,6 +648,8 @@ export function SportCourt({
               );
             }
 
+            // Flèche droite
+            const isSelected = selectedElement === arrow.id;
             return (
               <line
                 key={arrow.id}
@@ -644,12 +657,12 @@ export function SportCourt({
                 y1={`${arrow.startPosition.y}%`}
                 x2={`${arrow.endPosition.x}%`}
                 y2={`${arrow.endPosition.y}%`}
-                stroke={selectedElement === arrow.id ? '#00d4aa' : arrowStyle.stroke}
-                strokeWidth={selectedElement === arrow.id ? arrowConfig.width + 1 : arrowConfig.width}
+                stroke={arrowStyle.stroke}
+                strokeWidth={isSelected && draggingControlPoint ? arrowConfig.width + 0.2 : arrowConfig.width}
                 strokeDasharray={arrowStyle.strokeDasharray}
-                markerEnd={selectedElement === arrow.id ? 'url(#arrow-pass)' : arrowStyle.markerEnd}
+                markerEnd={arrowStyle.markerEnd}
                 style={{
-                  filter: selectedElement === arrow.id ? 'drop-shadow(0 0 6px #00d4aa60)' : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                  filter: isSelected && draggingControlPoint ? `drop-shadow(0 0 4px ${arrowConfig.color}80)` : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
                   cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
                 }}
                 onClick={(e) => {
@@ -665,6 +678,10 @@ export function SportCourt({
         {selectedElement && arrows.find(a => a.id === selectedElement) && selectedTool === 'select' && (() => {
           const selectedArrow = arrows.find(a => a.id === selectedElement);
           if (!selectedArrow) return null;
+
+          // Récupérer la couleur de la flèche
+          const arrowActionType = selectedArrow.actionType || 'pass';
+          const arrowConfig = ARROW_TYPES[arrowActionType];
 
           const startX = selectedArrow.startPosition.x;
           const startY = selectedArrow.startPosition.y;
@@ -687,13 +704,13 @@ export function SportCourt({
                 top: `${controlY}%`,
                 width: '16px',
                 height: '16px',
-                background: '#00d4aa',
+                background: arrowConfig.color,
                 border: '2px solid #ffffff',
                 borderRadius: '50%',
                 cursor: 'move',
                 transform: 'translate(-50%, -50%)',
                 zIndex: 150,
-                boxShadow: '0 2px 8px rgba(0, 212, 170, 0.4)',
+                boxShadow: `0 2px 8px ${arrowConfig.color}80`,
                 transition: draggingControlPoint === selectedArrow.id ? 'none' : 'all 0.15s ease'
               }}
               onMouseDown={(e) => {

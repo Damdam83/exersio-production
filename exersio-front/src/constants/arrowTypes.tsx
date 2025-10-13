@@ -92,7 +92,7 @@ export function generateArrowMarkers() {
             id={`arrow-${id}`}
             markerWidth="3"
             markerHeight="3"
-            refX="2.5"
+            refX="2.3"
             refY="1.5"
             orient="auto"
           >
@@ -107,7 +107,7 @@ export function generateArrowMarkers() {
             id={`arrow-${id}`}
             markerWidth="4"
             markerHeight="4"
-            refX="3.5"
+            refX="3.2"
             refY="2"
             orient="auto"
           >
@@ -122,7 +122,7 @@ export function generateArrowMarkers() {
             id={`arrow-${id}`}
             markerWidth="5"
             markerHeight="5"
-            refX="2.5"
+            refX="4.5"
             refY="2.5"
             orient="auto"
           >
@@ -137,7 +137,7 @@ export function generateArrowMarkers() {
             id={`arrow-${id}`}
             markerWidth="3.5"
             markerHeight="3.5"
-            refX="3"
+            refX="2.8"
             refY="1.75"
             orient="auto"
           >
