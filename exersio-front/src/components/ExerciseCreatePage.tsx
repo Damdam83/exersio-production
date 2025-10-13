@@ -226,14 +226,10 @@ export function ExerciseCreatePage() {
   const handleCourtPointerDown = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!courtRef.current || selectedTool === 'select') return;
 
-    // Prevent duplicate events on touch devices (touchstart triggers mousedown)
-    if ('touches' in e) {
-      e.preventDefault();
-    }
-
-    // Throttle rapid calls to prevent duplication (100ms minimum between placements)
+    // Throttle rapid calls to prevent duplication (50ms minimum between placements)
+    // This prevents both touch+mouse duplicate events and rapid-fire clicks
     const now = Date.now();
-    if (now - lastPlacementTime.current < 100) {
+    if (now - lastPlacementTime.current < 50) {
       return;
     }
     lastPlacementTime.current = now;
