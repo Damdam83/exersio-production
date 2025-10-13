@@ -129,6 +129,7 @@ export function ExerciseCreatePage() {
   const courtRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
   const lastPlacementTime = useRef<number>(0);
+  const lastCreationTime = useRef<number>(0);
 
   // Initialize history with current state
   useEffect(() => {
@@ -341,7 +342,6 @@ export function ExerciseCreatePage() {
     // Handle creating elements - always update mouse position when creating
     if ((selectedTool.startsWith('arrow-') || selectedTool === 'zone') && (isCreating || creationStart)) {
       setCurrentMousePos({ x, y });
-      e.preventDefault();
     }
   }, [isCreating, creationStart, draggedElement, selectedTool]);
 
