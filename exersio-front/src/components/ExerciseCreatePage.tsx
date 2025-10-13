@@ -224,6 +224,12 @@ export function ExerciseCreatePage() {
   // handlers court
   const handleCourtPointerDown = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!courtRef.current || selectedTool === 'select') return;
+
+    // Prevent duplicate events on touch devices (touchstart triggers mousedown)
+    if ('touches' in e) {
+      e.preventDefault();
+    }
+
     const { x, y } = getEventPosition(e, courtRef);
 
     if (selectedTool.startsWith('player-')) {
@@ -231,36 +237,35 @@ export function ExerciseCreatePage() {
       const toolParts = selectedTool.split('-');
       const role = toolParts[1] as Player['role'];
       const selectedNumber = toolParts[2] ? parseInt(toolParts[2]) : undefined;
-      
+
       const label = displayMode === 'number' && selectedNumber
-        ? selectedNumber.toString() 
+        ? selectedNumber.toString()
         : (roleLabels[role as keyof typeof roleLabels] || 'A');
-      
-      const newPlayer: Player = { 
-        id: Date.now().toString(), 
-        role, 
-        position: { x, y }, 
+
+      const newPlayer: Player = {
+        id: Date.now().toString(),
+        role,
+        position: { x, y },
         label,
         displayMode,
         playerNumber: displayMode === 'number' ? (selectedNumber || playerCounter) : undefined
       };
-      
+
       setPlayers(prev => [...prev, newPlayer]);
-      
+
       if (displayMode === 'number') {
         setPlayerCounter(prev => prev + 1);
       }
-      
+
       // Save to history after adding element
       setTimeout(saveToHistory, 0);
     } else if (selectedTool === 'ball') {
       const newBall: Ball = { id: Date.now().toString(), position: { x, y } };
       setBalls(prev => [...prev, newBall]);
-      
+
       // Save to history after adding element
       setTimeout(saveToHistory, 0);
     } else if (selectedTool.startsWith('arrow-') || selectedTool === 'zone') {
-      e.preventDefault();
       setIsCreating(true);
       setCreationStart({ x, y });
       setCurrentMousePos({ x, y });
