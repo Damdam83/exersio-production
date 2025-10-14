@@ -106,7 +106,6 @@ export function ExerciseDetailView({
     try {
       await exerciseActions.shareWithClub(exercise.id);
       // Mettre à jour les données locales si nécessaire
-      console.log('Exercice partagé avec succès avec le club');
       // Optionnel: Afficher une notification de succès
     } catch (error) {
       console.error('Erreur lors du partage:', error);
@@ -128,7 +127,6 @@ export function ExerciseDetailView({
     
     try {
       await exerciseActions.deleteExercise(exercise.id);
-      console.log('Exercice supprimé avec succès');
       // Retourner à la page précédente
       onBack();
     } catch (error) {

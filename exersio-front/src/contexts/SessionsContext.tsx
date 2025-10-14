@@ -333,8 +333,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       if (updates.status !== undefined) updateData.status = updates.status;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
 
-      console.log('Updating session with data:', updateData);
-      
       await sessionsService.update(id, updateData);
       dispatch({ type: 'UPDATE_SUCCESS', payload: { id, updates } });
     } catch (error) {

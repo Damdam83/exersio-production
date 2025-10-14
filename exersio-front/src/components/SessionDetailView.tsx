@@ -682,16 +682,16 @@ export function SessionDetailView({
                                   👁️
                                 </div>
                               )}
-                              <div 
-                                className="control-btn" 
-                                onClick={(e) => { e.stopPropagation(); console.log('Notes pour exercice:', exercise.id); }} 
+                              <div
+                                className="control-btn"
+                                onClick={(e) => { e.stopPropagation(); /* TODO: Add notes feature */ }}
                                 title="Ajouter des notes"
                               >
                                 📝
                               </div>
-                              <div 
-                                className="control-btn" 
-                                onClick={(e) => { e.stopPropagation(); console.log('Permuter exercice:', exercise.id); }} 
+                              <div
+                                className="control-btn"
+                                onClick={(e) => { e.stopPropagation(); /* TODO: Reorder exercise */ }}
                                 title="Réorganiser"
                               >
                                 🔀

@@ -15,6 +15,10 @@ export interface Arrow {
   endPosition: { x: number; y: number };
   step?: number;
   type: 'movement' | 'ball' | 'action';
+  actionType?: 'pass' | 'shot' | 'movement' | 'dribble' | 'defense';
+  isCurved?: boolean;
+  controlX?: number;
+  controlY?: number;
 }
 
 export interface Ball {

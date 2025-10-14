@@ -80,7 +80,7 @@ export function ExerciseCreatePage() {
   // éditeur
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<string>('select');
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [newStep, setNewStep] = useState('');
   const [newCriterion, setNewCriterion] = useState('');
@@ -91,8 +91,10 @@ export function ExerciseCreatePage() {
   // Drag functionality for select tool
   const [draggedElement, setDraggedElement] = useState<{
     id: string;
-    type: 'player' | 'ball' | 'zone';
+    type: 'player' | 'ball' | 'zone' | 'arrow';
     startPos: { x: number; y: number };
+    arrowOffset?: { startX: number; startY: number; endX: number; endY: number }; // Pour les flèches
+    controlOffset?: { x: number; y: number }; // Offset du point de contrôle pour flèches courbées
   } | null>(null);
   
   // Undo/Redo functionality
@@ -123,13 +125,11 @@ export function ExerciseCreatePage() {
   const [selectedSport, setSelectedSport] = useState<SportType>(sourceExercise?.sport as SportType || 'volleyball');
   const [showSportModal, setShowSportModal] = useState(false);
 
-  // Debug: Log when modal state changes
-  useEffect(() => {
-    console.log('🔍 SportModal state changed:', showSportModal);
-  }, [showSportModal]);
 
   const courtRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
+  const lastPlacementTime = useRef<number>(0);
+  const lastCreationTime = useRef<number>(0);
 
   // Initialize history with current state
   useEffect(() => {
@@ -226,6 +226,16 @@ export function ExerciseCreatePage() {
   // handlers court
   const handleCourtPointerDown = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!courtRef.current || selectedTool === 'select') return;
+
+    // Throttle rapid calls to prevent duplication (150ms minimum between placements)
+    // This prevents both touch+mouse duplicate events and rapid-fire clicks
+    const now = Date.now();
+    const timeSinceLastPlacement = now - lastPlacementTime.current;
+    if (timeSinceLastPlacement < 150 && timeSinceLastPlacement > 0) {
+      return;
+    }
+    lastPlacementTime.current = now;
+
     const { x, y } = getEventPosition(e, courtRef);
 
     if (selectedTool.startsWith('player-')) {
@@ -233,36 +243,35 @@ export function ExerciseCreatePage() {
       const toolParts = selectedTool.split('-');
       const role = toolParts[1] as Player['role'];
       const selectedNumber = toolParts[2] ? parseInt(toolParts[2]) : undefined;
-      
+
       const label = displayMode === 'number' && selectedNumber
-        ? selectedNumber.toString() 
+        ? selectedNumber.toString()
         : (roleLabels[role as keyof typeof roleLabels] || 'A');
-      
-      const newPlayer: Player = { 
-        id: Date.now().toString(), 
-        role, 
-        position: { x, y }, 
+
+      const newPlayer: Player = {
+        id: Date.now().toString(),
+        role,
+        position: { x, y },
         label,
         displayMode,
         playerNumber: displayMode === 'number' ? (selectedNumber || playerCounter) : undefined
       };
-      
+
       setPlayers(prev => [...prev, newPlayer]);
-      
+
       if (displayMode === 'number') {
         setPlayerCounter(prev => prev + 1);
       }
-      
+
       // Save to history after adding element
       setTimeout(saveToHistory, 0);
     } else if (selectedTool === 'ball') {
       const newBall: Ball = { id: Date.now().toString(), position: { x, y } };
       setBalls(prev => [...prev, newBall]);
-      
+
       // Save to history after adding element
       setTimeout(saveToHistory, 0);
-    } else if (selectedTool === 'arrow' || selectedTool === 'zone') {
-      e.preventDefault();
+    } else if (selectedTool.startsWith('arrow-') || selectedTool === 'zone') {
       setIsCreating(true);
       setCreationStart({ x, y });
       setCurrentMousePos({ x, y });
@@ -292,21 +301,47 @@ export function ExerciseCreatePage() {
             : b
         ));
       } else if (draggedElement.type === 'zone') {
-        setZones(prev => prev.map(z => 
-          z.id === draggedElement.id 
+        setZones(prev => prev.map(z =>
+          z.id === draggedElement.id
             ? { ...z, position: { x: Math.max(-20, Math.min(120, x)), y: Math.max(-20, Math.min(120, y)) } }
             : z
         ));
+      } else if (draggedElement.type === 'arrow' && draggedElement.arrowOffset) {
+        // Déplacer la flèche entière (start et end)
+        setArrows(prev => prev.map(a => {
+          if (a.id === draggedElement.id) {
+            const newStartX = x + draggedElement.arrowOffset!.startX;
+            const newStartY = y + draggedElement.arrowOffset!.startY;
+            const newEndX = x + draggedElement.arrowOffset!.endX;
+            const newEndY = y + draggedElement.arrowOffset!.endY;
+
+            return {
+              ...a,
+              startPosition: {
+                x: Math.max(-30, Math.min(130, newStartX)),
+                y: Math.max(-30, Math.min(130, newStartY))
+              },
+              endPosition: {
+                x: Math.max(-30, Math.min(130, newEndX)),
+                y: Math.max(-30, Math.min(130, newEndY))
+              },
+              // Si la flèche a un point de contrôle, le déplacer aussi en utilisant l'offset
+              ...(a.controlX !== undefined && a.controlY !== undefined && draggedElement.controlOffset ? {
+                controlX: Math.max(-30, Math.min(130, x + draggedElement.controlOffset.x)),
+                controlY: Math.max(-30, Math.min(130, y + draggedElement.controlOffset.y))
+              } : {})
+            };
+          }
+          return a;
+        }));
       }
-      
-      e.preventDefault();
+
       return;
     }
     
     // Handle creating elements - always update mouse position when creating
-    if ((selectedTool === 'arrow' || selectedTool === 'zone') && (isCreating || creationStart)) {
+    if ((selectedTool.startsWith('arrow-') || selectedTool === 'zone') && (isCreating || creationStart)) {
       setCurrentMousePos({ x, y });
-      e.preventDefault();
     }
   }, [isCreating, creationStart, draggedElement, selectedTool]);
 
@@ -318,18 +353,27 @@ export function ExerciseCreatePage() {
       setTimeout(saveToHistory, 0);
       return;
     }
-    
+
     // Handle creation
     if (!isCreating || !creationStart || !currentMousePos) return;
 
-    if (selectedTool === 'arrow') {
+    if (selectedTool.startsWith('arrow-')) {
       const deltaX = currentMousePos.x - creationStart.x;
       const deltaY = currentMousePos.y - creationStart.y;
       const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       if (length > 3) {
-        const newArrow: Arrow = { id: Date.now().toString(), startPosition: creationStart, endPosition: currentMousePos, type: 'movement' };
+        // Extract action type from selectedTool (e.g., 'arrow-pass' -> 'pass')
+        const actionType = selectedTool.replace('arrow-', '') as 'pass' | 'shot' | 'movement' | 'dribble' | 'defense';
+        const newArrow: Arrow = {
+          id: Date.now().toString(),
+          startPosition: creationStart,
+          endPosition: currentMousePos,
+          type: 'movement', // Deprecated field for backwards compatibility
+          actionType: actionType // New field for styled arrows
+        };
+
         setArrows(prev => [...prev, newArrow]);
-        
+
         // Save to history after adding element
         setTimeout(saveToHistory, 0);
       }
@@ -352,19 +396,43 @@ export function ExerciseCreatePage() {
     setCurrentMousePos(null);
   }, [isCreating, creationStart, currentMousePos, selectedTool, zones.length, draggedElement, saveToHistory]);
 
-  const handleElementPointerDown = (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone') => {
+  const handleElementPointerDown = (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone' | 'arrow') => {
     if (selectedTool !== 'select') return;
     e.stopPropagation();
-    
+
     if (!courtRef.current) return;
     const { x, y } = getEventPosition(e, courtRef);
-    
+
     setSelectedElement(elementId);
-    setDraggedElement({
-      id: elementId,
-      type: elementType,
-      startPos: { x, y }
-    });
+
+    // Pour les flèches, calculer l'offset entre le point cliqué et les positions start/end
+    if (elementType === 'arrow') {
+      const arrow = arrows.find(a => a.id === elementId);
+      if (arrow) {
+        setDraggedElement({
+          id: elementId,
+          type: elementType,
+          startPos: { x, y },
+          arrowOffset: {
+            startX: arrow.startPosition.x - x,
+            startY: arrow.startPosition.y - y,
+            endX: arrow.endPosition.x - x,
+            endY: arrow.endPosition.y - y
+          },
+          // Si la flèche a un point de contrôle, calculer aussi son offset
+          controlOffset: (arrow.controlX !== undefined && arrow.controlY !== undefined) ? {
+            x: arrow.controlX - x,
+            y: arrow.controlY - y
+          } : undefined
+        });
+      }
+    } else {
+      setDraggedElement({
+        id: elementId,
+        type: elementType,
+        startPos: { x, y }
+      });
+    }
   };
 
   const handleDeleteElement = (elementId: string) => {
@@ -502,8 +570,6 @@ export function ExerciseCreatePage() {
 
   const handleSave = async () => {
     if (!canSave || isSaving) return;
-    
-    console.log('🚀 handleSave called - modes:', { isEditMode, isCopyMode, isDraftMode });
 
     setIsSaving(true);
     
@@ -768,16 +834,7 @@ export function ExerciseCreatePage() {
             border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '16px',
             padding: '20px',
-            position: isLandscape ? 'fixed' : 'relative',
-            top: isLandscape ? '0' : 'auto',
-            left: isLandscape ? '0' : 'auto',
-            right: isLandscape ? '0' : 'auto',
-            bottom: isLandscape ? '0' : 'auto',
-            zIndex: isLandscape ? 1000 : 'auto',
-            height: isLandscape ? '100vh' : 'auto',
-            width: isLandscape ? '100vw' : 'auto',
-            display: isLandscape ? 'flex' : 'block',
-            flexDirection: isLandscape ? 'column' : 'initial'
+            marginBottom: '16px'
           }}>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent:'space-between'  }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -799,14 +856,11 @@ export function ExerciseCreatePage() {
                 >
                   🔄 Sport
                 </button>
-                {isLandscape && (
-                  <button onClick={() => { if (window.screen && window.screen.orientation && window.screen.orientation.unlock) { window.screen.orientation.unlock(); } }} style={{ padding: '8px 12px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', color: 'white', fontSize: '12px', cursor: 'pointer' }}>🔄 Portrait</button>
-                )}
               </div>
             </div>
 
             {/* Éditeur disponible en portrait et paysage */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <Toolbar
                 sport={selectedSport}
                 selectedTool={selectedTool}
@@ -844,8 +898,8 @@ export function ExerciseCreatePage() {
                 canRedo={canRedo}
               />
 
-              {/* Terrain sportif pleine hauteur */}
-              <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+              {/* Terrain sportif */}
+              <div style={{ position: 'relative' }}>
                 <SportCourt
                   sport={selectedSport}
                   courtRef={courtRef}
@@ -856,6 +910,9 @@ export function ExerciseCreatePage() {
                   balls={balls}
                   zones={zones}
                   selectedElement={selectedElement}
+                  onElementSelect={setSelectedElement}
+                  onUpdateElement={handleUpdateElement}
+                  displayMode={displayMode}
                   isCreating={isCreating}
                   creationStart={creationStart}
                   currentMousePos={currentMousePos}
@@ -863,7 +920,6 @@ export function ExerciseCreatePage() {
                   onCourtPointerMove={handleCourtPointerMove}
                   onCourtPointerUp={handleCourtPointerUp}
                   onElementPointerDown={handleElementPointerDown}
-                  onElementSelect={setSelectedElement}
                 />
               </div>
             </div>
@@ -1049,10 +1105,7 @@ export function ExerciseCreatePage() {
                       value=""
                       onChange={e => {
                         const selectedValue = e.target.value;
-                        console.log('Selected value:', selectedValue);
-                        console.log('Current categories:', exerciseData.categories);
-                        console.log('Already includes?', exerciseData.categories.includes(selectedValue));
-                        
+
                         if (selectedValue && !exerciseData.categories.includes(selectedValue)) {
                           setExerciseData(p => ({ 
                             ...p, 
@@ -1300,6 +1353,9 @@ export function ExerciseCreatePage() {
               balls={balls}
               zones={zones}
               selectedElement={selectedElement}
+              onElementSelect={setSelectedElement}
+              onUpdateElement={handleUpdateElement}
+              displayMode={displayMode}
               isCreating={isCreating}
               creationStart={creationStart}
               currentMousePos={currentMousePos}
@@ -1307,7 +1363,6 @@ export function ExerciseCreatePage() {
               onCourtPointerMove={handleCourtPointerMove}
               onCourtPointerUp={handleCourtPointerUp}
               onElementPointerDown={handleElementPointerDown}
-              onElementSelect={setSelectedElement}
             />
             
             {/* Bouton propriétés sous le terrain */}

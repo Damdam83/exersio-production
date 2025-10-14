@@ -31,10 +31,8 @@ class NotificationService {
     try {
       // Demander les permissions pour les notifications locales
       const localResult = await LocalNotifications.requestPermissions();
-      console.log('Local notifications permission:', localResult.display);
 
       // TODO: Push notifications désactivées temporairement (problème Firebase)
-      console.log('Push notifications disabled - using local notifications only');
 
       this.isInitialized = true;
     } catch (error) {
@@ -44,7 +42,6 @@ class NotificationService {
 
   private setupListeners() {
     // Push notifications désactivées temporairement
-    console.log('Push notifications listeners disabled');
   }
 
   private async registerTokenOnServer(token: string) {
@@ -54,7 +51,6 @@ class NotificationService {
         token,
         platform
       });
-      console.log('Push token registered on server');
     } catch (error) {
       console.error('Error registering push token:', error);
     }
@@ -165,13 +161,11 @@ class NotificationService {
   // Test notifications (pour debug)
   async testSessionReminders() {
     if (!Capacitor.isNativePlatform()) {
-      console.log('Test session reminders not available on web');
       return;
     }
 
     try {
       await api.post('/notifications/test-session-reminders');
-      console.log('Test session reminders triggered');
     } catch (error) {
       console.error('Error testing session reminders:', error);
     }

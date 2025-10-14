@@ -104,13 +104,7 @@ export class BundleAnalyzer {
   }
 
   private logMetrics(metrics: PerformanceMetrics) {
-    console.group('📊 Bundle Performance Metrics');
-    console.log('Bundle size:', Math.round(metrics.bundleSize / 1024) + 'KB');
-    console.log('Load time:', Math.round(metrics.loadTime) + 'ms');
-    console.log('Render time:', Math.round(metrics.renderTime) + 'ms');
-    console.log('Memory usage:', Math.round(metrics.memoryUsage / 1024 / 1024) + 'MB');
-    console.log('Chunks loaded:', metrics.chunksLoaded);
-    console.groupEnd();
+    // Bundle Performance Metrics silently tracked
 
     // Alertes de performance
     if (metrics.loadTime > 3000) {

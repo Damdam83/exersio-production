@@ -21,9 +21,6 @@ export function CourtBackgroundImage({
   loading = 'lazy',
   usePlaceholder = false // Temporairement true en attendant les vraies images
 }: CourtBackgroundImageProps) {
-
-  console.log('🎨 CourtBackgroundImage RENDU - Sport:', sport);
-
   const [imageError, setImageError] = useState(false);
 
   // Mapping sport → chemin image (organisé par dossier sport)
@@ -39,12 +36,8 @@ export function CourtBackgroundImage({
   const webpPath = `/assets/courts/${imagePath}.webp`;
   const pngPath = `/assets/courts/${imagePath}.png`;
 
-  // DEBUG: Log les chemins d'images
-  console.log(`🏟️ CourtBackgroundImage - Sport: ${sport}, WebP: ${webpPath}, PNG: ${pngPath}`);
-
   // Si placeholder forcé OU erreur de chargement → afficher SVG
   if (usePlaceholder || imageError) {
-    console.log(`⚠️ Using placeholder for ${sport} - usePlaceholder: ${usePlaceholder}, imageError: ${imageError}`);
     return <CourtPlaceholderSVG sport={sport} className={className} />;
   }
 

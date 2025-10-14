@@ -1,25 +1,24 @@
-import React from "react";
 import { useNavigation } from "../contexts/NavigationContext";
 
-import { Navigation } from "./Navigation";
-import { PageLayout } from "./PageLayout";
+import { AdminNotificationsPage } from "./AdminNotificationsPage";
 import { MobileLayout } from "./MobileLayout";
 import { NotificationSettingsPage } from "./NotificationSettingsPage";
-import { AdminNotificationsPage } from "./AdminNotificationsPage";
+import { PageLayout } from "./PageLayout";
 // Import des composants lazy pour optimisation du bundle
+import { useExercises } from "../contexts/ExercisesContext";
+import { useSessions } from "../contexts/SessionsContext";
 import {
-  HomePage,
-  SessionsPage,
+  ExerciseCreatePage,
+  ExerciseDetailView,
   ExercisesPage,
   HistoryPage,
+  HomePage,
   ProfilePage,
-  ExerciseCreatePage,
   SessionCreatePage,
   SessionDetailView,
-  ExerciseDetailView
+  SessionsPage
 } from "../utils/lazyComponents";
-import { useSessions } from "../contexts/SessionsContext";
-import { useExercises } from "../contexts/ExercisesContext";
+import { Navigation } from "./Navigation";
 
 interface MainLayoutProps {
   isMobile: boolean;
@@ -69,7 +68,6 @@ function SessionDetailPageWrapper({ sessionId }: { sessionId?: string }) {
       onBack={() => setCurrentPage('sessions')}
       onUpdateSession={sessionsActions.updateSession}
       onExportSession={(session) => {
-        console.log('Export session:', session);
         // Ici on pourrait implémenter l'export
       }}
       onViewExercise={(exerciseId) => {
@@ -133,7 +131,7 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
             setCurrentPage('sessions');
           }}
           onToggleFavorite={() => {
-            console.log('Preview mode: cannot toggle favorite');
+            // Preview mode: favorites disabled
           }}
           isFavorite={false}
           contextInfo={contextInfo}
@@ -191,7 +189,7 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
         setCurrentPage('sessions');
       }}
       onToggleFavorite={() => {
-        console.log('Toggle favorite for exercise:', exerciseId);
+        // TODO: Implement toggle favorite
       }}
       isFavorite={false}
       contextInfo={contextInfo}

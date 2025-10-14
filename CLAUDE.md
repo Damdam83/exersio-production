@@ -331,6 +331,26 @@ docker compose down        # Arrêter la DB
 - ✅ **Corrections déploiement** : Dependencies NestJS/TypeScript, Docker Debian
 - 🏆 **APPLICATION 100% FONCTIONNELLE EN PRODUCTION**
 
+### Session du 13/10/2025 - Système de flèches multi-types amélioré
+- ✅ **Système complet de flèches** : 5 types de flèches avec styles distincts (pass, shot, movement, dribble, defense)
+- ✅ **Flèches courbes** : Implémentation Bézier quadratiques automatiques pour movement et dribble
+- ✅ **Fix majeur positionnement** : Correction viewBox dynamique basé sur aspectRatio du sport
+- ✅ **Tailles optimisées** : Markers 3-5px, strokeWidth 0.4-0.6px après plusieurs itérations utilisateur
+- ✅ **Border-aware coordinates** : Prise en compte bordure 3px dans calculs de position
+- ✅ **Toolbar amélioré** : 5 boutons flèches avec icônes et couleurs distinctes
+- ✅ **Nettoyage code** : Tous les console.log supprimés du frontend (50+ occurrences)
+- 🎯 **Problèmes résolus** :
+  - Offset 50px vertical résolu via viewBox aspectRatio (était viewBox="0 0 100 100", maintenant "0 0 167 100" pour volleyball)
+  - Tailles flèches optimisées via 5 itérations avec feedback utilisateur
+  - Curves automatiques avec contrôle perpendiculaire à 15% de la longueur
+- 📁 **Fichiers critiques** :
+  - `src/constants/arrowTypes.tsx` : Configuration 5 types + génération markers SVG (renommé .ts → .tsx)
+  - `src/components/ExerciseEditor/SportCourt.tsx` : viewBox dynamique + curves Bézier
+  - `src/utils/exerciseEditorHelpers.ts` : getEventPosition border-aware
+  - `src/components/ExerciseEditor/Toolbar.tsx` : 5 boutons flèches au lieu d'1
+- **Branche** : feat/react-flow-arrows
+- **Commit** : "feat: implement multi-type arrows with curved trajectories" (ad703bf)
+
 ---
 
 ## 📱 Déploiement mobile (Capacitor)

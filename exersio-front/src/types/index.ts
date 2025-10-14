@@ -114,6 +114,10 @@ export interface Arrow {
   width: number;
   style?: 'solid' | 'dashed' | 'dotted';
   label?: string;
+  actionType?: 'pass' | 'shot' | 'movement' | 'dribble' | 'defense'; // Type d'action pour styles visuels différenciés
+  isCurved?: boolean; // Si la flèche utilise une courbe Bézier
+  controlX?: number; // Point de contrôle X pour courbe Bézier
+  controlY?: number; // Point de contrôle Y pour courbe Bézier
 }
 
 export interface Annotation {
