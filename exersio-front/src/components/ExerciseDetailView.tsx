@@ -286,7 +286,7 @@ export function ExerciseDetailView({
                 </div>
 
                 {/* Terrain unifié */}
-                <div className="relative max-w-3xl mx-auto">
+                <div className="relative w-full mx-auto">
                   <SportCourtViewer
                     sport={exercise.sport || 'volleyball'}
                     players={initializePlayers(exercise)}
@@ -294,7 +294,6 @@ export function ExerciseDetailView({
                     balls={initializeBalls(exercise)}
                     zones={initializeZones(exercise)}
                     showGrid={true}
-                    style={{ height: '400px' }}
                   />
                 </div>
 

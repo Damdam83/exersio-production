@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Arrow, Ball, Player, Zone } from '../../constants/exerciseEditor';
 import { SPORTS_CONFIG, SportType } from '../../constants/sportsConfig';
 import { ARROW_TYPES, getArrowStyle, generateArrowMarkers } from '../../constants/arrowTypes';
@@ -32,6 +32,9 @@ export function SportCourtViewer({
   style = {},
   displayMode = 'role'
 }: SportCourtViewerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
   const sportConfig = SPORTS_CONFIG[sport];
 
   // Calculer le viewBox basé sur l'aspect ratio du sport
@@ -39,11 +42,33 @@ export function SportCourtViewer({
   const viewBoxWidth = 100 * aspectRatio;
   const viewBox = `0 0 ${viewBoxWidth} 100`;
 
-  // Tailles adaptatives pour miniature
-  const playerSize = 24;
-  const ballSize = 16;
-  const fontSize = 10;
-  const borderWidth = 2;
+  // Observer les changements de taille du conteneur
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    updateWidth();
+
+    const resizeObserver = new ResizeObserver(updateWidth);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  // Tailles adaptatives basées sur la largeur du conteneur
+  // Utiliser un ratio de la largeur pour avoir des tailles cohérentes
+  const baseSize = Math.max(containerWidth * 0.04, 16); // Minimum 16px
+  const playerSize = baseSize;
+  const ballSize = baseSize * 0.67;
+  const fontSize = baseSize * 0.42;
+  const borderWidth = Math.max(baseSize * 0.08, 1.5);
 
   const renderGrid = () => {
     if (!showGrid) return null;
@@ -102,6 +127,7 @@ export function SportCourtViewer({
 
   return (
     <div
+      ref={containerRef}
       className={`relative ${className}`}
       style={{
         position: 'relative',
@@ -286,14 +312,19 @@ export function SportCourtViewer({
               );
             }
 
-            // Flèche droite
+            // Flèche droite - convertir les coordonnées en valeurs viewBox
+            const vbStartX = (startX / 100) * viewBoxWidth;
+            const vbStartY = startY;
+            const vbEndX = (endX / 100) * viewBoxWidth;
+            const vbEndY = endY;
+
             return (
               <line
                 key={arrow.id}
-                x1={`${startX}%`}
-                y1={`${startY}%`}
-                x2={`${endX}%`}
-                y2={`${endY}%`}
+                x1={vbStartX}
+                y1={vbStartY}
+                x2={vbEndX}
+                y2={vbEndY}
                 stroke={arrowStyle.stroke}
                 strokeWidth={arrowConfig.width}
                 strokeDasharray={arrowStyle.strokeDasharray}
