@@ -2,8 +2,8 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 16/09/2025
-**Session actuelle :** ÉDITEUR DE TERRAIN MULTI-SPORT - CORRECTIONS MAJEURES
+**Dernière mise à jour :** 14/10/2025
+**Session actuelle :** AMÉLIORATION AFFICHAGE EXERCICES + UX RESPONSIVE
 
 ---
 
@@ -350,6 +350,38 @@ docker compose down        # Arrêter la DB
   - `src/components/ExerciseEditor/Toolbar.tsx` : 5 boutons flèches au lieu d'1
 - **Branche** : feat/react-flow-arrows
 - **Commit** : "feat: implement multi-type arrows with curved trajectories" (ad703bf)
+
+### Session du 14/10/2025 (matin) - Adaptation composants affichage multi-sport
+- ✅ **SportCourtViewer créé** : Composant read-only universel pour affichage terrains 5 sports
+- ✅ **ExercisesPage adapté** : Cards exercices avec SportCourtViewer + flexbox centering
+- ✅ **ExerciseDetailView adapté** : Affichage terrain avec sport détecté automatiquement
+- ✅ **SessionDetailView adapté** : Integration SportCourtViewer dans sessions
+- ✅ **Fix données flèches** : initializeArrows charge controlX/controlY/actionType/isCurved
+- ✅ **Fix aspect ratio** : CSS aspectRatio property pour proportions correctes
+- ✅ **Fix cutoff cards** : Flexbox avec padding pour éviter coupure bas terrain
+- 📁 **Fichiers modifiés** :
+  - `src/components/ExerciseEditor/SportCourtViewer.tsx` (nouveau)
+  - `src/utils/exerciseEditorHelpers.ts` (fix initializeArrows)
+  - `src/components/ExercisesPage.tsx`, `ExerciseDetailView.tsx`, `SessionDetailView.tsx`
+- **Branche** : feat/arrow-control-points
+- **Commit** : "feat: adapt display components to use multi-sport terrain viewer" (869dfb4)
+
+### Session du 14/10/2025 (après-midi) - Corrections responsive et positionnement
+- ✅ **Fix desktop ExerciseDetailView** : Supprimé height fixe pour aspect ratio naturel
+- ✅ **Fix mobile écrasement horizontal** : SportCourtViewer avec tailles responsive
+- ✅ **ResizeObserver implémenté** : Détection dynamique largeur conteneur
+- ✅ **Tailles adaptatives** : Joueurs/balles basés sur 4% largeur conteneur (min 16px)
+- ✅ **Fix coordonnées flèches** : Conversion viewBox cohérente droites + courbes
+- ✅ **Positionnement précis** : Éléments positionnés exactement comme en création
+- 🎯 **Problèmes résolus** :
+  - Desktop : éléments décalés → viewBox conversion uniforme
+  - Mobile : terrain écrasé → aspect ratio + tailles responsive
+  - Flèches droites : pourcentages CSS → coordonnées viewBox absolues
+- 📁 **Fichiers modifiés** :
+  - `src/components/ExerciseDetailView.tsx` (remove fixed height)
+  - `src/components/ExerciseEditor/SportCourtViewer.tsx` (responsive + fix arrows)
+- **Branche** : feat/arrow-control-points
+- **Commit** : "fix: improve SportCourtViewer responsive sizing and arrow positioning" (c7cc7c9)
 
 ---
 
