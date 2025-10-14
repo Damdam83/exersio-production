@@ -6,7 +6,7 @@ import { useExercises } from '../contexts/ExercisesContext';
 import type { Exercise } from '../types';
 import { initializeArrows, initializeBalls, initializePlayers, initializeZones } from '../utils/exerciseEditorHelpers';
 import { AddToSessionModal } from './AddToSessionModal';
-import { VolleyballCourtViewer } from './ExerciseEditor/VolleyballCourtViewer';
+import { SportCourtViewer } from './ExerciseEditor/SportCourtViewer';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -287,7 +287,8 @@ export function ExerciseDetailView({
 
                 {/* Terrain unifié */}
                 <div className="relative max-w-3xl mx-auto">
-                  <VolleyballCourtViewer
+                  <SportCourtViewer
+                    sport={exercise.sport || 'volleyball'}
                     players={initializePlayers(exercise)}
                     arrows={initializeArrows(exercise)}
                     balls={initializeBalls(exercise)}

@@ -31,23 +31,29 @@ export const initializePlayers = (exercise?: Exercise): Player[] => {
 
 export const initializeArrows = (exercise?: Exercise): Arrow[] => {
   if (!exercise?.fieldData) return [];
-  
+
   // Check new format first
   if (exercise.fieldData.arrows && exercise.fieldData.arrows[0]?.startPosition) {
     return exercise.fieldData.arrows.map(arrow => ({
       id: arrow.id,
       startPosition: arrow.startPosition,
       endPosition: arrow.endPosition,
-      type: arrow.type || 'movement'
+      type: arrow.type || 'movement',
+      actionType: arrow.actionType || 'pass',
+      step: arrow.step,
+      isCurved: arrow.isCurved,
+      controlX: arrow.controlX,
+      controlY: arrow.controlY
     }));
   }
-  
+
   // Fallback to old format
   return exercise.fieldData.arrows.map(arrow => ({
     id: arrow.id,
     startPosition: { x: arrow.startX, y: arrow.startY },
     endPosition: { x: arrow.endX, y: arrow.endY },
-    type: 'movement'
+    type: 'movement',
+    actionType: 'pass'
   }));
 };
 

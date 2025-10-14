@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Session, Exercise } from '../types';
-import { VolleyballCourtViewer } from './ExerciseEditor/VolleyballCourtViewer';
+import { SportCourtViewer } from './ExerciseEditor/SportCourtViewer';
 import { initializeArrows, initializeBalls, initializePlayers, initializeZones } from '../utils/exerciseEditorHelpers';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { MobileHeader } from './MobileHeader';
@@ -80,7 +80,8 @@ export function SessionDetailView({
     const zones = initializeZones(exercise);
 
     return (
-      <VolleyballCourtViewer
+      <SportCourtViewer
+        sport={exercise.sport || 'volleyball'}
         players={players}
         arrows={arrows}
         balls={balls}

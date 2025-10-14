@@ -10,7 +10,7 @@ import { MobileFilters } from './MobileFilters';
 import { ResultsCounter } from './ResultsCounter';
 import type { Exercise } from '../types';
 import { initializeArrows, initializeBalls, initializePlayers, initializeZones } from '../utils/exerciseEditorHelpers';
-import { VolleyballCourtViewer } from './ExerciseEditor/VolleyballCourtViewer';
+import { SportCourtViewer } from './ExerciseEditor/SportCourtViewer';
 
 export function ExercisesPage() {
   const { exercises, actions, state } = useExercises();
@@ -106,16 +106,17 @@ export function ExercisesPage() {
     const balls = initializeBalls(exercise);
     const zones = initializeZones(exercise);
 
-    // Toujours afficher le terrain avec le VolleyballCourtViewer
-    // Même s'il n'y a pas d'éléments, on aura au minimum le terrain vide
+    // Utiliser le sport de l'exercice (par défaut volleyball si non spécifié)
+    const sport = exercise.sport || 'volleyball';
+
     return (
-      <VolleyballCourtViewer
+      <SportCourtViewer
+        sport={sport}
         players={players}
         arrows={arrows}
         balls={balls}
         zones={zones}
         showGrid={false}
-        style={{ height: '160px' }} // Hauteur fixe comme une image
       />
     );
   };
@@ -217,8 +218,10 @@ export function ExercisesPage() {
               >
                 {/* Terrain de visualisation mobile */}
                 <div className="h-32 bg-gradient-to-br from-slate-700 to-slate-600 relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-30 scale-90 origin-center">
-                    {createCourtDiagram(exercise)}
+                  <div className="absolute inset-0 flex items-center justify-center p-2">
+                    <div style={{ width: '100%', maxHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {createCourtDiagram(exercise)}
+                    </div>
                   </div>
                   <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-400 px-2 py-1 rounded text-xs font-semibold">
                     {exercise.duration} min
@@ -598,7 +601,19 @@ export function ExercisesPage() {
                 }}></div>
 
                 {/* Diagramme de l'exercice avec le nouveau composant */}
-                {createCourtDiagram(exercise)}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '8px'
+                }}>
+                  {createCourtDiagram(exercise)}
+                </div>
               </div>
 
               {/* Contenu de la carte */}
