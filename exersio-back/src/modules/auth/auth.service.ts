@@ -28,15 +28,16 @@ export class AuthService {
     const emailVerificationToken = this.generateToken();
     const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
     
-    const user = await this.prisma.user.create({ 
-      data: { 
-        name: dto.name, 
-        email: dto.email, 
-        passwordHash, 
+    const user = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        email: dto.email,
+        passwordHash,
         role: 'coach',
         emailVerificationToken,
-        emailVerificationExpires
-      } 
+        emailVerificationExpires,
+        preferredSportId: dto.preferredSportId
+      }
     });
 
     // Envoyer l'email de confirmation
@@ -69,8 +70,14 @@ export class AuthService {
   async login(dto: LoginDto) {
     // Test log debug
     this.logger.log('DEBUG: Login method called', 'AuthService');
-    
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email }, include: { club: true } });
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      include: {
+        club: true,
+        preferredSport: true
+      }
+    });
     if (!user) {
       this.logger.logAuth('Login attempt - user not found', {
         email: dto.email,
@@ -106,33 +113,63 @@ export class AuthService {
       clubId: user.clubId,
     });
     return {
-      user: { 
-        id: user.id, 
-        name: user.name, 
-        email: user.email, 
-        role: user.role, 
-        avatar: user.avatar, 
-        createdAt: user.createdAt, 
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
         clubId: user.clubId,
-        emailVerified: user.emailVerified
+        emailVerified: user.emailVerified,
+        preferredSportId: user.preferredSportId,
+        preferredSport: user.preferredSport ? {
+          id: user.preferredSport.id,
+          name: user.preferredSport.name,
+          slug: user.preferredSport.slug,
+          icon: user.preferredSport.icon,
+          order: user.preferredSport.order
+        } : undefined
       },
       token,
-      club: user.club ? { 
-        id: user.club.id, 
-        name: user.club.name, 
-        description: user.club.description, 
-        logo: user.club.logo, 
-        ownerId: user.club.ownerId, 
-        createdAt: user.club.createdAt 
+      club: user.club ? {
+        id: user.club.id,
+        name: user.club.name,
+        description: user.club.description,
+        logo: user.club.logo,
+        ownerId: user.club.ownerId,
+        createdAt: user.club.createdAt
       } : undefined,
     };
   }
 
   async profile(userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { club: true } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        club: true,
+        preferredSport: true
+      }
+    });
     if (!user) throw new UnauthorizedException('Invalid user');
     return {
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar, createdAt: user.createdAt, clubId: user.clubId },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
+        clubId: user.clubId,
+        preferredSportId: user.preferredSportId,
+        preferredSport: user.preferredSport ? {
+          id: user.preferredSport.id,
+          name: user.preferredSport.name,
+          slug: user.preferredSport.slug,
+          icon: user.preferredSport.icon,
+          order: user.preferredSport.order
+        } : undefined
+      },
       club: user.club ? { id: user.club.id, name: user.club.name, description: user.club.description, logo: user.club.logo, ownerId: user.club.ownerId, createdAt: user.club.createdAt } : undefined,
     };
   }
@@ -178,20 +215,37 @@ export class AuthService {
       role: user.role,
     });
     
+    // Récupérer l'utilisateur avec les relations
+    const userWithRelations = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        preferredSport: true,
+        club: true
+      }
+    });
+
     // Connecter automatiquement l'utilisateur après confirmation
     const jwtToken = this.sign(user);
-    
+
     return {
       message: 'Email confirmé avec succès !',
       user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-        createdAt: user.createdAt,
-        clubId: user.clubId,
+        id: userWithRelations.id,
+        name: userWithRelations.name,
+        email: userWithRelations.email,
+        role: userWithRelations.role,
+        avatar: userWithRelations.avatar,
+        createdAt: userWithRelations.createdAt,
+        clubId: userWithRelations.clubId,
         emailVerified: true,
+        preferredSportId: userWithRelations.preferredSportId,
+        preferredSport: userWithRelations.preferredSport ? {
+          id: userWithRelations.preferredSport.id,
+          name: userWithRelations.preferredSport.name,
+          slug: userWithRelations.preferredSport.slug,
+          icon: userWithRelations.preferredSport.icon,
+          order: userWithRelations.preferredSport.order
+        } : undefined
       },
       token: jwtToken,
     };

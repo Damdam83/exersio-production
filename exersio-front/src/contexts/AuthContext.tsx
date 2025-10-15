@@ -343,5 +343,26 @@ export function useAuth() {
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context;
+
+  // Retourner à la fois l'ancienne structure ET les propriétés directes pour compatibilité
+  return {
+    // Ancienne structure (pour compatibilité avec App.tsx et autres)
+    state: context.state,
+    actions: context.actions,
+    // Nouvelles propriétés directes (pour faciliter l'utilisation)
+    user: context.state.user,
+    club: context.state.club,
+    isAuthenticated: context.state.isAuthenticated,
+    isInitialized: context.state.isInitialized,
+    loginState: context.state.loginState,
+    logoutState: context.state.logoutState,
+    // Actions directes
+    login: context.actions.login,
+    register: context.actions.register,
+    logout: context.actions.logout,
+    updateUser: context.actions.updateUser,
+    updateClub: context.actions.updateClub,
+    clearLoginError: context.actions.clearLoginError,
+    initialize: context.actions.initialize
+  };
 }

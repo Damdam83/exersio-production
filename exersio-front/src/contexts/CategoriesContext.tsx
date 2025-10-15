@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from 'react';
 import { categoriesService, type ExerciseCategory, type AgeCategory, type Level } from '../services/categoriesService';
 import type { AsyncState, ApiError } from '../types/api';
+import { useAuth } from './AuthContext';
 
 interface CategoriesState {
   exerciseCategories: AsyncState<ExerciseCategory[]>;
@@ -113,7 +114,7 @@ export function CategoriesProvider({ children }: CategoriesProviderProps) {
 
   const loadExerciseCategories = useCallback(async () => {
     dispatch({ type: 'LOAD_EXERCISE_CATEGORIES_START' });
-    
+
     try {
       const categories = await categoriesService.getExerciseCategories();
       dispatch({ type: 'LOAD_EXERCISE_CATEGORIES_SUCCESS', payload: categories });
@@ -155,10 +156,14 @@ export function CategoriesProvider({ children }: CategoriesProviderProps) {
     ]);
   }, [loadExerciseCategories, loadAgeCategories, loadLevels]);
 
-  // Charger les catégories au montage
+  const { isAuthenticated } = useAuth();
+
+  // Charger les catégories uniquement si l'utilisateur est authentifié
   useEffect(() => {
-    loadAllCategories();
-  }, [loadAllCategories]);
+    if (isAuthenticated) {
+      loadAllCategories();
+    }
+  }, [isAuthenticated, loadAllCategories]);
 
   const actions = useMemo(() => ({
     loadExerciseCategories,

@@ -3,10 +3,11 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:30
 
 // Types de réponse de l'API (basés sur WrapResponseInterceptor du backend)
 export interface ApiResponse<T = any> {
+  success: boolean;
   data: T;
   message?: string;
-  statusCode: number;
-  timestamp: string;
+  statusCode?: number;
+  timestamp?: string;
 }
 
 // Types d'erreur de l'API

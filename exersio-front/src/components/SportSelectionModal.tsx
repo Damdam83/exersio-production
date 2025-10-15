@@ -9,10 +9,10 @@ interface SportSelectionModalProps {
 }
 
 export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectionModalProps) {
-  if (!isOpen) return null;
-
   const isMobile = useIsMobile();
   const isVerySmall = typeof window !== 'undefined' && window.innerWidth < 480;
+
+  if (!isOpen) return null;
 
   const handleSportSelect = (sport: SportType) => {
     onSelect(sport);
@@ -176,7 +176,7 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
                   overflow: 'hidden'
                 }}>
                   {/* Image de fond du terrain */}
-                  <picture style={{
+                  <div style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
@@ -185,25 +185,27 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
                     width: '100%',
                     height: '100%'
                   }}>
-                    <source
-                      srcSet={`/assets/courts/${sport.id}/${sport.id}-court-dark.webp`}
-                      type="image/webp"
-                    />
-                    <img
-                      src={`/assets/courts/${sport.id}/${sport.id}-court-dark.png`}
-                      alt={`${sport.name} court`}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        objectPosition: 'center'
-                      }}
-                      onError={(e) => {
-                        // Fallback: masquer l'image et montrer le fond de couleur
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </picture>
+                    <picture>
+                      <source
+                        srcSet={`/assets/courts/${sport.id}/${sport.id}-court-dark.webp`}
+                        type="image/webp"
+                      />
+                      <img
+                        src={`/assets/courts/${sport.id}/${sport.id}-court-dark.png`}
+                        alt={`${sport.name} court`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          objectPosition: 'center'
+                        }}
+                        onError={(e) => {
+                          // Fallback: masquer l'image et montrer le fond de couleur
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </picture>
+                  </div>
 
                   {/* Overlay sombre pour meilleure lisibilité de l'emoji */}
                   <div style={{

@@ -12,6 +12,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AppVersionModule } from './modules/app/app.module';
+import { SportsModule } from './modules/sports/sports.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 // import { SetupController } from './setup-admin.controller';
@@ -31,6 +32,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     FavoritesModule,
     NotificationsModule,
     AppVersionModule,
+    SportsModule,
   ],
   controllers: [/* SetupController */],
   providers: [

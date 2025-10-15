@@ -38,6 +38,9 @@ model User {
   // Relation membre d'un club (nommée "ClubMembers")
   clubId       String?
   club         Club?    @relation("ClubMembers", fields: [clubId], references: [id])
+  // Sport préféré de l'utilisateur
+  preferredSportId String?
+  preferredSport   Sport?  @relation("UserPreferredSport", fields: [preferredSportId], references: [id])
   createdAt    DateTime @default(now())
   
   // Champs pour la confirmation d'email
@@ -84,30 +87,54 @@ model Club {
   invitations Invitation[]
 }
 
-model ExerciseCategory {
+model Sport {
   id        String   @id @default(cuid())
   name      String   @unique
   slug      String   @unique
-  color     String?
   icon      String?
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  exercises Exercise[]
+  exerciseCategories ExerciseCategory[]
+  ageCategories      AgeCategory[]
+  exercises          Exercise[]
+  sessions           Session[]
+  usersWithPreference User[]           @relation("UserPreferredSport")
 }
 
-model AgeCategory {
+model ExerciseCategory {
   id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
-  minAge    Int?
-  maxAge    Int?
+  name      String
+  slug      String
+  color     String?
+  icon      String?
   order     Int      @default(0)
+  sportId   String
+  sport     Sport    @relation(fields: [sportId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   exercises Exercise[]
+
+  @@unique([slug, sportId])
+}
+
+model AgeCategory {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String
+  minAge    Int?
+  maxAge    Int?
+  order     Int      @default(0)
+  sportId   String
+  sport     Sport    @relation(fields: [sportId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exercises Exercise[]
+
+  @@unique([slug, sportId])
 }
 
 model Exercise {
@@ -125,8 +152,13 @@ model Exercise {
   categoryRef      ExerciseCategory? @relation(fields: [categoryId], references: [id])
   ageCategoryId String?
   ageCategoryRef   AgeCategory?      @relation(fields: [ageCategoryId], references: [id])
-  
+
+  // Sport (ancien champ string pour rétrocompatibilité)
   sport       String
+
+  // Nouvelle relation Sport
+  sportId     String?
+  sportRef    Sport?   @relation(fields: [sportId], references: [id])
   instructions Json
   fieldData   Json?
   successCriteria Json?
@@ -160,7 +192,14 @@ model Session {
   createdBy   User     @relation("SessionCreatedBy", fields: [createdById], references: [id])
   clubId      String?
   club        Club?    @relation(fields: [clubId], references: [id])
+
+  // Sport (ancien champ string pour rétrocompatibilité)
   sport       String?
+
+  // Nouvelle relation Sport
+  sportId     String?
+  sportRef    Sport?   @relation(fields: [sportId], references: [id])
+
   ageCategory String?
   level       String?
   status      SessionStatus @default(planned)

@@ -243,7 +243,7 @@ async function handleUnauthorizedError(
   const url = input.toString();
   
   // Ne pas essayer de refresh sur les endpoints d'authentification
-  if (url.includes('/auth/login') || url.includes('/auth/register')) {
+  if (url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/profile') || url.includes('/auth/refresh')) {
     // Pour les erreurs d'auth, juste retourner la réponse 401 pour que le contexte la traite
     return new Response('Unauthorized', { status: 401 });
   }

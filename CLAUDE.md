@@ -383,6 +383,72 @@ docker compose down        # Arrêter la DB
 - **Branche** : feat/arrow-control-points
 - **Commit** : "fix: improve SportCourtViewer responsive sizing and arrow positioning" (c7cc7c9)
 
+### Session du 14/10/2025 (soir) - Migration système catégories multi-sport 🏆
+**Objectif:** Refonte complète du système de catégories avec sports en base de données
+
+#### Phase 1: ExercisesPage - Améliorations UX/UI ✅
+- ✅ **Cards exercices optimisées** : Terrain 190px, padding réduit, responsive 330px fixe
+- ✅ **Bouton Reset mobile** : Ajouté dans MobileFilters avec props onResetFilters
+- ✅ **Système filtres refactorisé** : Catégories et âges séparés avec états indépendants
+- ✅ **Filtres depuis backend** : Migration vers CategoriesContext au lieu de génération dynamique
+- ✅ **MobileFilters amélioré** : Bouton réinitialiser conditionnel (rouge) dans panneau filtres
+
+#### Phase 2: Migration vers IDs de catégories ✅
+- ✅ **Backend DTO** : Ajout categoryId/ageCategoryId optionnels (deprecated anciens champs)
+- ✅ **Frontend payload** : Helper getCategoryIds() pour convertir slugs → IDs
+- ✅ **ExerciseCreatePage** : Envoi categoryId + ageCategoryId dans create/update
+- ✅ **Rétrocompatibilité** : Conservation anciens champs category/ageCategory (strings)
+
+#### Phase 3: Architecture multi-sport complète 🚀
+**Schéma Prisma refactoré:**
+- ✅ **Nouvelle table Sport** : id, name, slug, icon, order + relations
+- ✅ **ExerciseCategory** : Ajout sportId + relation Sport (@@unique [slug, sportId])
+- ✅ **AgeCategory** : Ajout sportId + relation Sport (@@unique [slug, sportId])
+- ✅ **Exercise** : Ajout sportId + sportRef (optionnel, garde sport String)
+- ✅ **Session** : Ajout sportId + sportRef (optionnel, garde sport String)
+
+**Migration base de données:**
+- ✅ **Script seed créé** : `prisma/seed-sports.ts` peuple DB depuis JSON
+- ✅ **Migration appliquée** : `npx prisma db push --force-reset`
+- ✅ **Seed exécuté** : 5 sports + 28 catégories exercices + 37 catégories âge
+  - Volley-ball: 6 catégories exercices + 9 catégories âge
+  - Football: 5 catégories exercices + 7 catégories âge
+  - Basketball: 6 catégories exercices + 6 catégories âge
+  - Handball: 5 catégories exercices + 7 catégories âge
+  - Tennis: 6 catégories exercices + 8 catégories âge
+
+**Données structurées:**
+- ✅ **JSON source** : exersio_categories_age_sport.json avec toutes les catégories
+- ✅ **Catégories exercices** : Définies par sport (attaque, défense, service, etc.)
+- ✅ **Parsing âge intelligent** : Extraction minAge/maxAge depuis formats variés
+- ✅ **Relations strictes** : Chaque catégorie liée à 1 sport via sportId
+
+**Package.json:**
+- ✅ **Commande seed ajoutée** : `npm run seed:sports` pour peupler DB
+
+📁 **Fichiers créés/modifiés:**
+- `prisma/schema.prisma` : Tables Sport, ExerciseCategory, AgeCategory refactorées
+- `prisma/seed-sports.ts` : Script seed complet avec parsing JSON
+- `package.json` : Ajout commande seed:sports
+- `src/modules/exercises/dto/exercise.dto.ts` : categoryId/ageCategoryId
+- `src/components/ExercisesPage.tsx` : Filtres depuis CategoriesContext
+- `src/components/ExerciseCreatePage.tsx` : Helper getCategoryIds + envoi IDs
+- `src/components/MobileFilters.tsx` : Props reset + bouton conditionnel
+
+**Branche:** feat/arrow-control-points
+**Temps réalisé:** ~2h30
+**Status:** ✅ Backend terminé, ⏳ Frontend en cours
+
+#### 🚨 TODO DÉPLOIEMENT PRODUCTION
+**Actions critiques avant déploiement:**
+1. **Migration Prisma** : `npx prisma db push` (destructif, backup DB d'abord!)
+2. **Seed sports** : `npm run seed:sports` pour peupler tables
+3. **Vérifier données existantes** : Les exercices/sessions doivent être migrés manuellement
+4. **Update frontend** : Déployer nouveau code avec sportId support
+5. **Test complet** : Vérifier création exercice avec nouveaux IDs
+
+**⚠️ ATTENTION:** Migration destructive si données existantes dans ExerciseCategory/AgeCategory!
+
 ---
 
 ## 📱 Déploiement mobile (Capacitor)

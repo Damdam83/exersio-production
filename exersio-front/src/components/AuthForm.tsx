@@ -6,10 +6,12 @@ import { ExersioLogo } from './ExersioLogo';
 import { api } from '../services/api';
 import type { ApiError } from '../types/api';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { getSports } from '../services/sportsApi';
+import type { Sport } from '../types';
 
 interface AuthFormProps {
   onLogin: (credentials: { email: string; password: string }) => Promise<void>;
-  onRegister?: (data: { name: string; email: string; password: string }) => Promise<void>;
+  onRegister?: (data: { name: string; email: string; password: string; preferredSportId?: string }) => Promise<void>;
   isLoading?: boolean;
   error?: ApiError | string | null;
 }
@@ -26,6 +28,8 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
   const [localError, setLocalError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [preferredSportId, setPreferredSportId] = useState<string>('');
+  const [sports, setSports] = useState<Sport[]>([]);
 
   // URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -43,6 +47,19 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
       }
     }
   }, [urlToken, urlAction]);
+
+  // Load sports when switching to register mode
+  useEffect(() => {
+    if (mode === 'register' && sports.length === 0) {
+      console.log('Loading sports for registration...');
+      getSports()
+        .then(data => {
+          console.log('Sports loaded:', data);
+          setSports(data);
+        })
+        .catch(err => console.error('Failed to load sports:', err));
+    }
+  }, [mode]);
 
   // Nettoyer les erreurs et messages quand l'utilisateur tape
   React.useEffect(() => {
@@ -167,7 +184,12 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
       }
 
       try {
-        const result = await onRegister({ name, email, password });
+        const result = await onRegister({
+          name,
+          email,
+          password,
+          preferredSportId: preferredSportId || undefined
+        });
         // Si l'inscription réussit, afficher un message de succès
         setSuccessMessage('Compte créé avec succès ! Vérifiez votre email pour confirmer votre compte.');
       } catch (err: any) {
@@ -280,22 +302,56 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Champ nom (uniquement en mode inscription) */}
               {mode === 'register' && (
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium text-white">
-                    Nom complet
-                  </label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Votre nom complet"
-                    disabled={isLoading}
-                    className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa]"
-                    autoComplete="name"
-                    required={mode === 'register'}
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <label htmlFor="name" className="text-sm font-medium text-white">
+                      Nom complet
+                    </label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Votre nom complet"
+                      disabled={isLoading}
+                      className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa]"
+                      autoComplete="name"
+                      required={mode === 'register'}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="preferredSport" className="text-sm font-medium text-white">
+                      Sport préféré (optionnel)
+                    </label>
+                    <select
+                      id="preferredSport"
+                      value={preferredSportId}
+                      onChange={(e) => setPreferredSportId(e.target.value)}
+                      disabled={isLoading || !sports || sports.length === 0}
+                      className="w-full px-3 py-2 bg-[#283544] border border-[#3d4a5c] rounded-md text-white focus:border-[#00d4aa] focus:ring-1 focus:ring-[#00d4aa] focus:outline-none"
+                      style={{
+                        WebkitAppearance: 'menulist',
+                        MozAppearance: 'menulist',
+                        appearance: 'menulist'
+                      }}
+                    >
+                      <option value="">-- Sélectionner un sport --</option>
+                      {sports && Array.isArray(sports) && sports.length > 0 ? (
+                        sports.map(sport => (
+                          <option key={sport.id} value={sport.id}>
+                            {sport.icon ? `${sport.icon} ` : ''}{sport.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>Chargement des sports...</option>
+                      )}
+                    </select>
+                    {(!sports || sports.length === 0) && mode === 'register' && (
+                      <p className="text-xs text-gray-400">Chargement des sports...</p>
+                    )}
+                  </div>
+                </>
               )}
             
             {/* Champ email */}

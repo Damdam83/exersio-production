@@ -10,6 +10,8 @@ export interface User {
   role: Role;
   clubId?: string | null;
   avatar?: string | null;
+  preferredSportId?: string | null;
+  preferredSport?: Sport | null;
   createdAt: Date | string;
 }
 
@@ -24,6 +26,16 @@ export interface Club {
   createdAt: Date | string;
 }
 
+export interface Sport {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  order: number;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
 export interface ExerciseCategory {
   id: string;
   name: string;
@@ -31,6 +43,8 @@ export interface ExerciseCategory {
   color?: string;
   icon?: string;
   order: number;
+  sportId: string;
+  sport?: Sport;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -42,6 +56,8 @@ export interface AgeCategory {
   minAge?: number | null;
   maxAge?: number | null;
   order: number;
+  sportId: string;
+  sport?: Sport;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -51,17 +67,18 @@ export interface Exercise {
   name: string;
   description: string;
   duration: number; // en minutes
-  
-  // Nouvelles relations de catégories
+
+  // Nouvelles relations de catégories et sport
   categoryId?: string | null;
   categoryRef?: ExerciseCategory | null;
   ageCategoryId?: string | null;
   ageCategoryRef?: AgeCategory | null;
-  
+  sportId?: string | null;
+  sportRef?: Sport | null;
+
   // Anciens champs pour rétrocompatibilité
   category: string;
   ageCategory: string;
-  
   sport: string;
   instructions: string[]; // JSON array from Prisma
   fieldData?: any; // JSON field from Prisma

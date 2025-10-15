@@ -29,6 +29,8 @@ const roleLabels = importedRoleLabels || backupRoleLabels;
 import { useAuth } from '../contexts/AuthContext';
 import { useExercises } from '../contexts/ExercisesContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useCategories } from '../contexts/CategoriesContext';
+import { useSports } from '../contexts/SportsContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useOrientation } from '../hooks/useOrientation';
 import { MobileHeader } from './MobileHeader';
@@ -36,22 +38,90 @@ import { MobileHeader } from './MobileHeader';
 export function ExerciseCreatePage() {
   // contexts
   const { currentPage, params, navigate } = useNavigation();
-  const { state: auth } = useAuth();
+  const { user, club } = useAuth();
   const { state: exState, actions: exActions } = useExercises();
+  const { state: categoriesState } = useCategories();
+  const { state: sportsState, loadSports } = useSports();
   const isMobile = useIsMobile();
   const { isLandscape, isPortrait } = useOrientation();
+
+  // Charger les sports au montage
+  useEffect(() => {
+    loadSports();
+  }, []);
 
   // si on est en mode édition, on récupère l'exo ciblé
   const exerciseToEdit = useMemo(
     () => (params?.exerciseId ? exState.exercises.data.find(e => e.id === params.exerciseId) : undefined),
     [params?.exerciseId, exState.exercises.data]
   );
-  
+
   // Mode copie : utiliser le brouillon du contexte si disponible
   const isDraftMode = params?.mode === 'copy' && exState.draftExercise;
   const sourceExercise = isDraftMode ? exState.draftExercise : exerciseToEdit;
 
-  
+  // Sport selection - DOIT être déclaré AVANT les useMemo qui l'utilisent
+  // Ordre de priorité : 1) sport de l'exercice source, 2) sport préféré utilisateur, 3) volleyball par défaut
+  const [selectedSport, setSelectedSport] = useState<SportType>(
+    sourceExercise?.sport as SportType ||
+    (user?.preferredSport?.slug as SportType) ||
+    'volleyball'
+  );
+  const [showSportModal, setShowSportModal] = useState(false);
+
+  // Réinitialiser les catégories sélectionnées quand le sport change
+  useEffect(() => {
+    // On ne réinitialise que si on n'est pas en train de charger un exercice existant
+    if (!sourceExercise) {
+      setExerciseData(prev => ({
+        ...prev,
+        categories: [],
+        ageCategory: ''
+      }));
+    }
+  }, [selectedSport, sourceExercise]);
+
+  // Générer les catégories et âges depuis le backend (CategoriesContext)
+  // Filtrées par le sport sélectionné
+  const FIELD_CATEGORIES_FROM_BACKEND = useMemo(() => {
+    const categories = categoriesState.exerciseCategories.data || [];
+    const sports = sportsState.sports.data || [];
+
+    const currentSport = sports.find(s => s.slug === selectedSport);
+    const sportId = currentSport?.id;
+
+    const filteredCategories = sportId
+      ? categories.filter(cat => cat.sportId === sportId)
+      : categories;
+
+    return filteredCategories
+      .sort((a, b) => a.order - b.order)
+      .map(cat => ({
+        value: cat.slug,
+        label: cat.name
+      }));
+  }, [categoriesState.exerciseCategories.data, sportsState.sports.data, selectedSport]);
+
+  const FIELD_AGE_CATEGORIES_FROM_BACKEND = useMemo(() => {
+    const ages = categoriesState.ageCategories.data || [];
+    const sports = sportsState.sports.data || [];
+
+    const currentSport = sports.find(s => s.slug === selectedSport);
+    const sportId = currentSport?.id;
+
+    const filteredAges = sportId
+      ? ages.filter(age => age.sportId === sportId)
+      : ages;
+
+    return filteredAges
+      .sort((a, b) => a.order - b.order)
+      .map(age => ({
+        value: age.slug,
+        label: age.name
+      }));
+  }, [categoriesState.ageCategories.data, sportsState.sports.data, selectedSport]);
+
+
   // Modes d'édition
   const isCopyMode = !!params?.copyMode || isDraftMode;
   const isEditMode = !!params?.exerciseId && !isCopyMode;
@@ -120,11 +190,6 @@ export function ExerciseCreatePage() {
   
   // Properties modal
   const [showPropertiesModal, setShowPropertiesModal] = useState(false);
-
-  // Sport selection
-  const [selectedSport, setSelectedSport] = useState<SportType>(sourceExercise?.sport as SportType || 'volleyball');
-  const [showSportModal, setShowSportModal] = useState(false);
-
 
   const courtRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
@@ -498,6 +563,26 @@ export function ExerciseCreatePage() {
   const updateCriterion = (i: number, v: string) => setExerciseData(prev => ({ ...prev, successCriteria: prev.successCriteria.map((c, idx) => (idx === i ? v : c)) }));
   const removeCriterion = (i: number) => setExerciseData(prev => ({ ...prev, successCriteria: prev.successCriteria.filter((_, idx) => idx !== i) }));
 
+  // Helper function to convert slugs to IDs
+  const getCategoryIds = () => {
+    const categorySlug = exerciseData.categories.length > 0 ? exerciseData.categories[0] : null;
+    const ageSlug = exerciseData.ageCategory;
+    const sports = sportsState.sports.data || [];
+
+    const categoryId = categorySlug
+      ? categoriesState.exerciseCategories.data?.find(cat => cat.slug === categorySlug)?.id
+      : null;
+
+    const ageCategoryId = ageSlug
+      ? categoriesState.ageCategories.data?.find(age => age.slug === ageSlug)?.id
+      : null;
+
+    const currentSport = sports.find(s => s.slug === selectedSport);
+    const sportId = currentSport?.id || null;
+
+    return { categoryId, ageCategoryId, sportId };
+  };
+
   // Preview and Draft handlers
   const handlePreview = () => {
     if (!exerciseData.name.trim()) {
@@ -530,19 +615,22 @@ export function ExerciseCreatePage() {
     }
 
     const fieldData = convertToFieldData(players, arrows, balls, zones);
-    const now = new Date();
-    
+    const { categoryId, ageCategoryId, sportId } = getCategoryIds();
+
     const draftExercise: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'> = {
       name: `[BROUILLON] ${exerciseData.name.trim()}`,
       description: exerciseData.description.trim(),
       duration: exerciseData.duration,
       category: (exerciseData.categories.length > 0 ? exerciseData.categories[0] : 'attaque') as Exercise['category'],
+      categoryId: categoryId || undefined,
       ageCategory: exerciseData.ageCategory as Exercise['ageCategory'],
+      ageCategoryId: ageCategoryId || undefined,
       sport: selectedSport,
+      sportId: sportId || undefined,
       instructions: exerciseData.steps.filter(Boolean),
       fieldData,
-      createdById: sourceExercise?.createdById || auth.user?.id || 'anonymous',
-      clubId: sourceExercise?.clubId || auth.club?.id || null,
+      createdById: sourceExercise?.createdById || user?.id || 'anonymous',
+      clubId: sourceExercise?.clubId || club?.id || null,
       isPublic: false, // Drafts are always private
       level: exerciseData.intensity,
       intensity: exerciseData.intensity as Exercise['intensity'],
@@ -558,7 +646,7 @@ export function ExerciseCreatePage() {
 
     await exActions.createExercise(draftExercise);
     setSavedAsDraft(true);
-    
+
     // Show success message
     alert('Exercice sauvegardé comme brouillon !');
   };
@@ -572,22 +660,25 @@ export function ExerciseCreatePage() {
     if (!canSave || isSaving) return;
 
     setIsSaving(true);
-    
+
     try {
       const fieldData = convertToFieldData(players, arrows, balls, zones);
-      const now = new Date();
-      
+      const { categoryId, ageCategoryId, sportId } = getCategoryIds();
+
       const base: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'> = {
         name: exerciseData.name.trim(),
         description: exerciseData.description.trim(),
         duration: exerciseData.duration,
         category: (exerciseData.categories.length > 0 ? exerciseData.categories[0] : 'attaque') as Exercise['category'],
+        categoryId: categoryId || undefined,
         ageCategory: exerciseData.ageCategory as Exercise['ageCategory'],
+        ageCategoryId: ageCategoryId || undefined,
         sport: selectedSport,
+        sportId: sportId || undefined,
         instructions: exerciseData.steps.filter(Boolean),
         fieldData,
-        createdById: sourceExercise?.createdById || auth.user?.id || 'anonymous',
-        clubId: sourceExercise?.clubId || auth.club?.id || null,
+        createdById: sourceExercise?.createdById || user?.id || 'anonymous',
+        clubId: sourceExercise?.clubId || club?.id || null,
         isPublic: true,
         level: exerciseData.intensity,
         intensity: exerciseData.intensity as Exercise['intensity'],
@@ -609,7 +700,7 @@ export function ExerciseCreatePage() {
 
       // Rediriger directement vers la page exercices après sauvegarde
       navigate('exercises');
-      
+
     } catch (error) {
       console.error('Erreur lors de la publication:', error);
       alert('Erreur lors de la publication de l\'exercice. Veuillez réessayer.');
@@ -708,7 +799,7 @@ export function ExerciseCreatePage() {
                 {exerciseData.categories.length > 0 ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {exerciseData.categories.map((category, index) => {
-                      const categoryLabel = FIELD_CATEGORIES.find(c => c.value === category)?.label || category;
+                      const categoryLabel = FIELD_CATEGORIES_FROM_BACKEND.find(c => c.value === category)?.label || category;
                       return (
                         <Badge key={`category-${category}-${index}`} variant="secondary" style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981', fontSize: '10px', padding: '2px 6px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <span>{categoryLabel}</span>
@@ -721,10 +812,10 @@ export function ExerciseCreatePage() {
                   <div style={{ color: '#9ca3af', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>Aucune catégorie</div>
                 )}
               </div>
-              {exerciseData.categories.length < FIELD_CATEGORIES.length && (
+              {exerciseData.categories.length < FIELD_CATEGORIES_FROM_BACKEND.length && (
                 <select value="" onChange={e => { const selectedValue = e.target.value; if (selectedValue && !exerciseData.categories.includes(selectedValue)) { setExerciseData(p => ({ ...p, categories: [...p.categories, selectedValue], tags: p.tags.filter(t => t !== selectedValue) })); } e.target.value = ''; }} style={{ width: '100%', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white', fontSize: '12px', outline: 'none', marginTop: '8px' }}>
                   <option value="">+ Ajouter catégorie...</option>
-                  {FIELD_CATEGORIES.filter(cat => !exerciseData.categories.includes(cat.value)).map(cat => (<option key={`option-${cat.value}`} value={cat.value} style={{ backgroundColor: '#283544', color: 'white' }}>{cat.label}</option>))}
+                  {FIELD_CATEGORIES_FROM_BACKEND.filter(cat => !exerciseData.categories.includes(cat.value)).map(cat => (<option key={`option-${cat.value}`} value={cat.value} style={{ backgroundColor: '#283544', color: 'white' }}>{cat.label}</option>))}
                 </select>
               )}
             </div>
@@ -733,7 +824,7 @@ export function ExerciseCreatePage() {
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Niveau</label>
                 <select value={exerciseData.ageCategory} onChange={e => setExerciseData(p => ({ ...p, ageCategory: e.target.value }))} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}>
-                  {FIELD_AGE_CATEGORIES.map(cat => (<option key={cat.value} value={cat.value} style={{ backgroundColor: '#283544', color: 'white' }}>{cat.label}</option>))}
+                  {FIELD_AGE_CATEGORIES_FROM_BACKEND.map(cat => (<option key={cat.value} value={cat.value} style={{ backgroundColor: '#283544', color: 'white' }}>{cat.label}</option>))}
                 </select>
               </div>
               <div>
@@ -1069,7 +1160,7 @@ export function ExerciseCreatePage() {
                     {exerciseData.categories.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {exerciseData.categories.map((category, index) => {
-                          const categoryLabel = FIELD_CATEGORIES.find(c => c.value === category)?.label || category;
+                          const categoryLabel = FIELD_CATEGORIES_FROM_BACKEND.find(c => c.value === category)?.label || category;
                           return (
                             <Badge 
                               key={`category-${category}-${index}`} 
@@ -1099,7 +1190,7 @@ export function ExerciseCreatePage() {
                   </div>
                   
                   {/* Sélecteur pour ajouter des catégories - toujours en dessous */}
-                  {exerciseData.categories.length < FIELD_CATEGORIES.length && (
+                  {exerciseData.categories.length < FIELD_CATEGORIES_FROM_BACKEND.length && (
                     <select
                       key="category-selector"
                       value=""
@@ -1107,8 +1198,8 @@ export function ExerciseCreatePage() {
                         const selectedValue = e.target.value;
 
                         if (selectedValue && !exerciseData.categories.includes(selectedValue)) {
-                          setExerciseData(p => ({ 
-                            ...p, 
+                          setExerciseData(p => ({
+                            ...p,
                             categories: [...p.categories, selectedValue],
                             tags: p.tags.filter(t => t !== selectedValue)
                           }));
@@ -1119,7 +1210,7 @@ export function ExerciseCreatePage() {
                       className="w-full bg-white/5 exersio-border text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00d4aa] mt-2"
                     >
                       <option value="">+ Ajouter une catégorie...</option>
-                      {FIELD_CATEGORIES
+                      {FIELD_CATEGORIES_FROM_BACKEND
                         .filter(cat => !exerciseData.categories.includes(cat.value))
                         .map(cat => (
                           <option key={`option-${cat.value}`} value={cat.value} className="bg-[#283544] text-white">
@@ -1132,12 +1223,12 @@ export function ExerciseCreatePage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Niveau</label>
-                  <select 
-                    value={exerciseData.ageCategory} 
+                  <select
+                    value={exerciseData.ageCategory}
                     onChange={e => setExerciseData(p => ({ ...p, ageCategory: e.target.value }))}
                     className="w-full bg-white/5 exersio-border text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00d4aa]"
                   >
-                    {FIELD_AGE_CATEGORIES.map(cat => (
+                    {FIELD_AGE_CATEGORIES_FROM_BACKEND.map(cat => (
                       <option key={cat.value} value={cat.value} className="bg-[#283544] text-white">
                         {cat.label}
                       </option>
@@ -1148,8 +1239,8 @@ export function ExerciseCreatePage() {
 
               <div>
                 <label className="block text-sm font-medium mb-2">Intensité</label>
-                <select 
-                  value={exerciseData.intensity} 
+                <select
+                  value={exerciseData.intensity}
                   onChange={e => setExerciseData(p => ({ ...p, intensity: e.target.value }))}
                   className="w-full bg-white/5 exersio-border text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00d4aa]"
                 >

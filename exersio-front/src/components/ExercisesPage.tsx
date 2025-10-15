@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useExercises } from '../contexts/ExercisesContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useCategories } from '../contexts/CategoriesContext';
+import { useSports } from '../contexts/SportsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { memoizedFilters, useDebouncedCallback } from '../utils/memoization';
 import { MobileHeader } from './MobileHeader';
@@ -16,11 +19,18 @@ export function ExercisesPage() {
   const { exercises, actions, state } = useExercises();
   const { navigate } = useNavigation();
   const { actions: favoritesActions } = useFavorites();
+  const { state: categoriesState } = useCategories();
+  const { state: sportsState, loadSports } = useSports();
+  const { user } = useAuth();
   const isMobile = useIsMobile();
-  
+
+  // Initialiser selectedSport avec le sport préféré de l'utilisateur, ou 'all' par défaut
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [activeFilter, setActiveFilter] = useState('Tous');
+  const [selectedSport, setSelectedSport] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedAge, setSelectedAge] = useState('all');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [currentScope, setCurrentScope] = useState<'personal' | 'club' | 'all'>('all');
 
   // Debounce de la recherche pour éviter les filtres trop fréquents
@@ -32,6 +42,21 @@ export function ExercisesPage() {
     debouncedSearch(searchTerm);
   }, [searchTerm, debouncedSearch]);
 
+  // Charger les sports au montage
+  useEffect(() => {
+    loadSports();
+  }, []);
+
+  // Initialiser le filtre de sport avec le sport préféré de l'utilisateur
+  useEffect(() => {
+    const sports = sportsState.sports.data || [];
+
+    // Vérifier si on doit initialiser avec le sport préféré
+    if (user?.preferredSport && sports.length > 0 && selectedSport === 'all') {
+      setSelectedSport(user.preferredSport.slug);
+    }
+  }, [user, sportsState.sports.data, selectedSport]);
+
   // Charger les exercices et favoris au montage et quand le scope change
   useEffect(() => {
     actions.setFilters({ scope: currentScope });
@@ -40,21 +65,73 @@ export function ExercisesPage() {
     favoritesActions.loadFavorites();
   }, [currentScope]);
 
-  // Générer les tags dynamiquement à partir des exercices
-  const filterTags = useMemo(() => {
-    const categories = [...new Set(exercises.map(ex => ex.category))].filter(Boolean);
-    const ageCategories = [...new Set(exercises.map(ex => ex.ageCategory))].filter(Boolean);
-    
-    const allTags = [
-      'Tous',
-      ...categories.map(cat => cat.charAt(0).toUpperCase() + cat.slice(1)),
-      ...ageCategories.map(age => age.charAt(0).toUpperCase() + age.slice(1)),
-      'Favoris'
+  // Générer les filtres de sports depuis le backend (SportsContext)
+  const sportFilters = useMemo(() => {
+    const sports = sportsState.sports.data || [];
+    return [
+      { value: 'all', label: 'Tous les sports' },
+      ...sports
+        .sort((a, b) => a.order - b.order)
+        .map(sport => ({
+          value: sport.slug,
+          label: sport.name
+        }))
     ];
-    
-    // Déduplicater les tags pour éviter les clés dupliquées
-    return [...new Set(allTags)];
-  }, [exercises]);
+  }, [sportsState.sports.data]);
+
+  // Générer les filtres de catégories depuis le backend (CategoriesContext)
+  // Filtrés par le sport sélectionné
+  const categoryFilters = useMemo(() => {
+    const categories = categoriesState.exerciseCategories.data || [];
+    const sports = sportsState.sports.data || [];
+
+    // Si un sport est sélectionné, filtrer les catégories par ce sport
+    let filteredCategories = categories;
+    if (selectedSport !== 'all') {
+      const currentSport = sports.find(s => s.slug === selectedSport);
+      if (currentSport) {
+        filteredCategories = categories.filter(cat => cat.sportId === currentSport.id);
+      }
+    }
+
+    return [
+      { value: 'all', label: 'Toutes', id: 'all' },
+      ...filteredCategories
+        .sort((a, b) => a.order - b.order)
+        .map(cat => ({
+          value: cat.slug,
+          label: cat.name,
+          id: cat.id
+        }))
+    ];
+  }, [categoriesState.exerciseCategories.data, sportsState.sports.data, selectedSport]);
+
+  // Générer les filtres d'âges depuis le backend (CategoriesContext)
+  // Filtrés par le sport sélectionné
+  const ageFilters = useMemo(() => {
+    const ages = categoriesState.ageCategories.data || [];
+    const sports = sportsState.sports.data || [];
+
+    // Si un sport est sélectionné, filtrer les âges par ce sport
+    let filteredAges = ages;
+    if (selectedSport !== 'all') {
+      const currentSport = sports.find(s => s.slug === selectedSport);
+      if (currentSport) {
+        filteredAges = ages.filter(age => age.sportId === currentSport.id);
+      }
+    }
+
+    return [
+      { value: 'all', label: 'Tous âges', id: 'all' },
+      ...filteredAges
+        .sort((a, b) => a.order - b.order)
+        .map(age => ({
+          value: age.slug,
+          label: age.name,
+          id: age.id  // Ajouter l'ID pour les clés React uniques
+        }))
+    ];
+  }, [categoriesState.ageCategories.data, sportsState.sports.data, selectedSport]);
 
   // Fonction pour copier un exercice - maintenant en mode local
   const copyExercise = (exercise: Exercise) => {
@@ -87,17 +164,41 @@ export function ExercisesPage() {
 
   // Filtrage des exercices avec mémorisation optimisée et debounce
   const filteredExercises = useMemo(() => {
-    const filters = {
-      search: debouncedSearchTerm,
-      category: activeFilter === 'Tous' ? 'all' : activeFilter,
-      favorites: activeFilter === 'Favoris'
-    };
+    let result = exercises.map(ex => ({ ...ex, isFavorite: isFavorite(ex.id) }));
 
-    return memoizedFilters.filterExercises(
-      exercises.map(ex => ({ ...ex, isFavorite: isFavorite(ex.id) })),
-      filters
-    );
-  }, [exercises, debouncedSearchTerm, activeFilter, favoritesActions.favorites]);
+    // Filtre de recherche
+    if (debouncedSearchTerm) {
+      const term = debouncedSearchTerm.toLowerCase();
+      result = result.filter(ex =>
+        ex.name.toLowerCase().includes(term) ||
+        ex.description?.toLowerCase().includes(term) ||
+        ex.category?.toLowerCase().includes(term) ||
+        ex.tags?.some(tag => tag.toLowerCase().includes(term))
+      );
+    }
+
+    // Filtre par sport
+    if (selectedSport !== 'all') {
+      result = result.filter(ex => ex.sport === selectedSport);
+    }
+
+    // Filtre par catégorie
+    if (selectedCategory !== 'all') {
+      result = result.filter(ex => ex.category === selectedCategory);
+    }
+
+    // Filtre par âge
+    if (selectedAge !== 'all') {
+      result = result.filter(ex => ex.ageCategory === selectedAge);
+    }
+
+    // Filtre favoris
+    if (showFavoritesOnly) {
+      result = result.filter(ex => ex.isFavorite);
+    }
+
+    return result;
+  }, [exercises, debouncedSearchTerm, selectedSport, selectedCategory, selectedAge, showFavoritesOnly, favoritesActions.favorites]);
 
   // Fonction pour créer un diagramme de terrain unifié
   const createCourtDiagram = (exercise: Exercise) => {
@@ -131,30 +232,71 @@ export function ExercisesPage() {
     }
   };
 
+  // Fonction pour réinitialiser tous les filtres
+  const resetFilters = () => {
+    setSelectedSport('all');
+    setSelectedCategory('all');
+    setSelectedAge('all');
+    setShowFavoritesOnly(false);
+    setSearchTerm('');
+  };
+
+  // Vérifier si des filtres sont actifs
+  const hasActiveFilters = selectedSport !== 'all' || selectedCategory !== 'all' || selectedAge !== 'all' || showFavoritesOnly || searchTerm !== '';
+
   // Filtres pour la version mobile
   const mobileFilters = useMemo(() => {
-    // Générer les catégories dynamiquement
-    const categories = [...new Set(exercises.map(ex => ex.category).filter(Boolean))];
-    const ageCategories = [...new Set(exercises.map(ex => ex.ageCategory).filter(Boolean))];
-    
     return [
+      {
+        key: 'sport',
+        label: 'Sport',
+        value: selectedSport,
+        onChange: (value: string) => {
+          setSelectedSport(value);
+          // Réinitialiser catégorie et âge lors du changement de sport
+          setSelectedCategory('all');
+          setSelectedAge('all');
+        },
+        options: sportFilters.map(filter => ({
+          value: filter.value,
+          label: filter.label,
+          count: filter.value === 'all' ? exercises.length : exercises.filter(ex => ex.sport === filter.value).length
+        }))
+      },
       {
         key: 'category',
         label: 'Catégorie',
-        value: activeFilter === 'Tous' ? 'all' : activeFilter.toLowerCase(),
-        onChange: (value: string) => setActiveFilter(value === 'all' ? 'Tous' : value.charAt(0).toUpperCase() + value.slice(1)),
+        value: selectedCategory,
+        onChange: (value: string) => setSelectedCategory(value),
+        options: categoryFilters.map(filter => ({
+          value: filter.value,
+          label: filter.label,
+          count: filter.value === 'all' ? exercises.length : exercises.filter(ex => ex.category === filter.value).length
+        }))
+      },
+      {
+        key: 'age',
+        label: 'Tranche d\'âge',
+        value: selectedAge,
+        onChange: (value: string) => setSelectedAge(value),
+        options: ageFilters.map(filter => ({
+          value: filter.value,
+          label: filter.label,
+          count: filter.value === 'all' ? exercises.length : exercises.filter(ex => ex.ageCategory === filter.value).length
+        }))
+      },
+      {
+        key: 'favorites',
+        label: 'Favoris',
+        value: showFavoritesOnly ? 'favorites' : 'all',
+        onChange: (value: string) => setShowFavoritesOnly(value === 'favorites'),
         options: [
-          { value: 'all', label: 'Tous' },
-          ...categories.map(cat => ({ 
-            value: cat.toLowerCase(), 
-            label: cat.charAt(0).toUpperCase() + cat.slice(1),
-            count: exercises.filter(ex => ex.category === cat).length
-          })),
-          { value: 'favoris', label: 'Favoris', count: exercises.filter(ex => favoritesActions.isFavorite(ex.id)).length }
+          { value: 'all', label: 'Tous', count: exercises.length },
+          { value: 'favorites', label: 'Favoris uniquement', count: exercises.filter(ex => favoritesActions.isFavorite(ex.id)).length }
         ]
       }
     ];
-  }, [exercises, activeFilter, favoritesActions]);
+  }, [selectedSport, selectedCategory, selectedAge, showFavoritesOnly, sportFilters, categoryFilters, ageFilters, exercises, favoritesActions]);
 
   if (isMobile) {
     return (
@@ -170,6 +312,8 @@ export function ExercisesPage() {
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
           filters={mobileFilters}
+          onResetFilters={resetFilters}
+          hasActiveFilters={hasActiveFilters}
         />
 
         <ResultsCounter
@@ -179,7 +323,7 @@ export function ExercisesPage() {
           isLoading={state.exercises.isLoading}
         />
 
-        <div className="p-4 space-y-4">
+        <div className="p-4">
           {state.exercises.isLoading ? (
             <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-8 text-center">
               <div className="w-8 h-8 border-2 border-[#00d4aa] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -189,18 +333,18 @@ export function ExercisesPage() {
             <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-8 text-center">
               <div className="text-4xl mb-4">🏐</div>
               <h3 className="text-lg font-semibold text-white mb-2">
-                {searchTerm || activeFilter !== 'Tous' 
+                {hasActiveFilters
                   ? 'Aucun exercice trouvé'
                   : 'Aucun exercice disponible'
                 }
               </h3>
               <p className="text-gray-400 mb-4">
-                {searchTerm || activeFilter !== 'Tous' 
+                {hasActiveFilters
                   ? 'Essayez de modifier vos filtres ou recherche.'
                   : 'Commencez par créer votre premier exercice.'
                 }
               </p>
-              {(!searchTerm && activeFilter === 'Tous') && (
+              {!hasActiveFilters && (
                 <button
                   onClick={() => navigate('exercise-create')}
                   className="bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-6 py-3 rounded-lg font-medium transition-colors"
@@ -210,32 +354,36 @@ export function ExercisesPage() {
               )}
             </div>
           ) : (
-            filteredExercises.map((exercise: Exercise) => (
-              <div
-                key={exercise.id}
-                onClick={() => navigate('exercise-detail', { exerciseId: exercise.id })}
-                className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden active:scale-[0.98] transition-all duration-200"
-              >
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, 330px)',
+              gap: '16px',
+              justifyContent: 'center'
+            }}>
+              {filteredExercises.map((exercise: Exercise) => (
+                <div
+                  key={exercise.id}
+                  onClick={() => navigate('exercise-detail', { exerciseId: exercise.id })}
+                  className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden active:scale-[0.98] transition-all duration-200"
+                >
                 {/* Terrain de visualisation mobile */}
-                <div className="h-32 bg-gradient-to-br from-slate-700 to-slate-600 relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center p-2">
-                    <div style={{ width: '100%', maxHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {createCourtDiagram(exercise)}
-                    </div>
+                <div style={{ height: '190px' }} className="bg-gradient-to-br from-slate-700 to-slate-600 relative overflow-hidden">
+                  <div className="absolute inset-0">
+                    {createCourtDiagram(exercise)}
                   </div>
-                  <div className="absolute top-2 right-2 bg-amber-500/20 text-amber-400 px-2 py-1 rounded text-xs font-semibold">
+                  <div className="absolute top-1.5 right-1.5 bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded text-xs font-semibold">
                     {exercise.duration} min
                   </div>
                 </div>
 
                 {/* Contenu de la carte */}
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-3">
+                <div className="p-2.5">
+                  <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-lg truncate mb-1">
+                      <h3 className="font-semibold text-white text-base truncate mb-0.5">
                         {exercise.name}
                       </h3>
-                      <div className="text-sm text-gray-400">
+                      <div className="text-xs text-gray-400">
                         {exercise.category} • {exercise.ageCategory}
                       </div>
                     </div>
@@ -244,7 +392,7 @@ export function ExercisesPage() {
                         e.stopPropagation();
                         toggleFavorite(exercise.id);
                       }}
-                      className={`p-2 rounded-lg transition-colors ${
+                      className={`p-1.5 rounded-lg transition-colors ${
                         isFavorite(exercise.id)
                           ? 'bg-red-500/20 text-red-400'
                           : 'bg-white/5 text-gray-400'
@@ -254,30 +402,30 @@ export function ExercisesPage() {
                     </button>
                   </div>
 
-                  <p className="text-gray-300 text-sm mb-3 line-clamp-2">
+                  <p className="text-gray-300 text-xs mb-2 line-clamp-2">
                     {exercise.description}
                   </p>
 
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-medium border border-blue-500/30">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-xs font-medium border border-blue-500/30">
                       {exercise.category}
                     </span>
-                    <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-medium border border-green-500/30">
-                      {exercise.intensity} intensité
+                    <span className="bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded text-xs font-medium border border-green-500/30">
+                      {exercise.intensity}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm text-gray-400">
-                    <span>👥 {exercise.playersMin || 1}-{exercise.playersMax || 12} joueurs</span>
+                  <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+                    <span>👥 {exercise.playersMin || 1}-{exercise.playersMax || 12}</span>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-white/5">
+                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-white/5">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         navigate('exercise-detail', { exerciseId: exercise.id });
                       }}
-                      className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+                      className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
                       title="Voir détails"
                     >
                       👁️
@@ -287,7 +435,7 @@ export function ExercisesPage() {
                         e.stopPropagation();
                         navigate('exercise-edit', { exerciseId: exercise.id });
                       }}
-                      className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+                      className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
                       title="Modifier"
                     >
                       ✏️
@@ -297,7 +445,7 @@ export function ExercisesPage() {
                         e.stopPropagation();
                         copyExercise(exercise);
                       }}
-                      className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+                      className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
                       title="Copier"
                     >
                       📋
@@ -305,7 +453,8 @@ export function ExercisesPage() {
                   </div>
                 </div>
               </div>
-            ))
+            ))}
+            </div>
           )}
         </div>
 
@@ -357,9 +506,6 @@ export function ExercisesPage() {
             </div>
           </div>
           <div className="flex gap-3">
-            <button className="px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer transition-all bg-white/8 border border-white/12 text-white flex items-center gap-2 hover:bg-white/12">
-              📤 Exporter
-            </button>
             <button
               onClick={() => navigate('exercise-create')}
               className="px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer transition-all border-none bg-gradient-to-r from-blue-500 to-emerald-500 text-white flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30"
@@ -410,40 +556,203 @@ export function ExercisesPage() {
               />
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            {filterTags.map(tag => (
+          {/* Section Filtres */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Sports */}
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Sports
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {sportFilters.map(filter => (
+                  <button
+                    key={`sport-${filter.value}`}
+                    onClick={() => {
+                      setSelectedSport(filter.value);
+                      // Réinitialiser catégorie et âge lors du changement de sport
+                      setSelectedCategory('all');
+                      setSelectedAge('all');
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      background: selectedSport === filter.value
+                        ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(124, 58, 237, 0.2))'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: selectedSport === filter.value
+                        ? '1px solid rgba(139, 92, 246, 0.3)'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: selectedSport === filter.value ? '#a78bfa' : '#94a3b8',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      if (selectedSport !== filter.value) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (selectedSport !== filter.value) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      }
+                    }}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Catégories */}
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Catégories
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {categoryFilters.map(filter => (
+                  <button
+                    key={`category-${filter.id}`}
+                    onClick={() => setSelectedCategory(filter.value)}
+                    style={{
+                      padding: '8px 16px',
+                      background: selectedCategory === filter.value
+                        ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2))'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: selectedCategory === filter.value
+                        ? '1px solid rgba(59, 130, 246, 0.3)'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: selectedCategory === filter.value ? '#3b82f6' : '#94a3b8',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      if (selectedCategory !== filter.value) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (selectedCategory !== filter.value) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      }
+                    }}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tranches d'âge */}
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Tranches d'âge
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {ageFilters.map(filter => (
+                  <button
+                    key={`age-${filter.id}`}
+                    onClick={() => setSelectedAge(filter.value)}
+                    style={{
+                      padding: '8px 16px',
+                      background: selectedAge === filter.value
+                        ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.2))'
+                        : 'rgba(255, 255, 255, 0.05)',
+                      border: selectedAge === filter.value
+                        ? '1px solid rgba(16, 185, 129, 0.3)'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: selectedAge === filter.value ? '#10b981' : '#94a3b8',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseOver={(e) => {
+                      if (selectedAge !== filter.value) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (selectedAge !== filter.value) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      }
+                    }}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Boutons Favoris et Réinitialiser */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button
-                key={tag}
-                onClick={() => setActiveFilter(tag)}
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                 style={{
                   padding: '8px 16px',
-                  background: activeFilter === tag 
-                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2))' 
+                  background: showFavoritesOnly
+                    ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2))'
                     : 'rgba(255, 255, 255, 0.05)',
-                  border: activeFilter === tag 
-                    ? '1px solid rgba(59, 130, 246, 0.3)' 
+                  border: showFavoritesOnly
+                    ? '1px solid rgba(251, 191, 36, 0.3)'
                     : '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '20px',
                   fontSize: '12px',
                   fontWeight: '600',
-                  color: activeFilter === tag ? '#3b82f6' : '#94a3b8',
+                  color: showFavoritesOnly ? '#fbbf24' : '#94a3b8',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
                 }}
                 onMouseOver={(e) => {
-                  if (activeFilter !== tag) {
+                  if (!showFavoritesOnly) {
                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                   }
                 }}
                 onMouseOut={(e) => {
-                  if (activeFilter !== tag) {
+                  if (!showFavoritesOnly) {
                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
                   }
                 }}
               >
-                {tag}
+                ⭐ Favoris uniquement
               </button>
-            ))}
+
+              {hasActiveFilters && (
+                <button
+                  onClick={resetFilters}
+                  style={{
+                    padding: '8px 16px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    color: '#ef4444',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                  }}
+                >
+                  🔄 Réinitialiser
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -502,7 +811,7 @@ export function ExercisesPage() {
               color: '#ffffff',
               marginBottom: '12px'
             }}>
-              {searchTerm || activeFilter !== 'Tous' 
+              {hasActiveFilters
                 ? 'Aucun exercice trouvé'
                 : 'Aucun exercice disponible'
               }
@@ -513,12 +822,12 @@ export function ExercisesPage() {
               marginBottom: '30px',
               lineHeight: '1.6'
             }}>
-              {searchTerm || activeFilter !== 'Tous' 
+              {hasActiveFilters
                 ? 'Essayez de modifier vos filtres ou votre recherche pour voir plus d\'exercices.'
                 : 'Commencez par créer votre premier exercice pour enrichir votre base de données.'
               }
             </p>
-            {(!searchTerm && activeFilter === 'Tous') && (
+            {!hasActiveFilters && (
               <button 
                 onClick={() => navigate('exercise-create')}
                 style={{
@@ -551,9 +860,10 @@ export function ExercisesPage() {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, 330px)',
             gap: '25px',
-            marginBottom: '40px'
+            marginBottom: '40px',
+            justifyContent: 'center'
           }}>
             {filteredExercises.map((exercise: Exercise) => (
             <div
@@ -582,7 +892,7 @@ export function ExercisesPage() {
             >
               {/* Visualisation du terrain unifié */}
               <div style={{
-                height: '180px',
+                height: '190px',
                 background: 'linear-gradient(135deg, #1e293b, #334155)',
                 position: 'relative',
                 overflow: 'hidden'
@@ -606,18 +916,14 @@ export function ExercisesPage() {
                   top: 0,
                   left: 0,
                   right: 0,
-                  bottom: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '8px'
+                  bottom: 0
                 }}>
                   {createCourtDiagram(exercise)}
                 </div>
               </div>
 
               {/* Contenu de la carte */}
-              <div style={{ padding: '20px' }}>
+              <div style={{ padding: '16px' }}>
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',

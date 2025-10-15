@@ -2,7 +2,9 @@
 
 **Date :** 14 octobre 2025
 **Branche :** feat/arrow-control-points
-**Objectif :** Amélioration UX/UI pages exercices + corrections fonctionnelles
+**Objectif :** Migration système catégories multi-sport + Améliorations UX/UI
+
+**⚠️ MIGRATION MAJEURE EN COURS:** Refonte architecture base de données avec table Sport
 
 ---
 
@@ -23,13 +25,13 @@
 
 ## 📦 Phase 1 : ExercisesPage - Cards et Filtres
 
-### 1.1 Amélioration Cards Exercices
+### 1.1 Amélioration Cards Exercices ✅ TERMINÉ
 **Fichier :** `src/components/ExercisesPage.tsx`
 
 #### Modifications cards mobile (lignes ~220-229)
-- ✅ **Afficher terrain complet** : Enlever padding 8px qui coupe l'image
-- ✅ **Supprimer bouton Exporter** : Retirer de l'interface cards
-- ✅ **Optimiser affichage** : Garder flexbox centering sans padding
+- ✅ **Afficher terrain complet** : Padding p-2 enlevé (ligne 221)
+- ✅ **Supprimer bouton Exporter** : Retiré lignes 360-362
+- ✅ **Optimiser affichage** : Terrain s'affiche maintenant en plein écran dans cards
 
 ```tsx
 // Avant
@@ -47,69 +49,112 @@
 - ✅ **Même modifications** que mobile
 - ✅ **Consistency** : Layout identique mobile/desktop
 
-### 1.2 Refonte Système de Filtres
+### 1.2 Refonte Système de Filtres ✅ TERMINÉ
 **Fichier :** `src/components/ExercisesPage.tsx`
 
 #### Dissociation Catégories et Tranches d'Âge
-**Actuellement :** Filtres mélangés (categories + ageCatéories dans même array)
+✅ **États séparés créés** (lignes 23-26):
+- `selectedCategory` : Filtre de catégorie indépendant
+- `selectedAge` : Filtre de tranche d'âge indépendant
+- `showFavoritesOnly` : Basculer affichage favoris
 
-**Nouveau système :**
+✅ **Filtres générés dynamiquement** (lignes 45-67):
 ```tsx
-// Deux groupes distincts de filtres
-const categoryFilters = ['all', 'echauffement', 'technique', 'tactique', 'physique', 'jeu'];
-const ageFilters = ['all', 'u11', 'u13', 'u15', 'u17', 'u19', 'seniors'];
+const categoryFilters = useMemo(() => {
+  const categories = [...new Set(exercises.map(ex => ex.category))].filter(Boolean);
+  return [
+    { value: 'all', label: 'Toutes' },
+    ...categories.map(cat => ({ value: cat, label: cat.charAt(0).toUpperCase() + cat.slice(1) }))
+  ];
+}, [exercises]);
 
-// États séparés
-const [selectedCategory, setSelectedCategory] = useState('all');
-const [selectedAge, setSelectedAge] = useState('all');
+const ageFilters = useMemo(() => {
+  const ages = [...new Set(exercises.map(ex => ex.ageCategory))].filter(Boolean);
+  return [
+    { value: 'all', label: 'Tous âges' },
+    ...ages.map(age => ({ value: age, label: age.charAt(0).toUpperCase() + age.slice(1) }))
+  ];
+}, [exercises]);
 ```
 
-#### Nouvelle UI Filtres
-```tsx
-<div className="filter-section">
-  <h3>Catégories</h3>
-  <div className="filter-buttons">
-    {categoryFilters.map(category => (...))}
-  </div>
+#### Nouvelle UI Filtres ✅ TERMINÉ (lignes 426-575)
+✅ **Deux sections distinctes** avec titres séparés:
+- Section "Catégories" avec tous les filtres de catégorie (bleu)
+- Section "Tranches d'âge" avec tous les filtres d'âge (vert)
+- Bouton "Favoris uniquement" avec couleur jaune
+- Bouton "Réinitialiser" affiché uniquement quand filtres actifs (rouge)
 
-  <h3>Tranches d'âge</h3>
-  <div className="filter-buttons">
-    {ageFilters.map(age => (...))}
-  </div>
-</div>
+#### Bouton Reset Filtres ✅ TERMINÉ (lignes 164-172)
+```tsx
+const resetFilters = () => {
+  setSelectedCategory('all');
+  setSelectedAge('all');
+  setShowFavoritesOnly(false);
+  setSearchTerm('');
+};
+
+const hasActiveFilters = selectedCategory !== 'all' || selectedAge !== 'all'
+  || showFavoritesOnly || searchTerm !== '';
 ```
 
-#### Bouton Reset Filtres
+#### Logique de Filtrage ✅ TERMINÉ (lignes 99-129)
 ```tsx
-<button
-  onClick={() => {
-    setSelectedCategory('all');
-    setSelectedAge('all');
-    setExerciseSearch('');
-  }}
-  className="reset-filters-btn"
->
-  🔄 Réinitialiser filtres
-</button>
+const filteredExercises = useMemo(() => {
+  let result = exercises.map(ex => ({ ...ex, isFavorite: isFavorite(ex.id) }));
+
+  // Filtre de recherche
+  if (debouncedSearchTerm) {
+    const term = debouncedSearchTerm.toLowerCase();
+    result = result.filter(ex =>
+      ex.name.toLowerCase().includes(term) ||
+      ex.description?.toLowerCase().includes(term) ||
+      ex.category?.toLowerCase().includes(term) ||
+      ex.tags?.some(tag => tag.toLowerCase().includes(term))
+    );
+  }
+
+  // Filtre par catégorie
+  if (selectedCategory !== 'all') {
+    result = result.filter(ex => ex.category === selectedCategory);
+  }
+
+  // Filtre par âge
+  if (selectedAge !== 'all') {
+    result = result.filter(ex => ex.ageCategory === selectedAge);
+  }
+
+  // Filtre favoris
+  if (showFavoritesOnly) {
+    result = result.filter(ex => ex.isFavorite);
+  }
+
+  return result;
+}, [exercises, debouncedSearchTerm, selectedCategory, selectedAge, showFavoritesOnly, favoritesActions.favorites]);
+
 ```
 
-#### Logique de Filtrage
-```tsx
-const filteredExercises = exercises.filter(ex => {
-  // Recherche textuelle
-  const matchesSearch = ex.name.toLowerCase().includes(exerciseSearch.toLowerCase());
+---
 
-  // Filtre catégorie
-  const matchesCategory = selectedCategory === 'all' || ex.category === selectedCategory;
+### ✅ PHASE 1 COMPLÉTÉE
 
-  // Filtre âge
-  const matchesAge = selectedAge === 'all' || ex.ageCategory === selectedAge;
+**Temps réalisé :** ~30 minutes
+**Fichiers modifiés :** 1 (ExercisesPage.tsx)
 
-  return matchesSearch && matchesCategory && matchesAge;
-});
-```
+**Changements effectués :**
+1. ✅ Terrain complet sans padding (ligne 221)
+2. ✅ Bouton Exporter supprimé (lignes 360-362)
+3. ✅ États filtres séparés (lignes 23-26)
+4. ✅ Filtres générés dynamiquement (lignes 45-67)
+5. ✅ Nouvelle UI filtres avec sections distinctes (lignes 426-575)
+6. ✅ Bouton Reset filtres (lignes 164-172, 547-573)
+7. ✅ Logique filtrage combinée (lignes 99-129)
 
-**Estimation :** 45 minutes
+**Validation :**
+- ✅ Compilation sans erreur
+- ✅ Serveur fonctionne (http://localhost:5174)
+- ⏳ Test utilisateur requis
+
+**Estimation :** 45 minutes → **Réalisé en 30 minutes**
 **Fichiers modifiés :** 1 (ExercisesPage.tsx)
 
 ---
