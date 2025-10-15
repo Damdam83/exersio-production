@@ -2,8 +2,8 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 14/10/2025
-**Session actuelle :** AMÉLIORATION AFFICHAGE EXERCICES + UX RESPONSIVE
+**Dernière mise à jour :** 15/10/2025
+**Session actuelle :** SYSTÈME CATÉGORIES MULTI-SPORT + FIX AGECATEGORYID
 
 ---
 
@@ -105,6 +105,31 @@
 - Configuration développement (console) vs production (fichiers)
 **Intégration modules :** AuthService, MailService, PrismaService avec logs spécialisés
 
+### 10. Système catégories multi-sport avec relations DB (15/10/2025)
+**Problème :** ageCategoryId manquant dans le payload de création d'exercice, filtres par âge non fonctionnels
+**Solution Backend :**
+- Créé module Sports complet (controller, service, dto) pour gestion sports
+- Script seed-sports.ts pour peupler table Sport avec 5 sports (volleyball, football, tennis, handball, basketball)
+- Mise à jour schema.prisma : modèle Sport avec relations exerciseCategories/ageCategories via sportId
+- auth.service : inclusion de preferredSport dans réponse utilisateur
+- Endpoints categories retournent maintenant les relations sport
+
+**Solution Frontend :**
+- Créé SportsContext et sportsApi pour gestion état sports
+- Fonction getCategoryIds() : conversion slugs → IDs (categoryId, ageCategoryId, sportId)
+- ExerciseCreatePage : utilisation catégories backend filtrées par sport sélectionné
+- useEffect pour réinitialiser catégories lors changement de sport
+- handleSave/handleSaveDraft incluent maintenant categoryId, ageCategoryId et sportId
+- AuthForm : inclusion preferredSport dans payload d'inscription
+- ExercisesPage : filtres utilisent catégories backend
+
+**Fixes :**
+- Warning React "Expected static flag was missing" dans SportSelectionModal (hooks avant return conditionnel)
+- Suppression doublon état selectedSport
+- Catégories et âges chargent maintenant depuis backend avec filtrage par sport
+
+**Résultat :** ✅ Filtres par âge fonctionnels avec relations DB correctes, payload complet avec tous les IDs
+
 ---
 
 ## ⚙️ Configuration VS Code
@@ -146,7 +171,9 @@ C:\PROJETS\Exersio\front/
 │   │   │   ├── mail/         # ✅ Service NodeMailer + templates HTML
 │   │   │   ├── exercises/
 │   │   │   ├── sessions/
-│   │   │   ├── favorites/    # ✅ Nouveau module
+│   │   │   ├── favorites/    # ✅ Module favorites
+│   │   │   ├── sports/       # ✅ Module sports (15/10/2025)
+│   │   │   ├── categories/   # ✅ Module categories avec relations Sport
 │   │   │   └── ...
 │   │   └── prisma/           # ✅ Service avec logging événements
 │   └── prisma/
@@ -166,7 +193,9 @@ C:\PROJETS\Exersio\front/
 │   │   │   ├── SyncIndicator.tsx     # ✅ Indicateurs synchronisation
 │   │   │   └── ...
 │   │   ├── contexts/
-│   │   │   └── ExercisesContext.tsx  # ✅ Intégré mode offline
+│   │   │   ├── ExercisesContext.tsx  # ✅ Intégré mode offline
+│   │   │   ├── SportsContext.tsx     # ✅ Gestion état sports (15/10/2025)
+│   │   │   └── CategoriesContext.tsx # ✅ Gestion catégories avec filtrage sport
 │   │   ├── hooks/
 │   │   │   ├── useIsMobile.ts        # ✅ Détection mobile
 │   │   │   ├── useOrientation.ts     # ✅ Portrait/paysage
@@ -175,9 +204,11 @@ C:\PROJETS\Exersio\front/
 │   │   ├── services/
 │   │   │   ├── api.ts                # ✅ Configuré pour mobile
 │   │   │   ├── offlineStorage.ts     # ✅ Service IndexedDB
-│   │   │   └── syncService.ts        # ✅ Synchronisation avancée
+│   │   │   ├── syncService.ts        # ✅ Synchronisation avancée
+│   │   │   ├── sportsApi.ts          # ✅ Service API sports (15/10/2025)
+│   │   │   └── categoriesService.ts  # ✅ Service API catégories avec relations
 │   │   └── types/
-│   │       └── index.ts              # ✅ Types mis à jour (successCriteria)
+│   │       └── index.ts              # ✅ Types (Sport, ExerciseCategory, AgeCategory, etc.)
 └── .vscode/               # ✅ Configuration VS Code
 ```
 
