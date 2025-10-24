@@ -241,17 +241,25 @@ async function handleUnauthorizedError(
   config: RequestInit
 ): Promise<Response> {
   const url = input.toString();
-  
+
   // Ne pas essayer de refresh sur les endpoints d'authentification
   if (url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/profile') || url.includes('/auth/refresh')) {
-    // Pour les erreurs d'auth, juste retourner la réponse 401 pour que le contexte la traite
+    // Pour les erreurs d'auth, juste retourner la réponse 401
+    // Éviter la redirection ici pour laisser le composant gérer l'état
     return new Response('Unauthorized', { status: 401 });
   }
-  
+
   try {
-    // Essayer de rafraîchir le token
+    // Essayer de rafraîchir le token UNE SEULE FOIS
     const newToken = await refreshTokenIfNeeded();
-    
+
+    // Si pas de nouveau token, déconnecter sans boucle
+    if (!newToken) {
+      await authService.logout();
+      window.location.href = '/login';
+      return new Response('Unauthorized', { status: 401 });
+    }
+
     // Refaire la requête avec le nouveau token
     const newConfig = {
       ...config,
@@ -262,21 +270,21 @@ async function handleUnauthorizedError(
     };
 
     const response = await fetch(input, newConfig);
-    
+
     // Si la requête échoue encore avec 401, déconnecter l'utilisateur
     if (response.status === 401) {
       await authService.logout();
-      // Rediriger vers la page de connexion ou émettre un événement
       window.location.href = '/login';
-      throw new Error('Session expired, please login again');
+      return new Response('Session expired', { status: 401 });
     }
 
     return response;
   } catch (error) {
-    // Si le refresh échoue, déconnecter l'utilisateur
+    // Si le refresh échoue, déconnecter l'utilisateur SANS relancer de requête
+    console.error('Unauthorized error handled, logging out:', error);
     await authService.logout();
     window.location.href = '/login';
-    throw error;
+    return new Response('Unauthorized', { status: 401 });
   }
 }
 

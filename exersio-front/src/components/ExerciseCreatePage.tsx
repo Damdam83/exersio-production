@@ -11,7 +11,7 @@ import { SportCourt } from './ExerciseEditor/SportCourt';
 import { Toolbar } from './ExerciseEditor/Toolbar';
 import { SportSelectionModal } from './SportSelectionModal';
 
-import { Arrow, Ball, FIELD_AGE_CATEGORIES, FIELD_CATEGORIES, FIELD_INTENSITIES, roleLabels as importedRoleLabels, Player, PlayerDisplayMode, TAG_SUGGESTIONS, Zone } from '../constants/exerciseEditor';
+import { Arrow, Ball, FIELD_INTENSITIES, roleLabels as importedRoleLabels, Player, PlayerDisplayMode, TAG_SUGGESTIONS, Zone } from '../constants/exerciseEditor';
 import { convertToFieldData, getEventPosition, initializeArrows, initializeBalls, initializePlayers, initializeZones } from '../utils/exerciseEditorHelpers';
 
 // Backup roleLabels au cas où l'import ne marche pas
@@ -27,9 +27,9 @@ const backupRoleLabels = {
 const roleLabels = importedRoleLabels || backupRoleLabels;
 
 import { useAuth } from '../contexts/AuthContext';
+import { useCategories } from '../contexts/CategoriesContext';
 import { useExercises } from '../contexts/ExercisesContext';
 import { useNavigation } from '../contexts/NavigationContext';
-import { useCategories } from '../contexts/CategoriesContext';
 import { useSports } from '../contexts/SportsContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useOrientation } from '../hooks/useOrientation';
@@ -128,7 +128,12 @@ export function ExerciseCreatePage() {
 
   // state formulaire
   const [exerciseData, setExerciseData] = useState({
-    name: isCopyMode ? params?.copyName || `${sourceExercise?.name} (Copie)` : sourceExercise?.name || '',
+    name: isCopyMode
+      ? (params?.copyName ||
+         (sourceExercise?.name?.includes('(Copie)') || sourceExercise?.name?.includes('(copie)')
+           ? sourceExercise.name
+           : `${sourceExercise?.name} (Copie)`))
+      : sourceExercise?.name || '',
     description: sourceExercise?.description || '',
     duration: sourceExercise?.duration || 15,
     playerCount: sourceExercise?.playerCount || 6,
@@ -840,22 +845,7 @@ export function ExerciseCreatePage() {
               <Textarea value={exerciseData.material} onChange={e => setExerciseData(p => ({ ...p, material: e.target.value }))} rows={3} className="bg-white/5 exersio-border text-white resize-none" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
 
-            {/* Tags mobile */}
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Tags</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
-                {exerciseData.tags.map((tag, index) => (
-                  <Badge key={`tag-${tag}-${index}`} variant="secondary" style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#3b82f6', fontSize: '10px', padding: '2px 6px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {tag}
-                    <button onClick={() => removeTag(tag)} style={{ color: '#ef4444', fontSize: '10px', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
-                  </Badge>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Input value={tagInput} onChange={e => { setTagInput(e.target.value); setShowTagSuggestions(e.target.value.length > 0); setFilteredTagSuggestions(TAG_SUGGESTIONS.filter(s => s.toLowerCase().includes(e.target.value.toLowerCase()) && !exerciseData.tags.includes(s))); }} onKeyDown={e => e.key === 'Enter' && addTag()} placeholder="Nouveau tag..." style={{ flex: 1, padding: '8px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white', fontSize: '12px', outline: 'none' }} />
-                <Button onClick={addTag} size="sm" className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]" style={{ padding: '8px 12px', borderRadius: '8px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer' }}>+</Button>
-              </div>
-            </div>
+  
           </div>
 
           {/* Étapes mobile */}

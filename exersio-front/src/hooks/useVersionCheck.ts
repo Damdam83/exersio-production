@@ -66,7 +66,8 @@ export function useVersionCheck() {
       // Sur desktop en production, marquer comme vérifié sans faire d'appel
       setState(prev => ({ ...prev, hasChecked: true }));
     }
-  }, [checkVersion, isMobile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Ne dépend que du montage initial
 
   // Actions pour les modals
   const handleUpdateNow = useCallback(() => {
@@ -112,7 +113,8 @@ export function useVersionCheck() {
   // Vérifier les rappels au montage
   useEffect(() => {
     checkUpdateReminder();
-  }, [checkUpdateReminder]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Ne dépend que du montage initial
 
   return {
     ...state,

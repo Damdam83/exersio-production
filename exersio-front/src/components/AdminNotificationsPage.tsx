@@ -27,6 +27,7 @@ interface NotificationStats {
   byType: {
     session_reminder?: number;
     exercise_added_to_club?: number;
+    member_joined_club?: number;
     system_notification?: number;
   };
   last24Hours: number;
@@ -181,6 +182,7 @@ export const AdminNotificationsPage: React.FC<AdminNotificationsPageProps> = ({ 
     switch (type) {
       case 'session_reminder': return <Calendar className="w-4 h-4 text-blue-500" />;
       case 'exercise_added_to_club': return <Users className="w-4 h-4 text-green-500" />;
+      case 'member_joined_club': return <User className="w-4 h-4 text-purple-500" />;
       case 'system_notification': return <Bell className="w-4 h-4 text-orange-500" />;
       default: return <Bell className="w-4 h-4 text-gray-500" />;
     }
@@ -422,6 +424,10 @@ export const AdminNotificationsPage: React.FC<AdminNotificationsPageProps> = ({ 
                     <div className="flex justify-between">
                       <span>Nouveaux exercices</span>
                       <span className="font-semibold">{stats.byType.exercise_added_to_club || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Nouveaux membres</span>
+                      <span className="font-semibold">{stats.byType.member_joined_club || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Notifications système</span>

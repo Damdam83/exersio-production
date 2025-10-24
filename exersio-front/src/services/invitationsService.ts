@@ -62,18 +62,6 @@ export class InvitationsService {
   }
 
   /**
-   * Répondre à une invitation
-   */
-  async respond(id: string, data: UpdateInvitationStatusData): Promise<Invitation> {
-    try {
-      return await api.patch<Invitation>(`/invitations/${id}/respond`, data);
-    } catch (error) {
-      console.error('Respond to invitation error:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Accepter une invitation
    */
   async accept(id: string): Promise<Invitation> {

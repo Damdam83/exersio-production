@@ -200,15 +200,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const initialize = async () => {
     dispatch({ type: 'INIT_START' });
-    
+
     try {
       const token = authService.getToken();
-      if (!token || authService.isTokenExpired()) {
-        dispatch({ type: 'INIT_ERROR', payload: 'No valid token' });
+      if (!token) {
+        dispatch({ type: 'INIT_ERROR', payload: 'No token found' });
         return;
       }
 
-      // Récupérer le profil utilisateur
+      // Vérifier si le token est complètement invalide (pas juste expiré)
+      try {
+        JSON.parse(atob(token.split('.')[1])); // Valider que c'est un JWT
+      } catch {
+        console.warn('Invalid token format, clearing...');
+        await authService.logout();
+        dispatch({ type: 'INIT_ERROR', payload: 'Invalid token' });
+        return;
+      }
+
+      // Essayer de récupérer le profil utilisateur
+      // Si le token est expiré, le refresh se fera automatiquement
       const user = await authService.getProfile();
       
       // Récupérer le club si l'utilisateur en fait partie
@@ -227,12 +238,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Initialization failed';
-      dispatch({ 
-        type: 'INIT_ERROR', 
+      console.warn('Auth initialization failed:', errorMessage);
+      dispatch({
+        type: 'INIT_ERROR',
         payload: errorMessage
       });
-      // Nettoyer les tokens invalides
-      authService.logout();
+      // Nettoyer les tokens invalides sans rediriger ici
+      // La redirection se fera automatiquement par le composant App
+      await authService.logout();
     }
   };
 

@@ -30,7 +30,8 @@ export function ProfilePage() {
     const loadInvitations = async () => {
       if (auth.user) {
         try {
-          const response = await invitationsService.getByEmail(auth.user.email);
+          // Le backend filtre automatiquement par l'email du JWT, pas besoin de passer l'email
+          const response = await invitationsService.list(1, 50);
           setInvitations(response?.data || []);
         } catch (error) {
           console.error('Erreur lors du chargement des invitations:', error);
@@ -118,13 +119,14 @@ export function ProfilePage() {
   const handleRespondToInvitation = async (invitationId: string, response: 'accepted' | 'declined') => {
     setIsLoading(true);
     try {
-      await invitationsService.respond(invitationId, { status: response });
-      
+      // Utiliser updateStatus au lieu de respond (qui n'existe plus)
+      await invitationsService.updateStatus(invitationId, response);
+
       // Mettre à jour la liste des invitations localement
-      setInvitations(prev => prev.map(inv => 
+      setInvitations(prev => prev.map(inv =>
         inv.id === invitationId ? { ...inv, status: response } : inv
       ));
-      
+
       // Si acceptée, recharger le profil pour récupérer le club
       if (response === 'accepted') {
         await authActions.initialize();

@@ -5,6 +5,7 @@ interface FilterOption {
   value: string;
   label: string;
   count?: number;
+  id?: string; // ID unique pour les clés React (évite les doublons entre sports)
 }
 
 interface MobileFiltersProps {
@@ -87,7 +88,7 @@ export function MobileFilters({
               <div className="flex flex-wrap gap-2">
                 {filter.options.map((option) => (
                   <button
-                    key={option.value}
+                    key={option.id || option.value}
                     onClick={() => filter.onChange(option.value)}
                     className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
                       filter.value === option.value

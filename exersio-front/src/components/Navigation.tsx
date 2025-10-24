@@ -150,49 +150,67 @@ export function Navigation({ isMobile, onLogout }: NavigationProps) {
     );
   }
 
-  // Navigation desktop (inchangée)
-  // return (
-  //   <nav className="flex items-center justify-between p-4 bg-gray-900 text-white">
-  //     <div className="flex items-center gap-3">
-  //       <span className="font-bold text-lg">
-  //         {currentClub ? currentClub.name : "Exersio"}
-  //       </span>
-  //     </div>
+  // Navigation desktop
+  return (
+    <>
+      <nav className="flex items-center justify-between p-4 bg-slate-900 text-white border-b border-slate-700">
+        <div className="flex items-center gap-3">
+          <img
+            src="/assets/logo_exersio_mobile.png"
+            alt="Exersio"
+            className="w-8 h-8 object-contain flex-shrink-0"
+          />
+          <span className="font-bold text-lg">
+            {currentClub ? currentClub.name : "Exersio"}
+          </span>
+        </div>
 
-  //     <div className="flex gap-4">
-  //       {menuItems.map((item) => (
-  //         <button
-  //           key={item.id}
-  //           onClick={() => setCurrentPage(item.id as any)}
-  //           className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-  //             currentPage === item.id
-  //               ? "bg-[#00d4aa] text-white"
-  //               : "hover:bg-gray-800 text-gray-300"
-  //           }`}
-  //         >
-  //           {item.icon}
-  //           <span>{item.label}</span>
-  //         </button>
-  //       ))}
-  //     </div>
+        <div className="flex gap-2">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setCurrentPage(item.id as any)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                currentPage === item.id
+                  ? "bg-gradient-to-r from-blue-500 to-emerald-500 text-white"
+                  : "hover:bg-slate-800 text-gray-300"
+              }`}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
 
-  //     <div className="flex items-center gap-3">
-  //       <NotificationBadge
-  //         onClick={() => setNotificationCenterOpen(true)}
-  //       />
-  //       {currentUser && (
-  //         <span className="text-sm text-gray-300">{currentUser.name}</span>
-  //       )}
-  //       <Button variant="outline" size="sm" onClick={onLogout}>
-  //         Déconnexion
-  //       </Button>
-  //     </div>
+        <div className="flex items-center gap-3">
+          <NotificationBadge
+            onClick={() => setNotificationCenterOpen(true)}
+            className="text-white hover:bg-slate-800"
+          />
+          {currentUser && (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center font-bold text-sm">
+                {currentUser?.firstName?.[0] || currentUser?.name?.[0] || "C"}
+                {currentUser?.lastName?.[0] || "M"}
+              </div>
+              <span className="text-sm text-gray-300">{currentUser.name}</span>
+            </div>
+          )}
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-gray-300 hover:text-white rounded-lg transition-colors text-sm"
+          >
+            <LogOut size={16} />
+            <span>Déconnexion</span>
+          </button>
+        </div>
+      </nav>
 
-  //     {/* Notification Center */}
-  //     <NotificationCenter
-  //       isOpen={notificationCenterOpen}
-  //       onClose={() => setNotificationCenterOpen(false)}
-  //     />
-  //   </nav>
-  // );
+      {/* Notification Center */}
+      <NotificationCenter
+        isOpen={notificationCenterOpen}
+        onClose={() => setNotificationCenterOpen(false)}
+      />
+    </>
+  );
 }

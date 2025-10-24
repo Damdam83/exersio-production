@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 // import { NotificationsService } from '../notifications/notifications.service';
 
@@ -136,19 +136,36 @@ export class ExercisesService {
 
   // Partager un exercice avec le club
   async shareWithClub(id: string, userId: string) {
-    const exercise = await this.get(id);
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    
+    // Vérifier que l'exercice existe
+    const exercise = await this.prisma.exercise.findUnique({
+      where: { id }
+    });
+
+    if (!exercise) {
+      throw new NotFoundException('Exercice non trouvé');
+    }
+
     // Vérifier que l'utilisateur est le créateur de l'exercice
     if (exercise.createdById !== userId) {
-      throw new Error('Seul le créateur peut partager cet exercice');
+      throw new BadRequestException('Seul le créateur peut partager cet exercice');
     }
-    
+
+    // Vérifier si l'exercice est déjà partagé
+    if (exercise.clubId) {
+      throw new BadRequestException('Cet exercice est déjà partagé avec le club');
+    }
+
+    // Récupérer l'utilisateur pour obtenir son clubId
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { clubId: true }
+    });
+
     // Vérifier que l'utilisateur a un club
     if (!user?.clubId) {
-      throw new Error('Vous devez appartenir à un club pour partager un exercice');
+      throw new BadRequestException('Vous devez appartenir à un club pour partager un exercice');
     }
-    
+
     // Mettre à jour l'exercice avec le clubId
     return this.prisma.exercise.update({
       where: { id },

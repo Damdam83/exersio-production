@@ -224,6 +224,10 @@ export class AuthService {
       }
     });
 
+    if (!userWithRelations) {
+      throw new NotFoundException('Utilisateur non trouvé après confirmation');
+    }
+
     // Connecter automatiquement l'utilisateur après confirmation
     const jwtToken = this.sign(user);
 

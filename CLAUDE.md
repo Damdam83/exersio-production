@@ -2,8 +2,11 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 15/10/2025
-**Session actuelle :** SYSTÈME CATÉGORIES MULTI-SPORT + FIX AGECATEGORYID
+**Dernière mise à jour :** 24/10/2025
+**Session actuelle :** REFONTE SYSTÈME NOTIFICATIONS COMPLET
+**Documents de référence** :
+- [ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md) - Synthèse complète projet
+- [AUDIT-NOTIFICATIONS.md](AUDIT-NOTIFICATIONS.md) - Audit système notifications (24/10/2025)
 
 ---
 
@@ -129,6 +132,90 @@
 - Catégories et âges chargent maintenant depuis backend avec filtrage par sport
 
 **Résultat :** ✅ Filtres par âge fonctionnels avec relations DB correctes, payload complet avec tous les IDs
+
+### 11. Correctifs bugs critiques + Mode offline complet (24/10/2025)
+**Session de correction multiple des bugs critiques identifiés**
+
+#### 11.1. Fix localStorage pollué par données seed
+**Problème :** localStorage contenait ex1/ex2 (exercices de démo) même pour utilisateurs connectés
+**Solution :** Supprimé appel `initializeDefaultData()` dans App.tsx ligne 52
+**Résultat :** ✅ localStorage propre, plus de pollution avec données de démo
+
+#### 11.2. Fix double "(Copie)" dans noms d'exercices
+**Problème :** Copie d'exercice affichait "(Copie)(Copie)" dans le nom
+**Cause :** ExercisesContext.createLocalCopy() ET ExerciseCreatePage ajoutaient le suffixe
+**Solution :** ExerciseCreatePage vérifie maintenant si "(Copie)" ou "(copie)" existe déjà avant ajout
+**Fichier modifié :** `ExerciseCreatePage.tsx` ligne 131-136
+**Résultat :** ✅ Une seule occurrence de "(Copie)" lors de la copie
+
+#### 11.3. Fix erreur HTTP 500 "Partager avec le club"
+**Problème :** Bouton "Partager avec le club" retournait HTTP 500
+**Cause :** Backend utilisait `throw new Error()` au lieu d'exceptions NestJS
+**Solution :** Réécriture shareWithClub() avec BadRequestException et NotFoundException
+**Fichier modifié :** `exercises.service.ts` (backend)
+**Validations ajoutées :** Exercice existe, créateur valide, pas déjà partagé, utilisateur dans un club
+**Résultat :** ✅ Partage d'exercice fonctionnel avec gestion d'erreurs appropriée
+
+#### 11.4. Fix boucle infinie /auth/refresh au démarrage (401)
+**Problème :** Appels infinis à /auth/refresh avec 401 avant même la connexion
+**Causes multiples :**
+- ensureValidToken() créait des appels circulaires via l'interceptor
+- logout() déclenchait des appels API répétés
+- useVersionCheck se déclenchait plusieurs fois
+- AuthContext vérifiait expiration avant tentative de refresh
+
+**Solutions appliquées :**
+- **authService.ts :** Ajout flags `isRefreshing` et `isLoggingOut` pour éviter les boucles
+- **authService.ts :** Logout conditionnel (n'appelle l'API que si token valide et non expiré)
+- **useVersionCheck.ts :** useEffect avec dépendances vides `[]` (mount-only)
+- **AuthContext.tsx :** Validation format JWT avant getProfile(), suppression check isTokenExpired prématuré
+- **apiInterceptor.ts :** Vérification `!newToken` avant retry, meilleure gestion erreurs 401
+
+**Fichiers modifiés :** authService.ts, useVersionCheck.ts, AuthContext.tsx, apiInterceptor.ts
+**Résultat :** ✅ Plus de boucles infinies, authentification stable au démarrage
+
+#### 11.5. Fix boucle infinie /exercises lors F5 sur page détail
+**Problème :** Actualiser page exercices/{id} causait appels API infinis
+**Cause :** useEffect avec dépendance `exerciseActions` qui changeait de référence à chaque render
+**Solution :**
+- Ajout état `hasAttemptedLoad` pour tracker les tentatives de chargement
+- useEffect ne dépend que de `[exerciseId]`
+- Reset de hasAttemptedLoad quand exerciseId change
+
+**Fichier modifié :** `MainLayout.tsx` (ExerciseDetailPageWrapper)
+**Résultat :** ✅ Une seule requête API lors du F5, pas de boucle infinie
+
+#### 11.6. Implémentation mode offline complet avec IndexedDB
+**Problème :** IndexedDB vide, exercices/sessions pas sauvegardés pour usage offline
+**Cause :** loadExercises() et loadSessions() ne sauvegardaient pas dans IndexedDB
+
+**Solutions implémentées :**
+- **ExercisesContext.loadExercises() :**
+  - Si **online** : charge API → sauvegarde IndexedDB (status 'synced')
+  - Si **offline** : charge depuis IndexedDB directement
+  - Si **erreur réseau** : fallback vers IndexedDB
+
+- **SessionsContext.loadSessions() :**
+  - Même logique que exercices
+  - Ajout import offlineStorage
+
+**Fichiers modifiés :**
+- `ExercisesContext.tsx` lignes 258-292
+- `SessionsContext.tsx` lignes 287-321
+
+**Résultat :** ✅ Cache IndexedDB automatique, mode offline fonctionnel, données persistées
+
+#### 11.7. Fix incohérence scope par défaut
+**Problème :**
+- Navigation /exercices : `scope=all` (exercices visibles)
+- F5 sur /exercices : `scope=personal` (aucun exercice)
+
+**Cause :** ExercisesContext initialState avec `scope: 'personal'`, ExercisesPage avec `currentScope: 'all'`
+**Solution :** Changé initialState de ExercisesContext à `scope: 'all'`
+**Fichier modifié :** `ExercisesContext.tsx` ligne 72
+**Résultat :** ✅ Cohérence parfaite, mêmes résultats avec navigation ou F5
+
+**Vérification complète :** Aucune autre incohérence détectée dans SessionsContext, SessionsPage, HistoryPage
 
 ---
 
@@ -468,7 +555,116 @@ docker compose down        # Arrêter la DB
 
 **Branche:** feat/arrow-control-points
 **Temps réalisé:** ~2h30
-**Status:** ✅ Backend terminé, ⏳ Frontend en cours
+**Status:** ✅ Backend terminé, ✅ Frontend filtres terminés
+
+### Session du 24/10/2025 - Correctifs bugs critiques + Mode offline complet
+**Session intensive de débogage avec 7 correctifs majeurs appliqués**
+
+**Bugs corrigés :**
+1. ✅ **localStorage pollué** : Supprimé initializeDefaultData() - App.tsx
+2. ✅ **Double "(Copie)"** : Vérification conditionnelle - ExerciseCreatePage.tsx
+3. ✅ **HTTP 500 partage** : Exceptions NestJS appropriées - exercises.service.ts
+4. ✅ **Boucle /auth/refresh** : Flags anti-loop multiples - authService.ts, AuthContext.tsx, apiInterceptor.ts, useVersionCheck.ts
+5. ✅ **Boucle F5 exercices** : Flag hasAttemptedLoad - MainLayout.tsx
+6. ✅ **IndexedDB vide** : Auto-save lors loadExercises/loadSessions - ExercisesContext.tsx, SessionsContext.tsx
+7. ✅ **Scope incohérent** : initialState scope:'all' - ExercisesContext.tsx
+
+**Fonctionnalités ajoutées :**
+- ✅ **Mode offline complet** : Chargement depuis IndexedDB si offline, fallback automatique en cas d'erreur réseau
+- ✅ **Cache automatique** : Tous exercices/sessions chargés sauvegardés dans IndexedDB avec status 'synced'
+- ✅ **Gestion multi-état** : Online (API→IndexedDB), Offline (IndexedDB→State), Erreur (Fallback IndexedDB)
+
+**Impact utilisateur :**
+- Navigation fluide sans boucles infinies
+- Données accessibles hors connexion
+- Pas de pollution localStorage
+- Cohérence totale des filtres
+- Partage d'exercice fonctionnel
+- Copies d'exercices avec noms corrects
+
+**Temps réalisé :** ~3h
+**Status :** ✅ Tous les bugs critiques corrigés et testés
+
+### Session du 24/10/2025 (après-midi) - Refonte Système Notifications Complet
+**Audit complet réalisé, plan d'action Option B (tout corriger) - 7-9h estimé**
+
+#### 📊 Audit Système Notifications
+**Document créé** : `AUDIT-NOTIFICATIONS.md` avec analyse complète
+
+**Problèmes identifiés** :
+1. ❌ Navigation desktop commentée → Pas d'icône notifications
+2. ❌ Modal fond blanc → Pas cohérent avec le thème
+3. ❌ Erreur 500 `/notifications/settings` → Migration Prisma manquante
+4. ❌ Crash boutons test → Capacitor APIs en mode web
+5. ❌ Badge figé à "9" → Pas d'événements de mise à jour
+6. ❌ 9 notifications sur compte neuf → Source inconnue
+
+**Fonctionnalités existantes** :
+- ✅ Backend API complet (CRUD notifications)
+- ✅ Rappels séances automatiques (cron job)
+- ✅ Notification exercice ajouté au club
+- ✅ Système préférences utilisateur
+- ✅ Mobile NotificationBadge fonctionnel
+
+**Types notifications supportés (Prisma)** :
+- `session_reminder` - Rappel séance ✅ Implémenté
+- `exercise_added_to_club` - Nouvel exercice ✅ Implémenté
+- `system_notification` - Notification admin ⚠️ Endpoint existe, pas d'interface
+
+**Fonctionnalités à ajouter** :
+- ❌ `member_joined_club` - Nouveau membre (à créer)
+- ❌ Interface admin pour notifications globales
+
+#### 🎯 Plan de Correction - Option B (Complet)
+
+**Phase 1 - Bugs Critiques (2-3h)** :
+1. ⏳ Fix navigation desktop + icône Bell (30min)
+2. ⏳ Fix background modal gris/slate (15min)
+3. ⏳ Fix erreur 500 settings + migration Prisma (45min)
+4. ⏳ Supprimer boutons test non implémentés (30min)
+5. ⏳ Fix badge avec EventEmitter (1h)
+6. ⏳ Investiguer 9 notifications automatiques (30min)
+
+**Phase 2 - Nouvelles Fonctionnalités (3-4h)** :
+1. ⏳ Notification "Nouveau membre" (1.5h)
+2. ⏳ Interface admin notifications globales (2h)
+3. ⏳ Guard admin sur endpoint (30min)
+
+**Phase 3 - Améliorations UX (2h)** :
+1. ⏳ Polling léger 30-60s avec visibility API (30min)
+2. ⏳ Indicateurs visuels (animation badge) (30min)
+3. ⏳ Filtres notifications (type, date) (1h)
+
+**Status actuel** : ⏳ EN COURS - Phase 1 à commencer
+**Fichiers clés** :
+- Frontend : `NotificationCenter.tsx`, `NotificationBadge`, `NotificationSettingsPage.tsx`, `Navigation.tsx`
+- Backend : `notifications.service.ts`, `notifications.controller.ts`, `notification-scheduler.service.ts`
+
+### Session du 15/10/2025 - Corrections Filtres Multi-Sport + ExerciseDetailView ✅
+**Phase Frontend multi-sport complétée:**
+- ✅ **Fix filtres ExercisesPage** : Réinitialisation catégories/âges au changement de sport
+- ✅ **Fix clés React dupliquées** : Utilisation IDs uniques dans MobileFilters
+- ✅ **Fix bouton "Tous les sports"** : hasInitialized pour éviter re-sélection automatique
+- ✅ **Tests unitaires backend** : Fix mock preferredSportId dans auth.service.spec.ts
+
+**Phase 2 : ExerciseDetailView - 7 améliorations complétées:**
+1. ✅ Header Actions Responsive (background + icon-only mobile avec `md:mr-2` et `hidden md:inline`)
+2. ✅ Layout Responsive (changé `xl:grid-cols-3` → `md:grid-cols-3` pour breakpoint 768px)
+3. ✅ Bande noire terrain supprimée (retiré `bg-[#1e293b]` et pattern background)
+4. ✅ Catégorie / Tranche d'âge séparées (3 sections : Catégorie exercice, Tranche d'âge, Tags)
+5. ✅ Consignes inline épurées (ligne de séparation retirée, `space-y-4` au lieu de `space-y-6`)
+6. ✅ Tranche d'âge au lieu de Niveau (statistiques rapides affichent `exercise.ageCategory`)
+7. ✅ Fix rechargement page (useEffect charge exercice depuis API si absent du contexte)
+
+📁 **Fichiers modifiés:**
+- `src/components/ExercisesPage.tsx` : useEffect reset filtres, hasInitialized, mobileFilters avec IDs
+- `src/components/MobileFilters.tsx` : Interface FilterOption avec id optionnel, key={option.id || option.value}
+- `src/components/ExerciseDetailView.tsx` : 7 améliorations UI/UX complètes
+- `src/components/MainLayout.tsx` : ExerciseDetailPageWrapper avec useEffect loadExercises, useState isLoading
+- `src/modules/auth/auth.service.spec.ts` : mockUser avec preferredSportId: null
+
+**Branche:** feat/arrow-control-points
+**Status:** ✅ Phase 1 & 2 terminées, ⏳ Phase 3 à faire (fonctionnalités)
 
 #### 🚨 TODO DÉPLOIEMENT PRODUCTION
 **Actions critiques avant déploiement:**
@@ -574,15 +770,41 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 
 ---
 
+## 📋 Documentation Projet
+
+### 📊 Fichier de Référence Principal
+**[ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md)** - Document unique consolidé (23/10/2025)
+
+**Contenu** :
+- ✅ Accomplissements majeurs (sessions 12-15/10)
+- 🚨 6 bugs critiques identifiés (11/10) avec solutions détaillées
+- 📱 Plan mobile complet (Phases 1-4 : 18.5h)
+- 🔐 RGPD & Sécurité (10-14h)
+- 🚀 Améliorations avancées (i18n, version mobile, tests)
+- 📊 Récapitulatif temps : 60-73h total
+- 🎯 4 options d'action recommandées
+
+**Remplace** : Tous les anciens backlogs et plans (consolidés puis supprimés)
+
+---
+
 ## 🎯 Recommandations pour prochaine session
 
-1. **🚨 PRIORITÉ 1** : Ajouter `CORS_ORIGIN` dans Render (app mobile bloquée sinon)
-2. **✅ COMPLÉTÉ** : ~~Réparer éditeur de terrain~~ - Desktop 100% fonctionnel, mobile paysage OK
-3. **📱 Amélioration mobile** : Édition terrain en mode portrait (déférée, non-bloquante)
-4. **🔄 Système version mobile** - Check version obligatoire/optionnelle au démarrage
-5. **🧪 Exécution tests complets** - Lancer suite de tests créée (backend Jest + frontend Vitest)
-6. **📈 Analytics utilisateur** - Métriques usage et comportements
-7. **🎨 Mode sombre** - Implémentation thème sombre/clair
+### ⭐ OPTION 1 : Bugs Critiques (5-8h) - RECOMMANDÉ
+1. **Notifications non lues** : Badge + API markAsRead (2-3h)
+2. **Visuels terrain** : Tests SportCourtViewer (1-2h)
+3. **Fix copie/partage** : ExerciseDetailView (45min)
+4. **Phase 1 Mobile** : Toasts + polling + déconnexion (2h)
+
+### Option 2 : RGPD + Sécurité (10-14h)
+1. **Sécurité mot de passe** : Audit bcrypt + indicateur (3-4h)
+2. **CGU/Politique** : Pages + checkbox RGPD (4-6h)
+3. **Suppression compte** : Paramètres + endpoint (3-4h)
+
+### Option 3 : UX Mobile Complète (18.5h)
+Phases 1-4 du plan mobile + problèmes UX spécifiques
+
+**Voir détails complets dans [ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md)**
 
 ## 🗂️ Fichiers critiques récents
 

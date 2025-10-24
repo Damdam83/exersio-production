@@ -1,21 +1,23 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Body, 
-  Query, 
-  Param, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Query,
+  Param,
   UseGuards,
   Request
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../../common/auth/roles.guard';
+import { Roles } from '../../common/auth/roles.decorator';
 import { NotificationsService } from './notifications.service';
 import { NotificationSchedulerService } from './notification-scheduler.service';
-import { 
-  RegisterPushTokenDto, 
-  UpdateNotificationSettingsDto, 
-  NotificationQueryDto 
+import {
+  RegisterPushTokenDto,
+  UpdateNotificationSettingsDto,
+  NotificationQueryDto
 } from './dto/notification.dto';
 
 @Controller('notifications')
@@ -79,6 +81,8 @@ export class NotificationsController {
   // ===== ENDPOINTS ADMIN =====
 
   @Post('admin/send-notification')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async sendAdminNotification(
     @Request() req: any,
     @Body() body: {
@@ -90,7 +94,6 @@ export class NotificationsController {
     }
   ) {
     try {
-      // TODO: Add admin authorization check
       const userId = req.user.userId;
       
       if (body.recipientIds && body.recipientIds.length > 0) {
@@ -127,9 +130,10 @@ export class NotificationsController {
   }
 
   @Get('admin/stats')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async getNotificationStats(@Request() req: any) {
     try {
-      // TODO: Add admin authorization check
       const stats = await this.notificationsService.getNotificationStats();
       return { success: true, data: stats };
     } catch (error) {
@@ -138,9 +142,10 @@ export class NotificationsController {
   }
 
   @Get('admin/recent')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async getRecentNotifications(@Request() req: any) {
     try {
-      // TODO: Add admin authorization check
       const notifications = await this.notificationsService.getRecentNotifications(50);
       return { success: true, data: notifications };
     } catch (error) {

@@ -250,7 +250,7 @@ export class NotificationsService {
       // Récupérer les paramètres de l'utilisateur
       const userSettings = await this.getUserNotificationSettings(member.id);
       const settings = userSettings || { exerciseNotifications: true };
-      
+
       if (settings.exerciseNotifications) {
         const notification = await this.createNotification({
           userId: member.id,
@@ -271,6 +271,62 @@ export class NotificationsService {
     }
 
     this.logger.log(`Created ${notifications.length} exercise notifications for exercise ${exerciseId}`, 'NotificationsService');
+    return notifications;
+  }
+
+  async createMemberJoinedNotification(userId: string, clubId: string) {
+    this.logger.log(`Creating member joined notification for user ${userId} joining club ${clubId}`, 'NotificationsService');
+
+    const [newMember, club] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, email: true }
+      }),
+      this.prisma.club.findUnique({
+        where: { id: clubId },
+        include: {
+          users: {
+            include: {
+              notificationSettings: true
+            }
+          }
+        }
+      })
+    ]);
+
+    if (!newMember || !club) {
+      this.logger.warn(`User ${userId} or club ${clubId} not found for member joined notification`, 'NotificationsService');
+      return [];
+    }
+
+    const notifications = [];
+    // Notifier tous les membres existants (sauf le nouveau membre)
+    const existingMembers = club.users.filter((user: any) => user.id !== userId);
+
+    for (const member of existingMembers) {
+      // Récupérer les paramètres de l'utilisateur
+      const userSettings = await this.getUserNotificationSettings(member.id);
+      const settings = userSettings || { systemNotifications: true };
+
+      if (settings.systemNotifications) {
+        const notification = await this.createNotification({
+          userId: member.id,
+          type: NotificationType.member_joined_club,
+          title: `👋 Nouveau membre: ${newMember.name}`,
+          message: `${newMember.name} a rejoint le club ${club.name}`,
+          data: {
+            userId: newMember.id,
+            userName: newMember.name,
+            clubId: club.id,
+            clubName: club.name
+          }
+        });
+
+        notifications.push(notification);
+      }
+    }
+
+    this.logger.log(`Created ${notifications.length} member joined notifications for club ${clubId}`, 'NotificationsService');
     return notifications;
   }
 

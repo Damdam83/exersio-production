@@ -11,7 +11,7 @@ export interface NotificationSettings {
 
 export interface Notification {
   id: string;
-  type: 'session_reminder' | 'exercise_added_to_club' | 'system_notification';
+  type: 'session_reminder' | 'exercise_added_to_club' | 'member_joined_club' | 'system_notification';
   title: string;
   message: string;
   data?: any;
@@ -19,9 +19,29 @@ export interface Notification {
   createdAt: string;
 }
 
+// Simple EventEmitter pour les notifications
+type NotificationEventListener = () => void;
+
+class NotificationEventEmitter {
+  private listeners: NotificationEventListener[] = [];
+
+  subscribe(listener: NotificationEventListener): () => void {
+    this.listeners.push(listener);
+    // Retourner la fonction de désinscription
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  emit() {
+    this.listeners.forEach(listener => listener());
+  }
+}
+
 class NotificationService {
   private isInitialized = false;
   private pushToken: string | null = null;
+  private eventEmitter = new NotificationEventEmitter();
 
   async initialize() {
     if (this.isInitialized || !Capacitor.isNativePlatform()) {
@@ -120,6 +140,8 @@ class NotificationService {
   async markAsRead(notificationId: string) {
     try {
       await api.put(`/notifications/${notificationId}/read`);
+      // Émettre l'événement pour notifier les composants
+      this.eventEmitter.emit();
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -128,9 +150,16 @@ class NotificationService {
   async markAllAsRead() {
     try {
       await api.put('/notifications/read-all');
+      // Émettre l'événement pour notifier les composants
+      this.eventEmitter.emit();
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
+  }
+
+  // Méthode pour s'abonner aux changements de notifications
+  onNotificationChange(listener: NotificationEventListener): () => void {
+    return this.eventEmitter.subscribe(listener);
   }
 
   async getNotificationSettings(): Promise<NotificationSettings> {

@@ -47,15 +47,24 @@ export function ExercisesPage() {
     loadSports();
   }, []);
 
-  // Initialiser le filtre de sport avec le sport préféré de l'utilisateur
+  // Initialiser le filtre de sport avec le sport préféré de l'utilisateur (une seule fois au montage)
+  const [hasInitialized, setHasInitialized] = useState(false);
+
   useEffect(() => {
     const sports = sportsState.sports.data || [];
 
-    // Vérifier si on doit initialiser avec le sport préféré
-    if (user?.preferredSport && sports.length > 0 && selectedSport === 'all') {
+    // Vérifier si on doit initialiser avec le sport préféré (une seule fois)
+    if (!hasInitialized && user?.preferredSport && sports.length > 0 && selectedSport === 'all') {
       setSelectedSport(user.preferredSport.slug);
+      setHasInitialized(true);
     }
-  }, [user, sportsState.sports.data, selectedSport]);
+  }, [user, sportsState.sports.data]);
+
+  // Réinitialiser les filtres catégorie/âge quand le sport change
+  useEffect(() => {
+    setSelectedCategory('all');
+    setSelectedAge('all');
+  }, [selectedSport]);
 
   // Charger les exercices et favoris au montage et quand le scope change
   useEffect(() => {
@@ -253,13 +262,11 @@ export function ExercisesPage() {
         value: selectedSport,
         onChange: (value: string) => {
           setSelectedSport(value);
-          // Réinitialiser catégorie et âge lors du changement de sport
-          setSelectedCategory('all');
-          setSelectedAge('all');
         },
         options: sportFilters.map(filter => ({
           value: filter.value,
           label: filter.label,
+          id: filter.value, // ID unique pour chaque sport
           count: filter.value === 'all' ? exercises.length : exercises.filter(ex => ex.sport === filter.value).length
         }))
       },
@@ -271,6 +278,7 @@ export function ExercisesPage() {
         options: categoryFilters.map(filter => ({
           value: filter.value,
           label: filter.label,
+          id: filter.id, // ID unique de la DB pour éviter les doublons entre sports
           count: filter.value === 'all' ? exercises.length : exercises.filter(ex => ex.category === filter.value).length
         }))
       },
@@ -282,6 +290,7 @@ export function ExercisesPage() {
         options: ageFilters.map(filter => ({
           value: filter.value,
           label: filter.label,
+          id: filter.id, // ID unique de la DB pour éviter les doublons entre sports
           count: filter.value === 'all' ? exercises.length : exercises.filter(ex => ex.ageCategory === filter.value).length
         }))
       },
@@ -291,8 +300,8 @@ export function ExercisesPage() {
         value: showFavoritesOnly ? 'favorites' : 'all',
         onChange: (value: string) => setShowFavoritesOnly(value === 'favorites'),
         options: [
-          { value: 'all', label: 'Tous', count: exercises.length },
-          { value: 'favorites', label: 'Favoris uniquement', count: exercises.filter(ex => favoritesActions.isFavorite(ex.id)).length }
+          { value: 'all', label: 'Tous', id: 'favorites-all', count: exercises.length },
+          { value: 'favorites', label: 'Favoris uniquement', id: 'favorites-only', count: exercises.filter(ex => favoritesActions.isFavorite(ex.id)).length }
         ]
       }
     ];

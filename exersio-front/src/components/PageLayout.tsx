@@ -1,18 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigation } from "../contexts/NavigationContext";
 import { ExersioLogo } from "./ExersioLogo";
+import { NotificationBadge, NotificationCenter } from "./NotificationCenter";
 
 interface PageLayoutProps {
   children: React.ReactNode;
 }
 
 export function PageLayout({ children }: PageLayoutProps) {
-  const { state: authState } = useAuth();
+  const { state: authState, actions: authActions } = useAuth();
   const { currentPage, setCurrentPage, menuEntries } = useNavigation();
+  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
 
   const currentUser = authState.user;
   const currentClub = authState.club;
+
+  const handleLogout = () => {
+    authActions.logout();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-x-hidden">
@@ -45,6 +52,12 @@ export function PageLayout({ children }: PageLayoutProps) {
               ))}
             </div>
           <div className="flex items-center gap-4">
+            {/* Notifications */}
+            <NotificationBadge
+              onClick={() => setNotificationCenterOpen(true)}
+              className="text-white hover:bg-white/10"
+            />
+
             <div className="text-right">
               <h3 className="font-semibold">Coach {currentUser?.firstName || currentUser?.name || "Martin"}</h3>
               <p className="text-sm text-gray-400">{currentClub?.name || "Volley Club Paris"}</p>
@@ -53,8 +66,23 @@ export function PageLayout({ children }: PageLayoutProps) {
               {currentUser?.firstName?.[0] || currentUser?.name?.[0] || "C"}
               {currentUser?.lastName?.[0] || "M"}
             </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-xl bg-white/10 hover:bg-red-500/20 text-white transition-all duration-200 flex items-center gap-2"
+              title="Se déconnecter"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
         </div>
+
+        {/* Notification Center */}
+        <NotificationCenter
+          isOpen={notificationCenterOpen}
+          onClose={() => setNotificationCenterOpen(false)}
+        />
 
         {/* Page Title
         <div className="text-center">

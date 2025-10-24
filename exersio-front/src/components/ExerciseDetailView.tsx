@@ -148,10 +148,10 @@ export function ExerciseDetailView({
     <div className="max-w-7xl mx-auto">
       {/* Header Actions */}
       <Card style={{
-        // background: 'rgba(255, 255, 255, 0.08)',
+        background: 'rgba(255, 255, 255, 0.08)',
         backdropFilter: 'blur(20px)',
-        // border: '1px solid rgba(255, 255, 255, 0.12)',
-        // borderRadius: '20px'
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '20px'
       }} className="mb-8">
         <CardHeader className="pb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -161,7 +161,7 @@ export function ExerciseDetailView({
                 <Button variant="ghost" size="sm" onClick={onBack} className="h-auto p-0 text-[#00d4aa] hover:text-[#00b894]">
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   {contextInfo?.from === 'session-create' || contextInfo?.from === 'session-detail'
-                    ? (contextInfo.fromName || 'Séance') 
+                    ? (contextInfo.fromName || 'Séance')
                     : 'Exercices'
                   }
                 </Button>
@@ -188,68 +188,69 @@ export function ExerciseDetailView({
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-3">
+            {/* Actions - Responsive avec wrapping et icon-only sur mobile */}
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant={isFavorite ? "default" : "outline"}
                 size="sm"
                 onClick={onToggleFavorite}
-                className={isFavorite ? 
-                  "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600" : 
+                className={isFavorite ?
+                  "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600" :
                   "border-white/20 hover:bg-white/10"
                 }
               >
-                <Heart className={`w-4 h-4 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
-                Favori
+                <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''} md:mr-2`} />
+                <span className="hidden md:inline">Favori</span>
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleShare}
-                disabled={isSharing || exercise.clubId !== null} // Désactiver si déjà partagé
+                disabled={isSharing || exercise.clubId !== null}
                 className="border-white/20 hover:bg-white/10"
               >
-                <Share2 className="w-4 h-4 mr-2" />
-                {isSharing ? 'Partage...' : exercise.clubId ? 'Partagé' : 'Partager'}
+                <Share2 className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">{isSharing ? 'Partage...' : exercise.clubId ? 'Partagé' : 'Partager'}</span>
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleCopy}
                 className="border-white/20 hover:bg-white/10"
               >
-                <Copy className="w-4 h-4 mr-2" />
-                Copier
+                <Copy className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">Copier</span>
               </Button>
               {permissions.canEdit && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={onEdit}
                   className="border-white/20 hover:bg-white/10"
                 >
-                  <Edit3 className="w-4 h-4 mr-2" />
-                  Modifier
+                  <Edit3 className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">Modifier</span>
                 </Button>
               )}
               {permissions.canDelete && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleDelete}
                   disabled={isDeleting}
                   className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  {isDeleting ? 'Suppression...' : 'Supprimer'}
+                  <Trash2 className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
                 </Button>
               )}
-              <Button 
+              <Button
                 onClick={() => setIsModalOpen(true)}
+                size="sm"
                 className="bg-gradient-to-r from-[#00d4aa] to-[#00b894] hover:from-[#00b894] hover:to-[#009775]"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter à la séance
+                <Plus className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">Ajouter à la séance</span>
               </Button>
             </div>
           </div>
@@ -257,9 +258,9 @@ export function ExerciseDetailView({
       </Card>
 
       {/* Contenu principal */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Colonne principale */}
-        <div className="xl:col-span-2 space-y-8">
+        <div className="md:col-span-2 space-y-8">
           {/* Visualisation du terrain */}
           <Card style={{
             background: 'rgba(255, 255, 255, 0.08)',
@@ -276,27 +277,16 @@ export function ExerciseDetailView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-[#1e293b] rounded-xl p-4 relative overflow-hidden">
-                {/* Pattern background */}
-                <div className="absolute inset-0 opacity-5">
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: `linear-gradient(45deg, transparent 49%, rgba(59, 130, 246, 0.1) 50%, transparent 51%), linear-gradient(-45deg, transparent 49%, rgba(16, 185, 129, 0.1) 50%, transparent 51%)`,
-                    backgroundSize: '30px 30px'
-                  }} />
-                </div>
-
-                {/* Terrain unifié */}
-                <div className="relative w-full mx-auto">
-                  <SportCourtViewer
-                    sport={exercise.sport || 'volleyball'}
-                    players={initializePlayers(exercise)}
-                    arrows={initializeArrows(exercise)}
-                    balls={initializeBalls(exercise)}
-                    zones={initializeZones(exercise)}
-                    showGrid={true}
-                  />
-                </div>
-
+              {/* Terrain unifié */}
+              <div className="relative w-full mx-auto">
+                <SportCourtViewer
+                  sport={exercise.sport || 'volleyball'}
+                  players={initializePlayers(exercise)}
+                  arrows={initializeArrows(exercise)}
+                  balls={initializeBalls(exercise)}
+                  zones={initializeZones(exercise)}
+                  showGrid={true}
+                />
               </div>
             </CardContent>
           </Card>
@@ -317,17 +307,14 @@ export function ExerciseDetailView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {exercise.instructions && exercise.instructions.length > 0 ? (
                   exercise.instructions.map((instruction, index) => (
-                    <div key={index} className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-full flex items-center justify-center text-sm font-bold text-white mt-0.5">
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-full flex items-center justify-center text-sm font-bold text-white">
                         {index + 1}
                       </div>
-                      <div className="flex-1">
-                        <div className="h-0.5 bg-gradient-to-r from-[#00d4aa]/30 to-transparent mb-3"></div>
-                        <p className="text-gray-200 text-base leading-relaxed">{instruction}</p>
-                      </div>
+                      <p className="flex-1 text-gray-200 text-base leading-relaxed pt-0.5">{instruction}</p>
                     </div>
                   ))
                 ) : (
@@ -380,41 +367,67 @@ export function ExerciseDetailView({
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center hover:bg-white/8 transition-colors">
                   <div className="text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
-                    {exercise.level}
+                    {exercise.ageCategory}
                   </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide font-medium">Niveau</div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wide font-medium">Tranche d'âge</div>
                 </div>
               </div>
 
-              {/* Catégories */}
+              {/* Catégorie d'exercice */}
               <div>
                 <h4 className="flex items-center gap-3 text-sm font-medium text-gray-400 mb-3">
                   <div className="w-5 h-5 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-md flex items-center justify-center">
                     <Tag className="w-3 h-3 text-white" />
                   </div>
-                  Catégories
+                  Catégorie d'exercice
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
                     {exercise.category}
                   </Badge>
+                </div>
+              </div>
+
+              {/* Tranche d'âge */}
+              <div>
+                <h4 className="flex items-center gap-3 text-sm font-medium text-gray-400 mb-3">
+                  <div className="w-5 h-5 bg-gradient-to-br from-amber-400 to-amber-600 rounded-md flex items-center justify-center">
+                    <Tag className="w-3 h-3 text-white" />
+                  </div>
+                  Tranche d'âge
+                </h4>
+                <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
                     {exercise.ageCategory}
                   </Badge>
-                  {exercise.clubId && (
-                    <Badge variant="secondary" className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                      📢 Partagé avec le club
-                    </Badge>
-                  )}
-                  {exercise.tags && exercise.tags
-                    .filter(tag => tag !== exercise.category && tag !== exercise.ageCategory && tag !== exercise.intensity)
-                    .map((tag) => (
-                      <Badge key={tag} variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                        {tag}
-                      </Badge>
-                  ))}
                 </div>
               </div>
+
+              {/* Tags & Partage */}
+              {(exercise.clubId || (exercise.tags && exercise.tags.filter(tag => tag !== exercise.category && tag !== exercise.ageCategory && tag !== exercise.intensity).length > 0)) && (
+                <div>
+                  <h4 className="flex items-center gap-3 text-sm font-medium text-gray-400 mb-3">
+                    <div className="w-5 h-5 bg-gradient-to-br from-blue-400 to-blue-600 rounded-md flex items-center justify-center">
+                      <Tag className="w-3 h-3 text-white" />
+                    </div>
+                    Tags
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {exercise.clubId && (
+                      <Badge variant="secondary" className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                        📢 Partagé avec le club
+                      </Badge>
+                    )}
+                    {exercise.tags && exercise.tags
+                      .filter(tag => tag !== exercise.category && tag !== exercise.ageCategory && tag !== exercise.intensity)
+                      .map((tag) => (
+                        <Badge key={tag} variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                          {tag}
+                        </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Matériel */}
               {exercise.material && exercise.material.trim() && (

@@ -251,6 +251,7 @@ model UserExerciseFavorite {
 enum NotificationType {
   session_reminder
   exercise_added_to_club
+  member_joined_club
   system_notification
 }
 

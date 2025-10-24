@@ -13,8 +13,10 @@ export class InvitationsController {
 
   @Get()
   @ApiOperation({ summary: 'List invitations' })
-  list(@Query() query: any, @Query('page') page = '1', @Query('limit') limit = '10') {
-    return this.svc.list(query, parseInt(page, 10), parseInt(limit, 10));
+  list(@Req() req: any, @Query() query: any, @Query('page') page = '1', @Query('limit') limit = '10') {
+    // Filtrer uniquement les invitations de l'utilisateur connecté
+    const userEmail = req.user?.email;
+    return this.svc.list(query, parseInt(page, 10), parseInt(limit, 10), userEmail);
   }
 
   @Post()
@@ -25,7 +27,9 @@ export class InvitationsController {
 
   @Patch(':id/status')
   @ApiOperation({ summary: 'Update invitation status' })
-  update(@Param('id') id: string, @Body() dto: UpdateInvitationStatusDto) {
-    return this.svc.updateStatus(id, dto.status);
+  update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateInvitationStatusDto) {
+    // Passer l'email de l'utilisateur connecté pour l'ajouter au club
+    const userEmail = req.user?.email;
+    return this.svc.updateStatus(id, dto.status, userEmail);
   }
 }

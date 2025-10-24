@@ -69,7 +69,7 @@ const initialState: ExercisesState = {
     error: null
   },
   filters: {
-    scope: 'personal'
+    scope: 'all'
   },
   pagination: {
     page: 1,
@@ -257,13 +257,37 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
 
   const loadExercises = useCallback(async () => {
     dispatch({ type: 'LOAD_START' });
-    
+
     try {
+      // Si offline, charger depuis IndexedDB
+      if (!navigator.onLine) {
+        const offlineExercises = await offlineStorage.getAllExercises();
+        const exercises = offlineExercises.map(item => item.data);
+        dispatch({ type: 'LOAD_SUCCESS', payload: exercises });
+        return;
+      }
+
+      // Si online, charger depuis l'API
       const exercises = await exercisesService.getAll(state.filters);
       dispatch({ type: 'LOAD_SUCCESS', payload: exercises });
+
+      // Sauvegarder tous les exercices chargés dans IndexedDB pour le mode offline
+      if (exercises && exercises.length > 0) {
+        await Promise.all(
+          exercises.map(exercise => offlineStorage.saveExercise(exercise, 'synced'))
+        );
+      }
     } catch (error) {
       console.error('Error loading exercises:', error);
-      dispatch({ type: 'LOAD_ERROR', payload: error as ApiError });
+
+      // En cas d'erreur réseau, tenter de charger depuis IndexedDB
+      try {
+        const offlineExercises = await offlineStorage.getAllExercises();
+        const exercises = offlineExercises.map(item => item.data);
+        dispatch({ type: 'LOAD_SUCCESS', payload: exercises });
+      } catch (offlineError) {
+        dispatch({ type: 'LOAD_ERROR', payload: error as ApiError });
+      }
     }
   }, [state.filters]);
 

@@ -49,7 +49,8 @@ function AppContent() {
   });
 
   useEffect(() => {
-    initializeDefaultData();
+    // Note: initializeDefaultData() removed - no longer needed with real backend API
+
     // Configurer les gestionnaires globaux
     setGlobalErrorHandler(showError);
     setGlobalLoadingHandler({
