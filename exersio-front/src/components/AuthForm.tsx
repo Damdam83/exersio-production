@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ExersioLogo } from './ExersioLogo';
+import { LegalFooter } from './LegalFooter';
 import { api } from '../services/api';
 import type { ApiError } from '../types/api';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -30,6 +31,8 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
   const [isProcessing, setIsProcessing] = useState(false);
   const [preferredSportId, setPreferredSportId] = useState<string>('');
   const [sports, setSports] = useState<Sport[]>([]);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
   // URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -176,6 +179,10 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
       }
       if (password.length < 6) {
         setLocalError('Le mot de passe doit contenir au moins 6 caractères');
+        return;
+      }
+      if (!acceptTerms || !acceptPrivacy) {
+        setLocalError('Vous devez accepter les CGU et la Politique de Confidentialité pour créer un compte');
         return;
       }
       if (!onRegister) {
@@ -412,6 +419,57 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
               </div>
             )}
 
+            {/* RGPD Checkboxes - uniquement en mode register */}
+            {mode === 'register' && (
+              <div className="space-y-3 pt-2">
+                {/* CGU */}
+                <label className="flex items-start space-x-3 cursor-pointer group">
+                  <div className="relative flex items-center justify-center w-5 h-5 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={acceptTerms}
+                      onChange={(e) => setAcceptTerms(e.target.checked)}
+                      className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-700 text-[#00d4aa] focus:ring-2 focus:ring-[#00d4aa] focus:ring-offset-0 cursor-pointer"
+                      required
+                    />
+                  </div>
+                  <span className="text-sm text-gray-300 leading-snug flex-1">
+                    J'accepte les{' '}
+                    <button
+                      type="button"
+                      onClick={() => window.open('/terms', '_blank')}
+                      className="text-[#00d4aa] hover:text-[#00b894] underline font-medium"
+                    >
+                      Conditions Générales d'Utilisation
+                    </button>
+                  </span>
+                </label>
+
+                {/* Politique de confidentialité */}
+                <label className="flex items-start space-x-3 cursor-pointer group">
+                  <div className="relative flex items-center justify-center w-5 h-5 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={acceptPrivacy}
+                      onChange={(e) => setAcceptPrivacy(e.target.checked)}
+                      className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-700 text-[#00d4aa] focus:ring-2 focus:ring-[#00d4aa] focus:ring-offset-0 cursor-pointer"
+                      required
+                    />
+                  </div>
+                  <span className="text-sm text-gray-300 leading-snug flex-1">
+                    J'accepte la{' '}
+                    <button
+                      type="button"
+                      onClick={() => window.open('/privacy', '_blank')}
+                      className="text-[#00d4aa] hover:text-[#00b894] underline font-medium"
+                    >
+                      Politique de Confidentialité
+                    </button>
+                  </span>
+                </label>
+              </div>
+            )}
+
             {/* Affichage des erreurs */}
             {displayError && (
               <div className="p-4 rounded-lg bg-red-500/20 border border-red-500/40 backdrop-blur-sm">
@@ -529,12 +587,8 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
             </div>
           )}
 
-          {/* Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
-              © 2024 Exersio - Plateforme d'entraînement sportif
-            </p>
-          </div>
+          {/* Footer avec liens légaux */}
+          <LegalFooter className="mt-6" />
         </CardContent>
       </Card>
     </div>

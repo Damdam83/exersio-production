@@ -1,17 +1,17 @@
+import { AlertTriangle, Bell, Building2, Check, Copy, Crown, Edit3, Mail, Plus, Settings, Shield, Trash2, User as UserIcon, UserPlus, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Badge } from './ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Textarea } from './ui/textarea';
-import { Mail, Plus, Copy, Check, X, Settings, Shield, Crown, UserPlus, Users, User as UserIcon, Edit3, Building2, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { clubsService } from '../services/clubsService';
 import { invitationsService } from '../services/invitationsService';
 import { usersService } from '../services/usersService';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+
 
 export function ProfilePage() {
   const { state: auth, actions: authActions } = useAuth();
@@ -20,6 +20,8 @@ export function ProfilePage() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isCreatingClub, setIsCreatingClub] = useState(false);
   const [isInvitingUser, setIsInvitingUser] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [joinClubCode, setJoinClubCode] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [invitations, setInvitations] = useState<typeof import('../types').Invitation[]>([]);
@@ -164,6 +166,25 @@ export function ProfilePage() {
       } catch (error) {
         console.error('Erreur lors de la copie:', error);
       }
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'SUPPRIMER') {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await usersService.deleteOwnAccount();
+      // Déconnexion et redirection vers la page d'accueil
+      await authActions.logout();
+      setIsDeletingAccount(false);
+    } catch (error) {
+      console.error('Erreur lors de la suppression du compte:', error);
+      alert('Une erreur est survenue lors de la suppression de votre compte. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -531,6 +552,32 @@ export function ProfilePage() {
         </div>
       )}
 
+      {/* Zone de danger - Suppression de compte (RGPD) */}
+      <div style={{
+        background: 'rgba(220, 38, 38, 0.1)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(220, 38, 38, 0.3)',
+        borderRadius: '20px',
+        padding: '32px'
+      }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-red-600 to-red-700 rounded-xl flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-red-400">Zone de danger</h2>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setIsDeletingAccount(true)}
+            className="border-red-500/50 text-red-400 hover:bg-red-500/20"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Supprimer le compte
+          </Button>
+        </div>
+      </div>
+
       {/* Modal pour modification du profil */}
       <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
         <DialogContent className="max-w-md text-white" style={{
@@ -724,7 +771,89 @@ export function ProfilePage() {
         </DialogContent>
       </Dialog>
 
+      {/* Modal pour suppression de compte (RGPD) */}
+      <Dialog open={isDeletingAccount} onOpenChange={setIsDeletingAccount}>
+        <DialogContent className="max-w-md w-[calc(100vw-2rem)] mx-auto text-white" style={{
+          background: 'rgba(220, 38, 38, 0.15)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(220, 38, 38, 0.3)',
+          borderRadius: '20px'
+        }}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 sm:gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-r from-red-600 to-red-700 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              </div>
+              <span className="text-base sm:text-lg font-semibold text-red-400">Supprimer définitivement mon compte</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+            <div className="p-3 sm:p-4 rounded-lg" style={{
+              background: 'rgba(220, 38, 38, 0.2)',
+              border: '1px solid rgba(220, 38, 38, 0.4)'
+            }}>
+              <p className="text-white text-xs sm:text-sm font-semibold mb-2">⚠️ Attention : Cette action est irréversible !</p>
+              <p className="text-gray-300 text-xs sm:text-sm">
+                Toutes vos données seront définitivement supprimées et ne pourront pas être récupérées :
+              </p>
+              <ul className="text-gray-300 text-xs sm:text-sm space-y-1 mt-2 ml-4 list-disc">
+                <li>Profil et informations personnelles</li>
+                <li>Exercices créés</li>
+                <li>Séances d'entraînement</li>
+                <li>Favoris et préférences</li>
+                <li>Notifications</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-300 text-xs sm:text-sm">
+                Pour confirmer, tapez <span className="font-mono font-bold text-red-400">SUPPRIMER</span> ci-dessous :
+              </Label>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+                className="bg-white/5 border-red-500/50 text-white placeholder-gray-400 mt-1 font-mono text-sm"
+                placeholder="SUPPRIMER"
+                autoComplete="off"
+              />
+              <p className="text-[10px] sm:text-xs text-gray-400 italic">
+                Conformément au RGPD (Droit à l'oubli), cette action supprimera toutes vos données personnelles de nos serveurs.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-red-500/30">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeletingAccount(false);
+                setDeleteConfirmText('');
+              }}
+              className="border-white/20 text-white hover:bg-white/10 w-full sm:w-auto"
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== 'SUPPRIMER' || isLoading}
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto text-sm"
+            >
+              {isLoading ? (
+                <>Suppression en cours...</>
+              ) : (
+                <>
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
+                  Supprimer définitivement
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
         </div>
+
       </div>
     </div>
   );

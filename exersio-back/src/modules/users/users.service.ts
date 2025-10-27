@@ -1,10 +1,12 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { genSalt, hash } from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async list(page = 1, limit = 10) {
@@ -41,5 +43,49 @@ export class UsersService {
   async delete(id: string) {
     await this.prisma.user.delete({ where: { id } });
     return { deleted: true };
+  }
+
+  /**
+   * Delete own account (RGPD compliance)
+   * Deletes user and all associated data (cascaded by Prisma)
+   */
+  async deleteOwnAccount(userId: string) {
+    // Vérifier que l'utilisateur existe
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true }
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    try {
+      // Log pour audit RGPD (avant suppression)
+      this.logger.log(`[RGPD] Account deletion requested by user: ${user.email} (ID: ${user.id})`);
+
+      // Suppression de l'utilisateur (cascade Prisma supprime automatiquement toutes les données liées)
+      // Relations supprimées automatiquement :
+      // - Exercises (onDelete: Cascade)
+      // - Sessions (onDelete: Cascade)
+      // - Notifications (onDelete: Cascade)
+      // - UserNotificationSettings (onDelete: Cascade)
+      // - UserPushToken (onDelete: Cascade)
+      // - UserExerciseFavorite (onDelete: Cascade)
+      await this.prisma.user.delete({ where: { id: userId } });
+
+      // Log confirmation suppression (audit RGPD)
+      this.logger.log(`[RGPD] Account successfully deleted: ${user.email} (ID: ${user.id})`);
+
+      return {
+        success: true,
+        message: 'Account and all associated data deleted successfully',
+        deletedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      const err = error as Error;
+      this.logger.error(`[RGPD] Failed to delete account ${user.email}: ${err.message}`, err.stack);
+      throw error;
+    }
   }
 }

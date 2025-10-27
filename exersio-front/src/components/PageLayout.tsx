@@ -1,9 +1,10 @@
-import React, { useState } from "react";
 import { LogOut } from "lucide-react";
+import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigation } from "../contexts/NavigationContext";
 import { ExersioLogo } from "./ExersioLogo";
 import { NotificationBadge, NotificationCenter } from "./NotificationCenter";
+import { LegalFooter } from "./LegalFooter";
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -34,8 +35,8 @@ export function PageLayout({ children }: PageLayoutProps) {
 
       <div className="relative z-10 max-w-7xl mx-auto p-6 space-y-8">
         {/* Header */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-2 shadow-2xl flex flex-col lg:flex-row justify-between items-center gap-6">
-          <ExersioLogo size={100} showText className="ml-2" />
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-2 mx-4 shadow-2xl flex flex-col lg:flex-row justify-between items-center gap-6">
+          <ExersioLogo size={80} showText className="ml-2" />
           <div className="flex bg-white/10 rounded-2xl p-2 gap-1">
               {menuEntries.map((tab) => (
                 <button
@@ -62,10 +63,10 @@ export function PageLayout({ children }: PageLayoutProps) {
               <h3 className="font-semibold">Coach {currentUser?.firstName || currentUser?.name || "Martin"}</h3>
               <p className="text-sm text-gray-400">{currentClub?.name || "Volley Club Paris"}</p>
             </div>
-            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center font-bold text-lg shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200">
+            {/* <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center font-bold text-lg shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200">
               {currentUser?.firstName?.[0] || currentUser?.name?.[0] || "C"}
               {currentUser?.lastName?.[0] || "M"}
-            </div>
+            </div> */}
 
             {/* Logout Button */}
             <button
@@ -104,6 +105,9 @@ export function PageLayout({ children }: PageLayoutProps) {
 
         {/* Page Content */}
         <div className="space-y-8">{children}</div>
+
+        {/* Footer légal */}
+        <LegalFooter className="mt-12 mb-6" textColor="text-gray-400" />
       </div>
     </div>
   );

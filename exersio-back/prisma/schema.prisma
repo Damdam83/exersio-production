@@ -163,7 +163,7 @@ model Exercise {
   fieldData   Json?
   successCriteria Json?
   createdById String
-  createdBy   User     @relation("ExerciseCreatedBy", fields: [createdById], references: [id])
+  createdBy   User     @relation("ExerciseCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
   clubId      String?
   club        Club?    @relation(fields: [clubId], references: [id])
   isPublic    Boolean  @default(false)
@@ -189,7 +189,7 @@ model Session {
   duration    Int
   objectives  Json?
   createdById String
-  createdBy   User     @relation("SessionCreatedBy", fields: [createdById], references: [id])
+  createdBy   User     @relation("SessionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
   clubId      String?
   club        Club?    @relation(fields: [clubId], references: [id])
 
@@ -218,7 +218,7 @@ model Invitation {
   clubId       String
   club         Club     @relation(fields: [clubId], references: [id])
   invitedById  String
-  invitedBy    User     @relation("InvitedByUser", fields: [invitedById], references: [id])
+  invitedBy    User     @relation("InvitedByUser", fields: [invitedById], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
   expiresAt    DateTime
 }

@@ -302,6 +302,19 @@ export class UsersService {
       throw error;
     }
   }
+
+  /**
+   * Supprimer son propre compte (RGPD - Droit à l'oubli)
+   * Supprime l'utilisateur connecté et toutes ses données associées
+   */
+  async deleteOwnAccount(): Promise<{ success: boolean; message: string; deletedAt: string }> {
+    try {
+      return await api.delete('/users/account');
+    } catch (error) {
+      console.error('Delete own account error:', error);
+      throw error;
+    }
+  }
 }
 
 // Instance singleton

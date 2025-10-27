@@ -11,6 +11,8 @@ import { initializeDefaultData } from "./utils/storage";
 import { MainLayout } from "./components/MainLayout";
 import { AuthForm } from "./components/AuthForm";
 import { UpdateModal, MaintenanceModal } from "./components/UpdateModal";
+import { PrivacyPolicyPage } from "./components/PrivacyPolicyPage";
+import { TermsOfServicePage } from "./components/TermsOfServicePage";
 import { Toaster } from "./components/ui/sonner";
 import { AppProvider } from "./contexts/AppProvider";
 import ErrorNotifications from "./components/ErrorNotifications";
@@ -81,6 +83,17 @@ function AppContent() {
       });
     }
   }, [auth.isAuthenticated]);
+
+  // Routes publiques (accessibles sans authentification)
+  const pathname = window.location.pathname;
+
+  if (pathname === '/privacy') {
+    return <PrivacyPolicyPage onBack={() => window.history.back()} />;
+  }
+
+  if (pathname === '/terms') {
+    return <TermsOfServicePage onBack={() => window.history.back()} />;
+  }
 
   if (!auth.isInitialized || (isChecking && !hasChecked)) {
     return <div>Chargement…</div>;

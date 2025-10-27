@@ -35,6 +35,14 @@ export class UsersController {
   @ApiOperation({ summary: 'Update user by id (self or admin)' })
   update(@Param('id') id: string, @Body() dto: UpdateUserDto, @Req() req: any) { return this.users.update(req.user, id, dto); }
 
+  @Delete('account')
+  @ApiOperation({ summary: 'Delete own account (RGPD)' })
+  @ApiResponse({ status: 200, description: 'Account deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  deleteOwnAccount(@Req() req: any) {
+    return this.users.deleteOwnAccount(req.user.id);
+  }
+
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
