@@ -123,13 +123,11 @@ class NotificationService {
       const params = new URLSearchParams({
         limit: limit.toString(),
         offset: offset.toString(),
-        ...(unreadOnly && { unreadOnly: 'true' })
+        ...(unreadOnly && { unreadOnly: 'true' }),
+        ...(silent && { skipGlobalLoading: 'true' })
       });
 
-      const response = await api.get(`/notifications?${params}`, {
-        // Mode silencieux pour éviter les spinners de loading
-        skipGlobalLoading: silent
-      });
+      const response = await api.get(`/notifications?${params}`);
       return response;
     } catch (error) {
       console.error('Error fetching notifications:', error);

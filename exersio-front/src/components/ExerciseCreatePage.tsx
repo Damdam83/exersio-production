@@ -635,7 +635,7 @@ export function ExerciseCreatePage() {
       instructions: exerciseData.steps.filter(Boolean),
       fieldData,
       createdById: sourceExercise?.createdById || user?.id || 'anonymous',
-      clubId: sourceExercise?.clubId || club?.id || null,
+      clubId: sourceExercise?.clubId || null, // Ne pas assigner automatiquement le club de l'utilisateur
       isPublic: false, // Drafts are always private
       level: exerciseData.intensity,
       intensity: exerciseData.intensity as Exercise['intensity'],
@@ -683,7 +683,7 @@ export function ExerciseCreatePage() {
         instructions: exerciseData.steps.filter(Boolean),
         fieldData,
         createdById: sourceExercise?.createdById || user?.id || 'anonymous',
-        clubId: sourceExercise?.clubId || club?.id || null,
+        clubId: sourceExercise?.clubId || null, // Ne pas assigner automatiquement le club de l'utilisateur
         isPublic: true,
         level: exerciseData.intensity,
         intensity: exerciseData.intensity as Exercise['intensity'],

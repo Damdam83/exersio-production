@@ -1,8 +1,34 @@
 # 📊 État d'Avancement Projet Exersio
 
-**Dernière mise à jour** : 23/10/2025
+**Dernière mise à jour** : 25/10/2025
 **Branche actuelle** : `feat/arrow-control-points`
 **Document de référence unique** : Synthèse de tous les backlogs et plans
+**Session récente** : Système notifications finalisé (25/10/2025)
+
+---
+
+## 📈 État Actuel - Récapitulatif Rapide
+
+### ✅ Complété Récemment (25/10/2025)
+- **Système notifications** : Pagination serveur, EventEmitter, interface admin, documentation complète
+- **Nettoyage code** : Fonctions test obsolètes supprimées
+
+### 🚨 Bugs Critiques Restants (5 sur 6)
+1. ❌ **Visuels terrain cards/detail** - À tester (SportCourtViewer créé 14/10)
+2. ❌ **Éditeur terrain mobile paysage** - Non résolu (3-4h)
+3. ❌ **Sécurité mot de passe** - Audit bcrypt + indicateur force (3-4h)
+4. ❌ **CGU/Politique RGPD** - Pages manquantes (4-6h) - **OBLIGATOIRE LÉGAL**
+5. ❌ **Suppression compte** - Droit à l'oubli RGPD (3-4h) - **OBLIGATOIRE LÉGAL**
+
+### 📱 Mobile UX (Phases 1-4)
+- ❌ Phase 1 : Toasts, polling, déconnexion (2h) - **CRITIQUE**
+- ❌ Phase 2 : AuthForm, HomePage (1.5h)
+- ❌ Phase 3 : Sessions, Exercices, History (6h)
+- ❌ Phase 4 : Detail, Create pages (7h)
+
+### 🎯 Recommandation Prochaine Session
+**Option 1 (RECOMMANDÉ)** : RGPD + Sécurité (10-14h) - Conformité légale obligatoire avant production publique
+**Option 2** : Phase 1 Mobile + Tests terrain (3h) - Quick wins pour UX
 
 ---
 
@@ -19,6 +45,7 @@
 
 #### 🎨 Fonctionnalités Complètes
 - **Authentification** : JWT + confirmation email + reset password
+- **Notifications** : Système complet (rappels séances, exercices club, admin) + EventEmitter temps réel
 - **Mode offline** : IndexedDB + synchronisation bidirectionnelle
 - **Multi-sport** : 5 sports (volleyball, football, tennis, handball, basketball)
 - **Logging** : Winston avec rotation quotidienne + logs spécialisés
@@ -58,21 +85,25 @@
 
 ## 🚨 BUGS CRITIQUES IDENTIFIÉS (11/10/2025)
 
-### 🔔 1. Notifications Non Lues - 🔥 PRIORITÉ MAX (2-3h)
-**Problème** :
-- Badge chiffre rouge reste affiché après clic
-- Notifications ne passent pas en "lu"
-- 9 notifications non lues sur nouveau compte (anormal)
+### 🔔 1. Notifications Système - ✅ RÉSOLU (25/10/2025)
+**Session 25/10/2025** : Système notifications finalisé
 
-**Solution** :
-- Vérifier appel API `/api/notifications/:id/read`
-- Vérifier mise à jour state `NotificationContext`
-- Investiguer création automatique de notifs
+**Corrections appliquées** :
+- ✅ **Pagination côté serveur vraie** : Backend retourne `{ data, total }`, frontend avec `api.getRaw()`
+- ✅ **Statut 201 traité comme succès** : Envoi notifications fonctionne
+- ✅ **EventEmitter implémenté** : Badge se met à jour en temps réel
+- ✅ **Interface admin complète** : Envoi broadcast/club/users fonctionnel
+- ✅ **Nettoyage code** : Fonctions test obsolètes supprimées
+- ✅ **Documentation exhaustive** : NOTIFICATIONS-SYSTEME-COMPLET.md créé
 
-**Fichiers** :
-- `src/contexts/NotificationContext.tsx`
-- `src/components/NotificationsPanel.tsx`
-- `exersio-back/src/modules/notifications/notifications.service.ts`
+**⏳ Tests requis** :
+- Vérifier que le badge disparaît bien après lecture sur notification réelle
+- Investiguer les 9 notifications automatiques sur nouveau compte (si toujours présent)
+
+**Fichiers modifiés** :
+- Backend : `notifications.service.ts`, `notifications.controller.ts`
+- Frontend : `api.ts` (getRaw), `AdminNotificationsPage.tsx`, `NotificationSettingsPage.tsx`
+- Service : `notificationService.ts` (EventEmitter)
 
 ---
 

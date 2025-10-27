@@ -2,11 +2,12 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 24/10/2025
-**Session actuelle :** REFONTE SYSTÈME NOTIFICATIONS COMPLET
+**Dernière mise à jour :** 25/10/2025
+**Session actuelle :** SYSTÈME NOTIFICATIONS FINALISÉ
 **Documents de référence** :
 - [ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md) - Synthèse complète projet
 - [AUDIT-NOTIFICATIONS.md](AUDIT-NOTIFICATIONS.md) - Audit système notifications (24/10/2025)
+- [NOTIFICATIONS-SYSTEME-COMPLET.md](NOTIFICATIONS-SYSTEME-COMPLET.md) - Documentation technique complète (25/10/2025)
 
 ---
 
@@ -639,6 +640,44 @@ docker compose down        # Arrêter la DB
 **Fichiers clés** :
 - Frontend : `NotificationCenter.tsx`, `NotificationBadge`, `NotificationSettingsPage.tsx`, `Navigation.tsx`
 - Backend : `notifications.service.ts`, `notifications.controller.ts`, `notification-scheduler.service.ts`
+
+### Session du 25/10/2025 - Système Notifications Finalisé ✅
+**Session de finalisation système notifications : pagination + nettoyage + documentation**
+
+#### Corrections appliquées :
+1. ✅ **Pagination côté serveur vraie**
+   - Backend : Endpoints `getRecentNotifications(limit, offset)` retournent `{ data, total }`
+   - Frontend : Créé `api.getRaw()` pour récupérer réponse complète sans extraction automatique
+   - AdminNotificationsPage : Pagination réelle avec appels API à chaque changement de page
+   - Affichage correct : "Affichage 1 à 10 sur 52 notifications"
+
+2. ✅ **Statut 201 traité comme succès**
+   - Envoi de notification retourne 201 (Created) au lieu de 200
+   - Frontend : Modifié condition `response?.success || response?.success === undefined`
+   - Rechargement automatique stats + notifications après envoi réussi
+
+3. ✅ **Nettoyage code obsolète**
+   - Supprimé fonctions `testNotification()` et `testSessionReminders()` (non fonctionnelles sur web)
+   - Gardé section "Test Notifications (DEV)" avec appels API directs (fonctionnelle)
+
+#### Documentation créée :
+- ✅ **NOTIFICATIONS-SYSTEME-COMPLET.md** : Documentation technique exhaustive
+  - Architecture backend/frontend complète
+  - Tables Prisma (Notification, UserNotificationSettings, UserPushToken)
+  - API Endpoints (user + admin)
+  - Services (NotificationsService + NotificationSchedulerService)
+  - Frontend (notificationService.ts + EventEmitter + Composants UI)
+  - Types de notifications (rappel séance, exercice club, admin, futur membre)
+  - Permissions mobile (locales ✅ / push ⚠️ désactivées temporairement)
+  - Tests et débogage
+  - TODO futur (push notifications, polling, filtres)
+
+**Fichiers modifiés** :
+- Backend : `notifications.service.ts`, `notifications.controller.ts`
+- Frontend : `api.ts` (nouvelle méthode getRaw), `AdminNotificationsPage.tsx`, `NotificationSettingsPage.tsx`
+
+**Temps réalisé** : ~2h
+**Status final** : ✅ Système notifications pleinement opérationnel
 
 ### Session du 15/10/2025 - Corrections Filtres Multi-Sport + ExerciseDetailView ✅
 **Phase Frontend multi-sport complétée:**

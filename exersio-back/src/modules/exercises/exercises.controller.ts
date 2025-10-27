@@ -43,8 +43,8 @@ export class ExercisesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get exercise by id' })
-  get(@Param('id') id: string) {
-    return this.ex.get(id);
+  get(@Param('id') id: string, @Req() req: any) {
+    return this.ex.get(id, req.user.id);
   }
 
   @Put(':id')

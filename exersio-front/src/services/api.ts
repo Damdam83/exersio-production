@@ -125,6 +125,30 @@ export const api = {
     return apiRequest<T>(`${endpoint}${searchParams}`, { method: 'GET' });
   },
 
+  // Version qui retourne la réponse complète (avec success, data, total, etc.)
+  getRaw: async <T = any>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> => {
+    const searchParams = params ? `?${new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined && value !== null) {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    )}` : '';
+
+    const url = `${API_BASE_URL}${endpoint}${searchParams}`;
+    const config: RequestInit = {
+      headers: getAuthHeaders(),
+      method: 'GET',
+    };
+
+    const response = await fetch(url, config);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return await response.json();
+  },
+
   post: <T = any>(endpoint: string, data?: any): Promise<T> => {
     return apiRequest<T>(endpoint, {
       method: 'POST',

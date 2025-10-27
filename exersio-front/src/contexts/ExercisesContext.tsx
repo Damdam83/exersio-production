@@ -228,6 +228,7 @@ interface ExercisesContextType {
   state: ExercisesState;
   actions: {
     loadExercises: () => Promise<void>;
+    loadExerciseById: (id: string) => Promise<Exercise | null>;
     createExercise: (exercise: Omit<Exercise, 'id' | 'createdAt'>) => Promise<Exercise>;
     updateExercise: (id: string, updates: Partial<Exercise>) => Promise<void>;
     deleteExercise: (id: string) => Promise<void>;
@@ -290,6 +291,53 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
       }
     }
   }, [state.filters]);
+
+  const loadExerciseById = useCallback(async (id: string): Promise<Exercise | null> => {
+    try {
+      // Vérifier d'abord si l'exercice est déjà dans le state
+      const existingExercise = state.exercises.data.find(ex => ex.id === id);
+      if (existingExercise) {
+        return existingExercise;
+      }
+
+      // Si offline, chercher dans IndexedDB
+      if (!navigator.onLine) {
+        const offlineExercise = await offlineStorage.getExercise(id);
+        if (offlineExercise) {
+          // Ajouter l'exercice au state
+          dispatch({ type: 'CREATE_SUCCESS', payload: offlineExercise.data });
+          return offlineExercise.data;
+        }
+        return null;
+      }
+
+      // Si online, charger depuis l'API
+      const exercise = await exercisesService.getById(id);
+
+      // Ajouter l'exercice au state
+      dispatch({ type: 'CREATE_SUCCESS', payload: exercise });
+
+      // Sauvegarder dans IndexedDB
+      await offlineStorage.saveExercise(exercise, 'synced');
+
+      return exercise;
+    } catch (error) {
+      console.error('Error loading exercise by ID:', error);
+
+      // En cas d'erreur, tenter de charger depuis IndexedDB
+      try {
+        const offlineExercise = await offlineStorage.getExercise(id);
+        if (offlineExercise) {
+          dispatch({ type: 'CREATE_SUCCESS', payload: offlineExercise.data });
+          return offlineExercise.data;
+        }
+      } catch (offlineError) {
+        console.error('Failed to load from offline storage:', offlineError);
+      }
+
+      return null;
+    }
+  }, [state.exercises.data]);
 
   const createExercise = async (exerciseData: Omit<Exercise, 'id' | 'createdAt'>): Promise<Exercise> => {
     dispatch({ type: 'CREATE_START' });
@@ -492,6 +540,7 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
 
   const actions = useMemo(() => ({
     loadExercises,
+    loadExerciseById,
     createExercise,
     updateExercise,
     deleteExercise,
@@ -507,7 +556,7 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
     setPagination,
     clearStates,
     getFilteredExercises
-  }), [loadExercises, createExercise, updateExercise, deleteExercise, shareWithClub, getPermissions, selectExercise, createLocalCopy, setDraftExercise, updateDraftExercise, saveDraftExercise, clearDraft, setFilters, setPagination, clearStates, getFilteredExercises]);
+  }), [loadExercises, loadExerciseById, createExercise, updateExercise, deleteExercise, shareWithClub, getPermissions, selectExercise, createLocalCopy, setDraftExercise, updateDraftExercise, saveDraftExercise, clearDraft, setFilters, setPagination, clearStates, getFilteredExercises]);
 
   return (
     <ExercisesContext.Provider value={{ state, actions }}>

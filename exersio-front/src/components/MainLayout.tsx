@@ -155,7 +155,7 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
         setIsLoading(true);
         setHasAttemptedLoad(true);
         try {
-          await exerciseActions.loadExercises(); // Recharger tous les exercices
+          await exerciseActions.loadExerciseById(exerciseId); // Charger UN SEUL exercice
         } catch (error) {
           console.error('Erreur lors du chargement de l\'exercice:', error);
         } finally {

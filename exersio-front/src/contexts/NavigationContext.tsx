@@ -1,5 +1,5 @@
 // contexts/NavigationContext.tsx
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { NavigationPage } from '../types';
 
 // Pages additionnelles non listées dans le menu principal
@@ -48,7 +48,7 @@ const defaultMenuEntries: MenuEntry[] = [
   { key: 'sessions',  label: 'Séances' },
   { key: 'exercises', label: 'Exercices' },
   { key: 'history',   label: 'Historique' },
-  { key: 'profile',   label: 'Équipe' },
+  { key: 'profile',   label: 'Profil' },
 ];
 
 // Helpers pour le routing

@@ -86,26 +86,6 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
     }));
   };
 
-  const testNotification = async () => {
-    try {
-      await notificationService.scheduleLocalNotification(
-        '🎯 Test Notification',
-        'Les notifications fonctionnent correctement !',
-        5000 // 5 secondes
-      );
-    } catch (error) {
-      console.error('Error testing notification:', error);
-    }
-  };
-
-  const testSessionReminders = async () => {
-    try {
-      await notificationService.testSessionReminders();
-    } catch (error) {
-      console.error('Error testing session reminders:', error);
-    }
-  };
-
   const getPermissionStatus = (permission: string) => {
     switch (permission) {
       case 'granted': 

@@ -85,16 +85,17 @@ export class InvitationsService {
       });
 
       if (user) {
-        // Ajouter l'utilisateur au club
+        // Créer la notification "nouveau membre" AVANT d'ajouter l'utilisateur
+        // Cela permet de récupérer les membres existants sans inclure le nouveau
+        await this.notificationsService.createMemberJoinedNotification(user.id, invitation.clubId);
+
+        // Ajouter l'utilisateur au club APRÈS avoir créé les notifications
         await this.prisma.user.update({
           where: { id: user.id },
           data: { clubId: invitation.clubId }
         });
 
         this.logger.log(`User ${user.id} added to club ${invitation.clubId}`, 'InvitationsService');
-
-        // Créer la notification "nouveau membre"
-        await this.notificationsService.createMemberJoinedNotification(user.id, invitation.clubId);
       } else {
         this.logger.warn(`User with email ${userEmail} not found`, 'InvitationsService');
       }

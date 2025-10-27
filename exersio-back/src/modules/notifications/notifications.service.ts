@@ -425,17 +425,23 @@ export class NotificationsService {
     }
   }
 
-  async getRecentNotifications(limit: number = 50): Promise<any[]> {
+  async getRecentNotifications(limit: number = 50, offset: number = 0): Promise<{ notifications: any[], total: number }> {
     try {
-      return await this.prisma.notification.findMany({
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: {
-            select: { id: true, name: true, email: true }
+      const [notifications, total] = await Promise.all([
+        this.prisma.notification.findMany({
+          take: limit,
+          skip: offset,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: {
+              select: { id: true, name: true, email: true }
+            }
           }
-        }
-      });
+        }),
+        this.prisma.notification.count()
+      ]);
+
+      return { notifications, total };
     } catch (error) {
       this.logger.error(`Failed to get recent notifications: ${error instanceof Error ? error.message : 'Unknown error'}`, 'NotificationsService');
       throw error;

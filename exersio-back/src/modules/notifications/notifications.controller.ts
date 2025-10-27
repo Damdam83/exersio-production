@@ -32,41 +32,41 @@ export class NotificationsController {
 
   @Get()
   async getUserNotifications(@Request() req: any, @Query() query: NotificationQueryDto) {
-    return await this.notificationsService.getUserNotifications(req.user.userId, query);
+    return await this.notificationsService.getUserNotifications(req.user.id, query);
   }
 
   @Put(':id/read')
   async markAsRead(@Request() req: any, @Param('id') notificationId: string) {
-    return await this.notificationsService.markAsRead(req.user.userId, notificationId);
+    return await this.notificationsService.markAsRead(req.user.id, notificationId);
   }
 
   @Put('read-all')
   async markAllAsRead(@Request() req: any) {
-    return await this.notificationsService.markAllAsRead(req.user.userId);
+    return await this.notificationsService.markAllAsRead(req.user.id);
   }
 
   // ===== GESTION DES PUSH TOKENS =====
 
   @Post('push-token')
   async registerPushToken(@Request() req: any, @Body() dto: RegisterPushTokenDto) {
-    return await this.notificationsService.registerPushToken(req.user.userId, dto);
+    return await this.notificationsService.registerPushToken(req.user.id, dto);
   }
 
   @Get('push-tokens')
   async getUserPushTokens(@Request() req: any) {
-    return await this.notificationsService.getUserPushTokens(req.user.userId);
+    return await this.notificationsService.getUserPushTokens(req.user.id);
   }
 
   // ===== PARAMÈTRES NOTIFICATIONS =====
 
   @Get('settings')
   async getNotificationSettings(@Request() req: any) {
-    return await this.notificationsService.getUserNotificationSettings(req.user.userId);
+    return await this.notificationsService.getUserNotificationSettings(req.user.id);
   }
 
   @Put('settings')
   async updateNotificationSettings(@Request() req: any, @Body() dto: UpdateNotificationSettingsDto) {
-    return await this.notificationsService.updateNotificationSettings(req.user.userId, dto);
+    return await this.notificationsService.updateNotificationSettings(req.user.id, dto);
   }
 
   // ===== ENDPOINTS ADMIN/DEBUG =====
@@ -94,7 +94,7 @@ export class NotificationsController {
     }
   ) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       
       if (body.recipientIds && body.recipientIds.length > 0) {
         // Envoyer à des utilisateurs spécifiques
@@ -144,10 +144,21 @@ export class NotificationsController {
   @Get('admin/recent')
   @UseGuards(RolesGuard)
   @Roles('admin')
-  async getRecentNotifications(@Request() req: any) {
+  async getRecentNotifications(
+    @Request() req: any,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string
+  ) {
     try {
-      const notifications = await this.notificationsService.getRecentNotifications(50);
-      return { success: true, data: notifications };
+      const limitNum = limit ? parseInt(limit, 10) : 50;
+      const offsetNum = offset ? parseInt(offset, 10) : 0;
+
+      const { notifications, total } = await this.notificationsService.getRecentNotifications(limitNum, offsetNum);
+      return {
+        success: true,
+        data: notifications,
+        total: total
+      };
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
     }

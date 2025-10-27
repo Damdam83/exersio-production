@@ -1,12 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-// import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ExercisesService {
   constructor(
-    private prisma: PrismaService
-    // private notificationsService: NotificationsService
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService
   ) {}
 
   async list(query: any, page = 1, limit = 10, userId?: string) {
@@ -112,8 +112,8 @@ export class ExercisesService {
     return exercise;
   }
 
-  async get(id: string) {
-    const ex = await this.prisma.exercise.findUnique({ 
+  async get(id: string, userId?: string) {
+    const ex = await this.prisma.exercise.findUnique({
       where: { id },
       include: {
         categoryRef: true,
@@ -126,7 +126,30 @@ export class ExercisesService {
         }
       }
     });
+
     if (!ex) throw new NotFoundException('Exercise not found');
+
+    // Si userId fourni, vérifier les permissions
+    if (userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { clubId: true }
+      });
+
+      // L'utilisateur peut voir l'exercice si :
+      // 1. C'est son propre exercice
+      // 2. L'exercice appartient à son club
+      // 3. L'exercice est public (isPublic = true)
+      const canView =
+        ex.createdById === userId ||
+        (ex.clubId && ex.clubId === user?.clubId) ||
+        ex.isPublic === true;
+
+      if (!canView) {
+        throw new NotFoundException('Exercise not found'); // Ne pas révéler l'existence
+      }
+    }
+
     return ex;
   }
 
@@ -167,10 +190,15 @@ export class ExercisesService {
     }
 
     // Mettre à jour l'exercice avec le clubId
-    return this.prisma.exercise.update({
+    const updatedExercise = await this.prisma.exercise.update({
       where: { id },
       data: { clubId: user.clubId }
     });
+
+    // Créer les notifications pour les membres du club
+    await this.notificationsService.createExerciseAddedNotification(id, user.clubId);
+
+    return updatedExercise;
   }
 
 
