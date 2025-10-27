@@ -26,12 +26,12 @@
 
 ### 📱 Mobile UX (Phases 1-4) - EN COURS
 - ✅ Phase 1 : Toasts (✅), polling (non requis), déconnexion (✅ existe)
-- 🔄 **Phase 2 : AuthForm, HomePage (1.5h) - EN COURS**
-- ⏳ Phase 3 : Sessions, Exercices, History (6h)
-- ⏳ Phase 4 : Detail, Create pages (7h)
+- ✅ **Phase 2 : AuthForm, HomePage (1.5h) - TERMINÉ**
+- ✅ **Phase 3 : Sessions, Exercices, History (6h) - TERMINÉ**
+- 🔄 **Phase 4 : Detail, Create pages (7h) - EN COURS**
 
 ### 🎯 Tâche Actuelle
-**Phase 2 Mobile UX** : Optimisation AuthForm + HomePage pour mobile (1.5h estimé)
+**Phase 4 Mobile UX** : Optimisation ExerciseDetailView + ExerciseCreatePage pour mobile (7h estimé)
 
 ---
 
