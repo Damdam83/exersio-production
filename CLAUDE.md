@@ -2,8 +2,8 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 25/10/2025
-**Session actuelle :** SYSTÈME NOTIFICATIONS FINALISÉ
+**Dernière mise à jour :** 27/10/2025
+**Session actuelle :** RGPD COMPLET + UX POLISH
 **Documents de référence** :
 - [ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md) - Synthèse complète projet
 - [AUDIT-NOTIFICATIONS.md](AUDIT-NOTIFICATIONS.md) - Audit système notifications (24/10/2025)
@@ -678,6 +678,79 @@ docker compose down        # Arrêter la DB
 
 **Temps réalisé** : ~2h
 **Status final** : ✅ Système notifications pleinement opérationnel
+
+### Session du 26-27/10/2025 - RGPD Complet + UX Polish ✅
+**Session complète de conformité RGPD et améliorations UX**
+
+#### 1. Système RGPD complet (26/10)
+**Nouvelles pages créées :**
+- ✅ **LegalFooter.tsx** : Footer avec liens CGU + Politique de confidentialité
+- ✅ **TermsOfServicePage.tsx** : Conditions générales d'utilisation
+- ✅ **PrivacyPolicyPage.tsx** : Politique de confidentialité RGPD complète
+
+**Fonctionnalité suppression compte :**
+- ✅ **ProfilePage** : Section "Zone de danger" avec bouton suppression + modal confirmation
+- ✅ **Backend endpoint** : DELETE /api/user/account avec cascade deletion
+- ✅ **usersService.deleteUserAccount()** : Service frontend pour suppression
+
+**Conformité RGPD :**
+- ✅ Checkbox consentement CGU dans AuthForm (inscription)
+- ✅ Validation consentement obligatoire avant création compte
+- ✅ Footer légal affiché sur toutes les pages publiques (AuthForm)
+- ✅ Droit à l'oubli : suppression complète données utilisateur
+
+#### 2. Sécurité mot de passe améliorée (27/10)
+**Composant PasswordStrengthIndicator :**
+- ✅ Barre visuelle de force (0-4, couleurs progressives)
+- ✅ 5 critères validés : min 8 chars, majuscule, minuscule, chiffre, caractère spécial
+- ✅ Feedback temps réel avec icônes Check/X
+
+**AuthForm amélioré :**
+- ✅ Toggle show/hide password (Eye/EyeOff icons) sur tous champs password
+- ✅ Validation frontend stricte avec messages d'erreur explicites
+- ✅ PasswordStrengthIndicator affiché en modes register et reset-password
+
+**Backend audit :**
+- ✅ Confirmé bcrypt avec 10 salt rounds (sécurité excellente)
+
+#### 3. Correctifs affichage erreurs HTTP (27/10)
+**Problème :** Erreurs HTTP (409, 401) affichaient "HTTP 409" au lieu du message backend
+
+**Solutions appliquées :**
+- ✅ **api.ts** : Ajout `response.clone()` pour lecture body multiple fois
+- ✅ **apiInterceptor.ts** : Gestion erreurs serveur (500+) uniquement, laisse 400-499 intacts
+- ✅ **handleUnauthorizedError()** : Retourne originalResponse pour endpoints auth (au lieu de new Response)
+- ✅ Propagation correcte messages backend : "Email already in use", "Invalid credentials"
+
+**Résultat :** ✅ Messages d'erreur clairs et explicites pour l'utilisateur
+
+#### 4. Toast notifications configurés (27/10)
+**sonner.tsx modifié :**
+- ✅ Timeout 3000ms (3 secondes)
+- ✅ Close button manuel
+- ✅ Rich colors automatiques par type (success, error, info)
+- ✅ Position top-center optimisée mobile
+- ✅ Theme dark avec style personnalisé
+
+📁 **Fichiers créés :**
+- `exersio-front/src/components/LegalFooter.tsx`
+- `exersio-front/src/components/TermsOfServicePage.tsx`
+- `exersio-front/src/components/PrivacyPolicyPage.tsx`
+- `exersio-front/src/components/PasswordStrengthIndicator.tsx`
+
+📁 **Fichiers modifiés :**
+- `exersio-front/src/components/AuthForm.tsx` : Checkbox CGU, toggle password, validation stricte
+- `exersio-front/src/components/ProfilePage.tsx` : Section suppression compte
+- `exersio-front/src/components/ui/sonner.tsx` : Configuration timeout
+- `exersio-front/src/services/api.ts` : Clone response pour multi-read
+- `exersio-front/src/services/apiInterceptor.ts` : Fix gestion erreurs HTTP
+- `exersio-front/src/services/usersService.ts` : deleteUserAccount()
+- `exersio-back/src/modules/users/users.controller.ts` : DELETE /account endpoint
+- `exersio-back/src/modules/users/users.service.ts` : deleteUserAccount() avec cascade
+
+**Branche :** feat/next-features
+**Temps réalisé :** ~5h
+**Status :** ✅ RGPD complet + sécurité mot de passe + UX polish terminés
 
 ### Session du 15/10/2025 - Corrections Filtres Multi-Sport + ExerciseDetailView ✅
 **Phase Frontend multi-sport complétée:**
