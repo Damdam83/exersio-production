@@ -1,34 +1,37 @@
 # 📊 État d'Avancement Projet Exersio
 
-**Dernière mise à jour** : 25/10/2025
-**Branche actuelle** : `feat/arrow-control-points`
+**Dernière mise à jour** : 27/10/2025
+**Branche actuelle** : `feat/next-features`
 **Document de référence unique** : Synthèse de tous les backlogs et plans
-**Session récente** : Système notifications finalisé (25/10/2025)
+**Session récente** : RGPD complet + Sécurité + UX Polish (26-27/10/2025)
 
 ---
 
 ## 📈 État Actuel - Récapitulatif Rapide
 
-### ✅ Complété Récemment (25/10/2025)
-- **Système notifications** : Pagination serveur, EventEmitter, interface admin, documentation complète
-- **Nettoyage code** : Fonctions test obsolètes supprimées
+### ✅ Complété Récemment (26-27/10/2025)
+- **RGPD complet** : CGU, Politique confidentialité, Suppression compte, Checkbox consentement
+- **Sécurité mot de passe** : Audit bcrypt (10 rounds ✅), PasswordStrengthIndicator, toggle show/hide
+- **Correctifs HTTP** : Erreurs 409/401 affichent messages backend clairs
+- **Toast notifications** : Timeout 3s, close button, rich colors, position optimale
+- **Système notifications** : Pagination serveur, EventEmitter, interface admin, documentation complète (25/10)
 
-### 🚨 Bugs Critiques Restants (5 sur 6)
-1. ❌ **Visuels terrain cards/detail** - À tester (SportCourtViewer créé 14/10)
-2. ❌ **Éditeur terrain mobile paysage** - Non résolu (3-4h)
-3. ❌ **Sécurité mot de passe** - Audit bcrypt + indicateur force (3-4h)
-4. ❌ **CGU/Politique RGPD** - Pages manquantes (4-6h) - **OBLIGATOIRE LÉGAL**
-5. ❌ **Suppression compte** - Droit à l'oubli RGPD (3-4h) - **OBLIGATOIRE LÉGAL**
+### 🚨 Bugs Critiques Restants (Option A - TOUS COMPLÉTÉS ✅)
+1. ✅ **Visuels terrain cards/detail** - SportCourtViewer validé
+2. ✅ **Éditeur terrain mobile paysage** - Déjà résolu en session précédente
+3. ✅ **Sécurité mot de passe** - Audit bcrypt + indicateur force (FAIT 27/10)
+4. ✅ **CGU/Politique RGPD** - Pages créées avec LegalFooter (FAIT 26/10)
+5. ✅ **Suppression compte** - Droit à l'oubli RGPD (FAIT 26/10)
+6. ✅ **Fix copie/partage** - Double "(copie)" + erreur 500 (FAIT 24/10)
 
-### 📱 Mobile UX (Phases 1-4)
-- ❌ Phase 1 : Toasts, polling, déconnexion (2h) - **CRITIQUE**
-- ❌ Phase 2 : AuthForm, HomePage (1.5h)
-- ❌ Phase 3 : Sessions, Exercices, History (6h)
-- ❌ Phase 4 : Detail, Create pages (7h)
+### 📱 Mobile UX (Phases 1-4) - EN COURS
+- ✅ Phase 1 : Toasts (✅), polling (non requis), déconnexion (✅ existe)
+- 🔄 **Phase 2 : AuthForm, HomePage (1.5h) - EN COURS**
+- ⏳ Phase 3 : Sessions, Exercices, History (6h)
+- ⏳ Phase 4 : Detail, Create pages (7h)
 
-### 🎯 Recommandation Prochaine Session
-**Option 1 (RECOMMANDÉ)** : RGPD + Sécurité (10-14h) - Conformité légale obligatoire avant production publique
-**Option 2** : Phase 1 Mobile + Tests terrain (3h) - Quick wins pour UX
+### 🎯 Tâche Actuelle
+**Phase 2 Mobile UX** : Optimisation AuthForm + HomePage pour mobile (1.5h estimé)
 
 ---
 

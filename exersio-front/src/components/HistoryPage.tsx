@@ -265,39 +265,39 @@ export function HistoryPage() {
         />
 
         {/* Stats mobiles compactes */}
-        <div className="bg-slate-800/30 border-b border-white/10 p-4">
-          <div className="grid grid-cols-2 gap-4 text-center">
+        <div className="bg-slate-800/30 border-b border-white/10 p-3 sm:p-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-emerald-400">{totalSessions}</div>
-              <div className="text-xs text-gray-400">Séances totales</div>
+              <div className="text-xl sm:text-2xl font-bold text-emerald-400">{totalSessions}</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">Séances totales</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-blue-400">{totalHours}h</div>
-              <div className="text-xs text-gray-400">Temps total</div>
+              <div className="text-xl sm:text-2xl font-bold text-blue-400">{totalHours}h</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">Temps total</div>
             </div>
           </div>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
           {isLoading ? (
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-8 text-center">
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 text-center">
               <div className="w-8 h-8 border-2 border-[#00d4aa] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-400">Chargement de l'historique...</p>
+              <p className="text-sm text-gray-400">Chargement de l'historique...</p>
             </div>
           ) : sortedSessions.length === 0 ? (
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-8 text-center">
-              <div className="text-4xl mb-4">📋</div>
-              <h3 className="text-lg font-semibold text-white mb-2">
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 text-center">
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📋</div>
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">
                 Aucune séance dans l'historique
               </h3>
-              <p className="text-gray-400 mb-4">
-                {historySessions.length === 0 
-                  ? "Vous n'avez pas encore de séances terminées." 
+              <p className="text-sm text-gray-400 mb-3 sm:mb-4">
+                {historySessions.length === 0
+                  ? "Vous n'avez pas encore de séances terminées."
                   : "Aucune séance ne correspond à vos critères."}
               </p>
-              <button 
+              <button
                 onClick={() => navigate('sessions')}
-                className="bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-6 py-3 rounded-lg font-medium transition-colors"
+                className="bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-medium transition-colors"
               >
                 📅 Voir les séances
               </button>
@@ -310,21 +310,21 @@ export function HistoryPage() {
               const cardClass = getCardClass(session.status || 'completed');
               
               return (
-                <div 
-                  key={`session-${session.id || index}`} 
+                <div
+                  key={`session-${session.id || index}`}
                   onClick={() => navigate('session-detail', { sessionId: session.id })}
-                  className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-4 relative overflow-hidden active:scale-[0.98] transition-all duration-200"
+                  className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-3 sm:p-4 relative overflow-hidden active:scale-[0.98] transition-all duration-200"
                 >
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${
                     cardClass === 'completed' ? 'bg-emerald-500' : 'bg-red-500'
                   }`}></div>
 
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-2 sm:mb-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-lg truncate mb-1">
+                      <h3 className="font-semibold text-white text-base sm:text-lg truncate mb-1">
                         {session.name || 'Séance sans nom'}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-400 mb-1">
                         <span className="flex items-center gap-1">
                           📅 {formatDate(session.date)}
                         </span>
@@ -332,18 +332,18 @@ export function HistoryPage() {
                           ⏰ {formatTime(session.date)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-[#00d4aa] font-medium">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="text-xs sm:text-sm text-[#00d4aa] font-medium">
                           Équipe {session.ageCategory || 'Seniors'}
                         </span>
-                        <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-semibold border border-blue-500/30">
+                        <span className="bg-blue-500/20 text-blue-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-semibold border border-blue-500/30">
                           {getTimeAgo(session.date)}
                         </span>
                       </div>
                     </div>
-                    <div className={`px-2 py-1 rounded text-xs font-semibold ${
-                      cardClass === 'completed' 
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                    <div className={`px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-semibold ${
+                      cardClass === 'completed'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                         : 'bg-red-500/20 text-red-400 border border-red-500/30'
                     }`}>
                       {statusInfo.label}
@@ -351,46 +351,46 @@ export function HistoryPage() {
                   </div>
 
                   {session.description && (
-                    <p className="text-gray-300 text-sm mb-3 line-clamp-2">
+                    <p className="text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2">
                       {session.description}
                     </p>
                   )}
 
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <span className="bg-amber-500/20 text-amber-400 px-2 py-1 rounded text-xs font-medium border border-amber-500/30">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                    <span className="bg-amber-500/20 text-amber-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium border border-amber-500/30">
                       ⏱️ {session.duration || totalDuration} min
                     </span>
-                    <span className="bg-purple-500/20 text-purple-400 px-2 py-1 rounded text-xs font-medium border border-purple-500/30">
+                    <span className="bg-purple-500/20 text-purple-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium border border-purple-500/30">
                       🎯 {sessionExercises.length} exercice{sessionExercises.length !== 1 ? 's' : ''}
                     </span>
                     {session.status === 'completed' && (
-                      <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded text-xs font-medium border border-emerald-500/30">
+                      <span className="bg-emerald-500/20 text-emerald-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium border border-emerald-500/30">
                         ✅ Terminée
                       </span>
                     )}
                     {session.status === 'cancelled' && (
-                      <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs font-medium border border-red-500/30">
+                      <span className="bg-red-500/20 text-red-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium border border-red-500/30">
                         ❌ Annulée
                       </span>
                     )}
                   </div>
 
                   {sessionExercises.length > 0 && (
-                    <div className="space-y-1 mb-3">
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <div className="space-y-1 mb-2 sm:mb-3">
+                      <div className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Programme réalisé
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {sessionExercises.slice(0, 3).map(exercise => (
                           <div
                             key={exercise.id}
-                            className="bg-white/5 text-xs text-gray-300 px-2 py-1 rounded"
+                            className="bg-white/5 text-[10px] sm:text-xs text-gray-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded"
                           >
                             {exercise.name}
                           </div>
                         ))}
                         {sessionExercises.length > 3 && (
-                          <div className="bg-white/5 text-xs text-gray-400 px-2 py-1 rounded">
+                          <div className="bg-white/5 text-[10px] sm:text-xs text-gray-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
                             +{sessionExercises.length - 3}
                           </div>
                         )}

@@ -90,16 +90,16 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen text-white relative pb-20">
-      <div className="max-w-full mx-auto px-5 py-6 relative z-10">
+      <div className="max-w-full mx-auto px-4 sm:px-5 py-4 sm:py-6 relative z-10">
 
         {/* Stats Rapides */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
           {quickStats.map((stat) => (
-            <div key={stat.label} className="bg-glass-card p-4 text-center hover:-translate-y-0.5 transition-all">
-              <div className="text-xl font-extrabold bg-gradient-to-r from-blue-500 to-emerald-500 bg-clip-text text-transparent mb-1">
+            <div key={stat.label} className="bg-glass-card p-3 sm:p-4 text-center hover:-translate-y-0.5 transition-all">
+              <div className="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-blue-500 to-emerald-500 bg-clip-text text-transparent mb-1">
                 {stat.number}
               </div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+              <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider font-semibold">
                 {stat.label}
               </div>
             </div>
@@ -107,68 +107,68 @@ export function HomePage() {
         </div>
 
         {/* Actions Rapides */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-lg font-bold mb-4">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 text-base sm:text-lg font-bold mb-3 sm:mb-4">
             ⚡ Actions rapides
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <button
               onClick={() => setCurrentPage('session-create')}
-              className="bg-primary-btn"
+              className="bg-primary-btn p-4 sm:p-5"
             >
-              <div className="text-2xl mb-1">➕</div>
-              <div>Nouvelle<br />séance</div>
+              <div className="text-xl sm:text-2xl mb-1">➕</div>
+              <div className="text-xs sm:text-sm">Nouvelle<br />séance</div>
             </button>
             <button
               onClick={() => setCurrentPage('exercise-create')}
-              className="bg-white/8 backdrop-blur-xl border border-white/10 rounded-2xl p-5 text-white text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:border-blue-500/30 hover:bg-white/12 flex flex-col items-center gap-2 text-center"
+              className="bg-white/8 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 text-white text-xs sm:text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:border-blue-500/30 hover:bg-white/12 flex flex-col items-center gap-2 text-center"
             >
-              <div className="text-2xl mb-1">🎯</div>
-              <div>Créer<br />exercice</div>
+              <div className="text-xl sm:text-2xl mb-1">🎯</div>
+              <div className="text-xs sm:text-sm">Créer<br />exercice</div>
             </button>
           </div>
         </div>
 {/* Séances à venir */}
-        <div className='mb-4'>
-          <div className="flex items-center gap-2 text-lg font-bold mb-4">
+        <div className='mb-4 sm:mb-6'>
+          <div className="flex items-center gap-2 text-base sm:text-lg font-bold mb-3 sm:mb-4">
             📅 Séances à venir
           </div>
 
           {upcomingSessions.length === 0 ? (
-            <div className="bg-glass-card p-8 text-center">
-              <div className="text-4xl mb-4">📅</div>
-              <h3 className="text-lg font-semibold text-white mb-2">Aucune séance planifiée</h3>
-              <p className="text-gray-400 mb-4">Commencez par créer votre première séance.</p>
+            <div className="bg-glass-card p-6 sm:p-8 text-center">
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📅</div>
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Aucune séance planifiée</h3>
+              <p className="text-sm text-gray-400 mb-3 sm:mb-4">Commencez par créer votre première séance.</p>
               <button
                 onClick={() => setCurrentPage('session-create')}
-                className="bg-primary-btn text-white"
+                className="bg-primary-btn text-white text-xs sm:text-sm px-4 py-2"
               >
                 ➕ Créer une séance
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {upcomingSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="bg-glass-card p-5 transition-all hover:-translate-y-0.5 hover:border-blue-500/30 cursor-pointer relative overflow-hidden"
+                  className="bg-glass-card p-4 sm:p-5 transition-all hover:-translate-y-0.5 hover:border-blue-500/30 cursor-pointer relative overflow-hidden"
                   onClick={() => navigate('session-detail', { sessionId: session.id })}
                 >
                   {/* Bande colorée gauche */}
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-emerald-500 rounded-r"></div>
 
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="text-sm font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-lg">
+                  <div className="flex justify-between items-start mb-2 sm:mb-3">
+                    <div className="text-xs sm:text-sm font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-lg">
                       {formatSessionTime(session.date)}
                     </div>
-                    <div className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded-lg">
+                    <div className="text-[10px] sm:text-xs text-gray-400 bg-white/5 px-2 py-1 rounded-lg">
                       {session.duration || 90} min
                     </div>
                   </div>
 
-                  <div className="text-base font-bold text-white mb-2">{session.name}</div>
+                  <div className="text-sm sm:text-base font-bold text-white mb-2">{session.name}</div>
 
-                  <div className="flex flex-wrap gap-2 text-xs text-gray-400 mb-3">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-gray-400 mb-2 sm:mb-3">
                     <span className="flex items-center gap-1">
                       📍 Terrain principal
                     </span>
@@ -180,14 +180,14 @@ export function HomePage() {
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {session.ageCategory && (
-                      <span className="bg-blue-500/20 border border-blue-500/30 text-blue-400 px-2 py-1 rounded-lg text-xs font-semibold uppercase tracking-wide">
+                      <span className="bg-blue-500/20 border border-blue-500/30 text-blue-400 px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-wide">
                         {session.ageCategory}
                       </span>
                     )}
                     {session.level && (
-                      <span className="bg-blue-500/20 border border-blue-500/30 text-blue-400 px-2 py-1 rounded-lg text-xs font-semibold uppercase tracking-wide">
+                      <span className="bg-blue-500/20 border border-blue-500/30 text-blue-400 px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-wide">
                         {session.level}
                       </span>
                     )}
@@ -198,15 +198,15 @@ export function HomePage() {
           )}
         </div>
         {/* Progression + Stats fusionnées */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-lg font-bold mb-4">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 text-base sm:text-lg font-bold mb-3 sm:mb-4">
             📊 Progression du mois
           </div>
-          <div className="bg-glass-card p-5">
-            <div className="flex items-center gap-5">
+          <div className="bg-glass-card p-4 sm:p-5">
+            <div className="flex items-center gap-3 sm:gap-5">
               {/* Progression circulaire */}
-              <div className="relative w-16 h-16 flex-shrink-0">
-                <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
+                <svg className="w-14 h-14 sm:w-16 sm:h-16 transform -rotate-90" viewBox="0 0 64 64">
                   <defs>
                     <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" style={{ stopColor: '#3b82f6' }} />
@@ -237,10 +237,10 @@ export function HomePage() {
               </div>
 
               {/* Infos progression */}
-              <div className="flex-1">
-                <div className="text-base font-bold mb-1">Excellent travail !</div>
-                <div className="text-xs text-gray-400 mb-2">Objectifs en bonne voie</div>
-                <div className="flex gap-4 text-xs">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm sm:text-base font-bold mb-1">Excellent travail !</div>
+                <div className="text-[10px] sm:text-xs text-gray-400 mb-2">Objectifs en bonne voie</div>
+                <div className="flex gap-3 sm:gap-4 text-[10px] sm:text-xs">
                   <div className="text-center">
                     <div className="font-bold text-emerald-400">{userExercises.length}</div>
                     <div className="text-gray-400">Exercices</div>
