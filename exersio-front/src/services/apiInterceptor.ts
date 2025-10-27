@@ -128,12 +128,15 @@ export const createApiInterceptor = () => {
 
       // Gestion des erreurs d'authentification (401)
       if (response.status === 401) {
-        return await handleUnauthorizedError(input, config);
+        return await handleUnauthorizedError(input, config, response);
       }
 
-      // Gestion des autres erreurs HTTP
-      if (response.status >= 400) {
-        await handleHttpError(response, url);
+      // Gestion des erreurs serveur uniquement (500+)
+      // Les erreurs client (400-499) sont laissées pour que l'appelant les gère
+      if (response.status >= 500) {
+        // Cloner la réponse avant de la lire pour ne pas la consommer
+        const responseClone = response.clone();
+        await handleHttpError(responseClone, url);
       }
 
       // Pour les autres erreurs, retourner la réponse pour que l'appelant la traite
@@ -252,7 +255,8 @@ async function prepareRequest(
  */
 async function handleUnauthorizedError(
   input: RequestInfo | URL,
-  config: RequestInit
+  config: RequestInit,
+  originalResponse: Response
 ): Promise<Response> {
   const url = input.toString();
 
@@ -263,9 +267,9 @@ async function handleUnauthorizedError(
     url.includes('/auth/profile') ||
     url.includes('/auth/refresh')
   ) {
-    // Pour les erreurs d'auth, juste retourner la réponse 401
-    // Éviter la redirection ici pour laisser le composant gérer l'état
-    return new Response('Unauthorized', { status: 401 });
+    // Pour les erreurs d'auth, retourner la réponse originale intacte
+    // pour que l'appelant puisse lire le message d'erreur
+    return originalResponse;
   }
 
   try {

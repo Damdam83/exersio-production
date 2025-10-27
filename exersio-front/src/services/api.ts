@@ -82,23 +82,32 @@ export const apiRequest = async <T = any>(
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
       try {
-        const responseText = await response.text();
+        // Cloner la réponse pour pouvoir lire le body même si l'intercepteur l'a déjà lu
+        const responseClone = response.clone();
+        const responseText = await responseClone.text();
         console.error(`❌ API Error response text:`, responseText);
-        
+
         // Essayer de parser en JSON
         try {
-          const errorData: ApiError = JSON.parse(responseText);
-          errorMessage = errorData.message || errorMessage;
+          const errorData: any = JSON.parse(responseText);
+          // Gérer différents formats d'erreur du backend
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.details) {
+            errorMessage = errorData.details;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
         } catch (parseError) {
           // Si ce n'est pas du JSON, utiliser le texte brut
-          errorMessage = responseText.includes('<!DOCTYPE') 
-            ? `Received HTML instead of JSON (${response.status})` 
+          errorMessage = responseText.includes('<!DOCTYPE')
+            ? `Received HTML instead of JSON (${response.status})`
             : responseText.substring(0, 200);
         }
       } catch (textError) {
         console.error(`❌ Failed to read error response:`, textError);
       }
-      
+
       throw new Error(errorMessage);
     }
 

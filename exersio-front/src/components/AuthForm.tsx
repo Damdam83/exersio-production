@@ -4,6 +4,8 @@ import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ExersioLogo } from './ExersioLogo';
 import { LegalFooter } from './LegalFooter';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import { Eye, EyeOff } from 'lucide-react';
 import { api } from '../services/api';
 import type { ApiError } from '../types/api';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -33,6 +35,8 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
   const [sports, setSports] = useState<Sport[]>([]);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -136,8 +140,25 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
         return;
       }
 
-      if (password.length < 6) {
-        setLocalError('Le mot de passe doit contenir au moins 6 caractères');
+      // Validation de la force du mot de passe
+      if (password.length < 8) {
+        setLocalError('Le mot de passe doit contenir au moins 8 caractères');
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins une lettre majuscule');
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins une lettre minuscule');
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins un chiffre');
+        return;
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*)');
         return;
       }
 
@@ -177,10 +198,29 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
         setLocalError('Les mots de passe ne correspondent pas');
         return;
       }
-      if (password.length < 6) {
-        setLocalError('Le mot de passe doit contenir au moins 6 caractères');
+
+      // Validation de la force du mot de passe
+      if (password.length < 8) {
+        setLocalError('Le mot de passe doit contenir au moins 8 caractères');
         return;
       }
+      if (!/[A-Z]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins une lettre majuscule');
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins une lettre minuscule');
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins un chiffre');
+        return;
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*)');
+        return;
+      }
+
       if (!acceptTerms || !acceptPrivacy) {
         setLocalError('Vous devez accepter les CGU et la Politique de Confidentialité pour créer un compte');
         return;
@@ -201,7 +241,9 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
         setSuccessMessage('Compte créé avec succès ! Vérifiez votre email pour confirmer votre compte.');
       } catch (err: any) {
         console.error('Erreur d\'inscription:', err);
-        // L'erreur sera affichée via le prop error
+        // Afficher l'erreur à l'utilisateur
+        const errorMessage = err.message || 'Une erreur est survenue lors de l\'inscription';
+        setLocalError(errorMessage);
       }
     } else {
       // Mode connexion (login)
@@ -385,17 +427,35 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
                 <label htmlFor="password" className="text-sm font-medium text-white">
                   {mode === 'reset-password' ? 'Nouveau mot de passe' : 'Mot de passe'}
                 </label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  disabled={isLoading}
-                  className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa]"
-                  autoComplete={mode === 'reset-password' ? 'new-password' : 'current-password'}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa] pr-10"
+                    autoComplete={mode === 'reset-password' ? 'new-password' : 'current-password'}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+                {/* Indicateur de force de mot de passe - uniquement en mode inscription et reset */}
+                {(mode === 'register' || mode === 'reset-password') && (
+                  <PasswordStrengthIndicator password={password} />
+                )}
               </div>
             )}
 
@@ -405,17 +465,31 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
                 <label htmlFor="confirmPassword" className="text-sm font-medium text-white">
                   Confirmer le mot de passe
                 </label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  disabled={isLoading}
-                  className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa]"
-                  autoComplete="new-password"
-                  required={mode === 'register' || mode === 'reset-password'}
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa] pr-10"
+                    autoComplete="new-password"
+                    required={mode === 'register' || mode === 'reset-password'}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
             )}
 
