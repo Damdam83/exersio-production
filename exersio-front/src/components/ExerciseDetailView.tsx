@@ -152,12 +152,12 @@ export function ExerciseDetailView({
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.12)',
         borderRadius: '20px'
-      }} className="mb-8">
-        <CardHeader className="pb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      }} className="mb-4 sm:mb-6 md:mb-8">
+        <CardHeader className="pb-4 sm:pb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
             <div className="flex-1">
               {/* Breadcrumb contextuelle */}
-              <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+              <div className="flex items-center gap-2 text-sm text-gray-400 mb-3 sm:mb-4">
                 <Button variant="ghost" size="sm" onClick={onBack} className="h-auto p-0 text-[#00d4aa] hover:text-[#00b894]">
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   {contextInfo?.from === 'session-create' || contextInfo?.from === 'session-detail'
@@ -258,9 +258,9 @@ export function ExerciseDetailView({
       </Card>
 
       {/* Contenu principal */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         {/* Colonne principale */}
-        <div className="md:col-span-2 space-y-8">
+        <div className="md:col-span-2 space-y-4 sm:space-y-6 md:space-y-8">
           {/* Visualisation du terrain */}
           <Card style={{
             background: 'rgba(255, 255, 255, 0.08)',
@@ -307,10 +307,10 @@ export function ExerciseDetailView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {exercise.instructions && exercise.instructions.length > 0 ? (
                   exercise.instructions.map((instruction, index) => (
-                    <div key={index} className="flex items-start gap-3">
+                    <div key={index} className="flex items-start gap-2 sm:gap-3">
                       <div className="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-full flex items-center justify-center text-sm font-bold text-white">
                         {index + 1}
                       </div>
@@ -328,7 +328,7 @@ export function ExerciseDetailView({
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Informations */}
           <Card style={{
             background: 'rgba(255, 255, 255, 0.08)',
@@ -344,38 +344,38 @@ export function ExerciseDetailView({
                 Informations
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 sm:space-y-6">
               {/* Statistiques rapides */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/5 rounded-xl p-4 text-center hover:bg-white/8 transition-colors">
-                  <div className="text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+                <div className="bg-white/5 rounded-xl p-3 sm:p-4 text-center hover:bg-white/8 transition-colors">
+                  <div className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
                     {exercise.duration}min
                   </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide font-medium">Durée</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">Durée</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center hover:bg-white/8 transition-colors">
-                  <div className="text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
+                <div className="bg-white/5 rounded-xl p-3 sm:p-4 text-center hover:bg-white/8 transition-colors">
+                  <div className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
                     {exercise.playersMin}-{exercise.playersMax}
                   </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide font-medium">Joueurs</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">Joueurs</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center hover:bg-white/8 transition-colors">
-                  <div className="text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
+                <div className="bg-white/5 rounded-xl p-3 sm:p-4 text-center hover:bg-white/8 transition-colors">
+                  <div className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
                     {exercise.intensity}
                   </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide font-medium">Intensité</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">Intensité</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center hover:bg-white/8 transition-colors">
-                  <div className="text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
+                <div className="bg-white/5 rounded-xl p-3 sm:p-4 text-center hover:bg-white/8 transition-colors">
+                  <div className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
                     {exercise.ageCategory}
                   </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide font-medium">Tranche d'âge</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">Tranche d'âge</div>
                 </div>
               </div>
 
               {/* Catégorie d'exercice */}
               <div>
-                <h4 className="flex items-center gap-3 text-sm font-medium text-gray-400 mb-3">
+                <h4 className="flex items-center gap-2 sm:gap-3 text-sm font-medium text-gray-400 mb-2 sm:mb-3">
                   <div className="w-5 h-5 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-md flex items-center justify-center">
                     <Tag className="w-3 h-3 text-white" />
                   </div>
