@@ -140,8 +140,8 @@ export function SessionDetailView({
         />
 
         {/* Infos rapides en haut */}
-        <div className="bg-slate-800/50 backdrop-blur-sm border-b border-white/10 p-4">
-          <div className="flex items-center justify-between mb-3">
+        <div className="bg-slate-800/50 backdrop-blur-sm border-b border-white/10 p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
             <div>
               <div className="text-sm text-gray-400">
                 {sessionDate.toLocaleDateString('fr-FR', { 
@@ -171,23 +171,23 @@ export function SessionDetailView({
           </div>
 
           {/* Stats rapides */}
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 text-center">
             <div>
-              <div className="text-lg font-bold text-[#00d4aa]">{Math.floor(elapsedTime / 60)}</div>
-              <div className="text-xs text-gray-400">Min écoulées</div>
+              <div className="text-base sm:text-lg font-bold text-[#00d4aa]">{Math.floor(elapsedTime / 60)}</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">Min écoulées</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-[#00d4aa]">{completedExercises}/{totalExercises}</div>
-              <div className="text-xs text-gray-400">Exercices</div>
+              <div className="text-base sm:text-lg font-bold text-[#00d4aa]">{completedExercises}/{totalExercises}</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">Exercices</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-[#00d4aa]">{participants.length}</div>
-              <div className="text-xs text-gray-400">Participants</div>
+              <div className="text-base sm:text-lg font-bold text-[#00d4aa]">{participants.length}</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">Participants</div>
             </div>
           </div>
 
           {/* Barre de progression */}
-          <div className="mt-4">
+          <div className="mt-3 sm:mt-4">
             <div className="flex justify-between text-sm text-gray-400 mb-2">
               <span>Progression</span>
               <span>{progressPercentage}%</span>
@@ -202,16 +202,16 @@ export function SessionDetailView({
         </div>
 
         {/* Liste des exercices mobile */}
-        <div className="p-4 space-y-4">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+          <h2 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
             📋 Programme ({sessionExercises.length} exercices)
           </h2>
           
           {sessionExercises.length === 0 ? (
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-8 text-center">
-              <div className="text-4xl mb-4">📋</div>
-              <h3 className="text-lg font-semibold text-white mb-2">Aucun exercice planifié</h3>
-              <p className="text-gray-400 mb-4">Ajoutez des exercices à cette séance pour commencer</p>
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 text-center">
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📋</div>
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Aucun exercice planifié</h3>
+              <p className="text-sm sm:text-base text-gray-400 mb-3 sm:mb-4">Ajoutez des exercices à cette séance pour commencer</p>
               <button 
                 onClick={onAddExercise}
                 className="bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-6 py-3 rounded-lg font-medium transition-colors"
@@ -254,8 +254,8 @@ export function SessionDetailView({
                     </div>
                   </div>
 
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
+                  <div className="p-3 sm:p-4">
+                    <div className="flex items-start justify-between mb-2 sm:mb-3">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-white text-base truncate">
                           {exercise.name}
@@ -278,11 +278,11 @@ export function SessionDetailView({
                       </div>
                     </div>
 
-                    <p className="text-gray-300 text-sm line-clamp-2 mb-3">
+                    <p className="text-gray-300 text-sm line-clamp-2 mb-2 sm:mb-3">
                       {exercise.description || 'Description de l\'exercice avec objectifs pédagogiques.'}
                     </p>
 
-                    <div className="flex flex-wrap gap-2 mb-3">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                       <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-medium border border-blue-500/30">
                         {exercise.category}
                       </span>
@@ -291,13 +291,13 @@ export function SessionDetailView({
                       </span>
                     </div>
 
-                    <div className="text-sm text-gray-400 mb-3">
+                    <div className="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3">
                       👥 {exercise.playersMin && exercise.playersMax ? `${exercise.playersMin}-${exercise.playersMax} joueurs` : 'Équipe complète'} • 📍 Terrain entier
                     </div>
 
                     {/* Boutons d'action pour l'exercice en cours */}
                     {status === 'current' && (
-                      <div className="flex gap-2 pt-3 border-t border-white/10">
+                      <div className="flex gap-2 pt-2 sm:pt-3 border-t border-white/10">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -326,19 +326,19 @@ export function SessionDetailView({
         </div>
 
         {/* Section notes en bas */}
-        <div className="p-4 border-t border-white/10 bg-slate-800/30">
-          <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+        <div className="p-3 sm:p-4 border-t border-white/10 bg-slate-800/30">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-2 sm:mb-3 flex items-center gap-2">
             📝 Notes de séance
           </h3>
           <textarea
             value={sessionNotes}
             onChange={(e) => setSessionNotes(e.target.value)}
             placeholder="Ajouter des notes sur le déroulement de la séance..."
-            className="w-full h-24 bg-slate-700/50 border border-white/10 rounded-lg p-3 text-white placeholder-gray-400 resize-none"
+            className="w-full h-20 sm:h-24 bg-slate-700/50 border border-white/10 rounded-lg p-2 sm:p-3 text-sm sm:text-base text-white placeholder-gray-400 resize-none"
           />
-          <button 
+          <button
             onClick={() => onUpdateSession(session.id, { notes: sessionNotes })}
-            className="w-full mt-3 bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full mt-2 sm:mt-3 bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors flex items-center justify-center gap-2"
           >
             💾 Sauvegarder les notes
           </button>
@@ -346,10 +346,10 @@ export function SessionDetailView({
 
         {/* Bouton de fin de séance si en cours */}
         {session.status === 'in-progress' && (
-          <div className="p-4 bg-slate-800/50 border-t border-white/10">
-            <button 
+          <div className="p-3 sm:p-4 bg-slate-800/50 border-t border-white/10">
+            <button
               onClick={handleCompleteSession}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-4 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-colors flex items-center justify-center gap-2"
             >
               ✅ Terminer la séance
             </button>
