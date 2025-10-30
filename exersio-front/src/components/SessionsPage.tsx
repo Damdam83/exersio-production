@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useExercises } from "../contexts/ExercisesContext";
 import { useNavigation } from "../contexts/NavigationContext";
 import { useSessions } from "../contexts/SessionsContext";
@@ -8,6 +9,7 @@ import { MobileFilters } from "./MobileFilters";
 import { ResultsCounter } from "./ResultsCounter";
 
 export function SessionsPage() {
+  const { t } = useTranslation();
   const { state, actions } = useSessions();
   const { exercises } = useExercises();
   const { navigate } = useNavigation();
@@ -111,15 +113,15 @@ export function SessionsPage() {
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'planned':
-        return { label: 'À venir', class: 'status-upcoming' };
+        return { label: t('sessions.status.planned'), class: 'status-upcoming' };
       case 'in-progress':
-        return { label: 'En cours', class: 'status-in-progress' };
+        return { label: t('sessions.status.inProgress'), class: 'status-in-progress' };
       case 'completed':
-        return { label: 'Terminée', class: 'status-completed' };
+        return { label: t('sessions.status.completed'), class: 'status-completed' };
       case 'cancelled':
-        return { label: 'Annulée', class: 'status-cancelled' };
+        return { label: t('sessions.status.cancelled'), class: 'status-cancelled' };
       default:
-        return { label: 'À venir', class: 'status-upcoming' };
+        return { label: t('sessions.status.planned'), class: 'status-upcoming' };
     }
   };
 
@@ -154,41 +156,41 @@ export function SessionsPage() {
   const mobileFilters = [
     {
       key: 'ageCategory',
-      label: 'Catégorie',
+      label: t('sessions.filters.category'),
       value: state.filters.ageCategory || 'all',
       onChange: handleAgeCategoryFilter,
       options: [
-        { value: 'all', label: 'Toutes' },
-        { value: 'seniors', label: 'Seniors' },
-        { value: 'minimes', label: 'Minimes' },
-        { value: 'enfants', label: 'Enfants' },
-        { value: 'mixte', label: 'Mixte' }
+        { value: 'all', label: t('sessions.filters.allFeminine') },
+        { value: 'seniors', label: t('sessions.filters.seniors') },
+        { value: 'minimes', label: t('sessions.filters.minimes') },
+        { value: 'enfants', label: t('sessions.filters.children') },
+        { value: 'mixte', label: t('sessions.filters.mixed') }
       ]
     },
     {
       key: 'status',
-      label: 'Statut',
+      label: t('sessions.filters.status'),
       value: state.filters.status || 'all',
       onChange: handleStatusFilter,
       options: [
-        { value: 'all', label: 'Tous' },
-        { value: 'planned', label: 'À venir' },
-        { value: 'in-progress', label: 'En cours' },
-        { value: 'completed', label: 'Terminées' },
-        { value: 'cancelled', label: 'Annulées' }
+        { value: 'all', label: t('sessions.filters.all') },
+        { value: 'planned', label: t('sessions.filters.upcoming') },
+        { value: 'in-progress', label: t('sessions.filters.inProgress') },
+        { value: 'completed', label: t('sessions.filters.completed') },
+        { value: 'cancelled', label: t('sessions.filters.cancelled') }
       ]
     },
     {
       key: 'level',
-      label: 'Niveau',
+      label: t('sessions.filters.level'),
       value: state.filters.level || 'all',
       onChange: handleLevelFilter,
       options: [
-        { value: 'all', label: 'Tous' },
-        { value: 'debutant', label: 'Débutant' },
-        { value: 'intermediaire', label: 'Intermédiaire' },
-        { value: 'avance', label: 'Avancé' },
-        { value: 'expert', label: 'Expert' }
+        { value: 'all', label: t('sessions.filters.all') },
+        { value: 'debutant', label: t('sessions.filters.beginner') },
+        { value: 'intermediaire', label: t('sessions.filters.intermediate') },
+        { value: 'avance', label: t('sessions.filters.advanced') },
+        { value: 'expert', label: t('sessions.filters.expert') }
       ]
     }
   ];
@@ -197,10 +199,10 @@ export function SessionsPage() {
     return (
       <div className="min-h-screen bg-slate-900">
         <MobileHeader
-          title="Séances"
+          title={t('sessions.title')}
           onAction={() => navigate('session-create')}
           actionIcon={<span className="text-lg">➕</span>}
-          actionLabel="Nouvelle séance"
+          actionLabel={t('sessions.newSession')}
         />
 
         <MobileFilters
