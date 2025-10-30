@@ -1,5 +1,6 @@
 import { Dumbbell, History, Home, List, LogOut, Menu, User, X } from "lucide-react";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigation } from "../contexts/NavigationContext";
 import { NotificationBadge, NotificationCenter } from "./NotificationCenter";
@@ -16,13 +17,14 @@ export function Navigation({ isMobile, onLogout }: NavigationProps) {
   const currentClub = auth.club;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
+  const { t } = useTranslation();
 
   const menuItems = [
-    { id: "home", label: "Accueil", icon: <Home size={18} /> },
-    { id: "sessions", label: "Séances", icon: <List size={18} /> },
-    { id: "exercises", label: "Exercices", icon: <Dumbbell size={18} /> },
-    { id: "history", label: "Historique", icon: <History size={18} /> },
-    { id: "profile", label: "Profil", icon: <User size={18} /> },
+    { id: "home", label: t('navigation.home'), icon: <Home size={18} /> },
+    { id: "sessions", label: t('navigation.sessions'), icon: <List size={18} /> },
+    { id: "exercises", label: t('navigation.exercises'), icon: <Dumbbell size={18} /> },
+    { id: "history", label: t('navigation.history'), icon: <History size={18} /> },
+    { id: "profile", label: t('navigation.profile'), icon: <User size={18} /> },
   ];
 
   const handleNavigate = (pageId: string) => {
@@ -89,13 +91,13 @@ export function Navigation({ isMobile, onLogout }: NavigationProps) {
                       {currentUser?.lastName?.[0] || "M"}
                     </div>
                     <div className="flex-1">
-                      <p className="text-gray-300 text-sm">Connecté en tant que</p>
+                      <p className="text-gray-300 text-sm">{t('auth.loggedInAs')}</p>
                       <p className="text-white font-medium">{currentUser.name}</p>
                     </div>
                     <button
                       onClick={onLogout}
                       className="p-2 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all duration-200"
-                      title="Déconnexion"
+                      title={t('auth.logout')}
                     >
                       <LogOut size={20} />
                     </button>

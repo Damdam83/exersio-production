@@ -1,5 +1,6 @@
 import { Cloud, CloudOff } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useExercises } from '../contexts/ExercisesContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useSessions } from '../contexts/SessionsContext';
@@ -25,6 +26,7 @@ const isTomorrow = (date: Date) => {
 const differenceInDays = (d1: Date, d2: Date) => Math.ceil((d1.getTime() - d2.getTime()) / (1000 * 60 * 60 * 24));
 
 export function HomePage() {
+  const { t } = useTranslation();
   const { currentUser, currentClub } = useUser();
   const { sessions, actions } = useSessions();
   const { exercises } = useExercises();
@@ -54,10 +56,10 @@ export function HomePage() {
 
   // Stats rapides
   const quickStats = [
-    { number: todaySessions.length.toString(), label: "Aujourd'hui" },
-    { number: thisMonthSessions.length.toString(), label: 'Ce mois' },
-    { number: currentClub?.members?.length?.toString() || '18', label: 'Joueurs' },
-    { number: `${Math.round(totalHoursThisMonth / 60 * 10) / 10}h`, label: 'Temps' },
+    { number: todaySessions.length.toString(), label: t('home.today') },
+    { number: thisMonthSessions.length.toString(), label: t('home.thisMonth') },
+    { number: currentClub?.members?.length?.toString() || '18', label: t('home.players') },
+    { number: `${Math.round(totalHoursThisMonth / 60 * 10) / 10}h`, label: t('home.time') },
   ];
 
   const achievements = [];
@@ -78,14 +80,14 @@ export function HomePage() {
 
   const getSessionIntensity = (session: any) => {
     const sessionExercises = exercises.filter(ex => session.exercises?.includes(ex.id));
-    if (!sessionExercises.length) return 'Modérée';
+    if (!sessionExercises.length) return t('home.moderate');
 
     const intensityMap = { 'Faible': 1, 'Moyenne': 2, 'Élevée': 3, 'Très élevée': 4 };
     const avgIntensity = sessionExercises.reduce((sum, ex) => sum + (intensityMap[ex.intensity] || 2), 0) / sessionExercises.length;
 
-    if (avgIntensity >= 3.5) return 'Haute intensité';
-    if (avgIntensity >= 2.5) return 'Modérée';
-    return 'Légère';
+    if (avgIntensity >= 3.5) return t('home.highIntensity');
+    if (avgIntensity >= 2.5) return t('home.moderate');
+    return t('home.light');
   };
 
   return (
@@ -109,7 +111,7 @@ export function HomePage() {
         {/* Actions Rapides */}
         <div className="mb-4 sm:mb-6">
           <div className="flex items-center gap-2 text-base sm:text-lg font-bold mb-3 sm:mb-4">
-            ⚡ Actions rapides
+            ⚡ {t('home.quickActions')}
           </div>
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <button
@@ -117,33 +119,33 @@ export function HomePage() {
               className="bg-primary-btn p-4 sm:p-5"
             >
               <div className="text-xl sm:text-2xl mb-1">➕</div>
-              <div className="text-xs sm:text-sm">Nouvelle<br />séance</div>
+              <div className="text-xs sm:text-sm" dangerouslySetInnerHTML={{ __html: t('home.newSession').replace(' ', '<br />') }}></div>
             </button>
             <button
               onClick={() => setCurrentPage('exercise-create')}
               className="bg-white/8 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 text-white text-xs sm:text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:border-blue-500/30 hover:bg-white/12 flex flex-col items-center gap-2 text-center"
             >
               <div className="text-xl sm:text-2xl mb-1">🎯</div>
-              <div className="text-xs sm:text-sm">Créer<br />exercice</div>
+              <div className="text-xs sm:text-sm" dangerouslySetInnerHTML={{ __html: t('home.createExercise').replace(' ', '<br />') }}></div>
             </button>
           </div>
         </div>
 {/* Séances à venir */}
         <div className='mb-4 sm:mb-6'>
           <div className="flex items-center gap-2 text-base sm:text-lg font-bold mb-3 sm:mb-4">
-            📅 Séances à venir
+            📅 {t('home.upcomingSessions')}
           </div>
 
           {upcomingSessions.length === 0 ? (
             <div className="bg-glass-card p-6 sm:p-8 text-center">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📅</div>
-              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Aucune séance planifiée</h3>
-              <p className="text-sm text-gray-400 mb-3 sm:mb-4">Commencez par créer votre première séance.</p>
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">{t('home.noUpcomingSessions')}</h3>
+              <p className="text-sm text-gray-400 mb-3 sm:mb-4">{t('home.noSessionsMessage')}</p>
               <button
                 onClick={() => setCurrentPage('session-create')}
                 className="bg-primary-btn text-white text-xs sm:text-sm px-4 py-2"
               >
-                ➕ Créer une séance
+                ➕ {t('home.createSession')}
               </button>
             </div>
           ) : (
@@ -170,10 +172,10 @@ export function HomePage() {
 
                   <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-gray-400 mb-2 sm:mb-3">
                     <span className="flex items-center gap-1">
-                      📍 Terrain principal
+                      📍 {t('home.mainField')}
                     </span>
                     <span className="flex items-center gap-1">
-                      👥 {currentClub?.members?.length || 18} joueurs
+                      👥 {currentClub?.members?.length || 18} {t('home.players').toLowerCase()}
                     </span>
                     <span className="flex items-center gap-1">
                       ⚡ {getSessionIntensity(session)}
@@ -200,7 +202,7 @@ export function HomePage() {
         {/* Progression + Stats fusionnées */}
         <div className="mb-4 sm:mb-6">
           <div className="flex items-center gap-2 text-base sm:text-lg font-bold mb-3 sm:mb-4">
-            📊 Progression du mois
+            📊 {t('home.progressionMonth')}
           </div>
           <div className="bg-glass-card p-4 sm:p-5">
             <div className="flex items-center gap-3 sm:gap-5">
@@ -238,16 +240,16 @@ export function HomePage() {
 
               {/* Infos progression */}
               <div className="flex-1 min-w-0">
-                <div className="text-sm sm:text-base font-bold mb-1">Excellent travail !</div>
-                <div className="text-[10px] sm:text-xs text-gray-400 mb-2">Objectifs en bonne voie</div>
+                <div className="text-sm sm:text-base font-bold mb-1">{t('home.excellentWork')}</div>
+                <div className="text-[10px] sm:text-xs text-gray-400 mb-2">{t('home.goalsOnTrack')}</div>
                 <div className="flex gap-3 sm:gap-4 text-[10px] sm:text-xs">
                   <div className="text-center">
                     <div className="font-bold text-emerald-400">{userExercises.length}</div>
-                    <div className="text-gray-400">Exercices</div>
+                    <div className="text-gray-400">{t('home.exercises')}</div>
                   </div>
                   <div className="text-center">
                     <div className="font-bold text-emerald-400">+{Math.round(progressPercentage/5)}%</div>
-                    <div className="text-gray-400">Activité</div>
+                    <div className="text-gray-400">{t('home.activity')}</div>
                   </div>
                 </div>
               </div>
@@ -260,7 +262,7 @@ export function HomePage() {
                     ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894]'
                     : 'bg-gray-600'
                 } hover:opacity-90 p-2 rounded-lg transition-opacity flex-shrink-0`}
-                title={offlineState.isOnline ? 'Mode hors connexion' : 'Hors ligne'}
+                title={offlineState.isOnline ? t('home.offlineMode') : t('home.offline')}
               >
                 {offlineState.isOnline ? (
                   <Cloud className="w-5 h-5" />
