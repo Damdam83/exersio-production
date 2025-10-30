@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, Building2, Check, Copy, Crown, Edit3, Mail, Plus, Settings, Shield, Trash2, User as UserIcon, UserPlus, Users, X } from 'lucide-react';
+import { AlertTriangle, Bell, Building2, Check, Copy, Crown, Edit3, Globe, Mail, Plus, Settings, Shield, Trash2, User as UserIcon, UserPlus, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -11,11 +11,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../hooks/useLanguage';
 
 
 export function ProfilePage() {
   const { state: auth, actions: authActions } = useAuth();
   const { setCurrentPage } = useNavigation();
+  const { t } = useTranslation();
+  const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isCreatingClub, setIsCreatingClub] = useState(false);
@@ -357,6 +361,56 @@ export function ProfilePage() {
             <p className="text-white">
               {new Date(auth.user.createdAt).toLocaleDateString()}
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Préférences */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '20px',
+        padding: '32px'
+      }}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-xl flex items-center justify-center">
+            <Settings className="w-4 h-4 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-white">{t('profile.preferences')}</h2>
+        </div>
+
+        {/* Sélecteur de langue */}
+        <div className="mb-6">
+          <h4 className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-3">
+            <div className="w-4 h-4 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-sm flex items-center justify-center">
+              <Globe className="w-2 h-2 text-white" />
+            </div>
+            {t('profile.language')}
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            {availableLanguages.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => changeLanguage(lang.code)}
+                className={`p-4 rounded-xl border transition-all ${
+                  currentLanguage === lang.code
+                    ? 'bg-gradient-to-r from-[#00d4aa]/20 to-[#00b894]/20 border-[#00d4aa]/50 text-white'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-2xl">{lang.flag}</span>
+                  <div className="text-left">
+                    <div className="font-semibold">{lang.name}</div>
+                    <div className="text-xs opacity-70">{lang.code.toUpperCase()}</div>
+                  </div>
+                  {currentLanguage === lang.code && (
+                    <Check className="w-5 h-5 ml-auto text-[#00d4aa]" />
+                  )}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </div>
