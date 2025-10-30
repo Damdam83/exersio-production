@@ -40,7 +40,7 @@ export function ProfilePage() {
           const response = await invitationsService.list(1, 50);
           setInvitations(response?.data || []);
         } catch (error) {
-          console.error('Erreur lors du chargement des invitations:', error);
+          console.error(t('profile.errors.loadInvitations'), error);
           setInvitations([]);
         }
       }
@@ -51,7 +51,7 @@ export function ProfilePage() {
   if (!auth.user) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-muted-foreground">Chargement du profil...</p>
+        <p className="text-muted-foreground">{t('profile.loading')}</p>
       </div>
     );
   }
@@ -78,7 +78,7 @@ export function ProfilePage() {
       authActions.updateUser(profileForm);
       setIsEditingProfile(false);
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du profil:', error);
+      console.error(t('profile.errors.updateProfile'), error);
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +95,7 @@ export function ProfilePage() {
       setClubForm({ name: '', description: '' });
       setIsCreatingClub(false);
     } catch (error) {
-      console.error('Erreur lors de la création du club:', error);
+      console.error(t('profile.errors.createClub'), error);
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +116,7 @@ export function ProfilePage() {
       setInviteForm({ email: '', role: 'assistant' });
       setIsInvitingUser(false);
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'invitation:', error);
+      console.error(t('profile.errors.sendInvitation'), error);
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +138,7 @@ export function ProfilePage() {
         await authActions.initialize();
       }
     } catch (error) {
-      console.error('Erreur lors de la réponse à l\'invitation:', error);
+      console.error(t('profile.errors.respondInvitation'), error);
     } finally {
       setIsLoading(false);
     }
@@ -151,7 +151,7 @@ export function ProfilePage() {
       await authActions.initialize(); // Recharger pour récupérer le nouveau club
       setJoinClubCode('');
     } catch (error) {
-      console.error('Erreur lors de l\'adhésion au club:', error);
+      console.error(t('profile.errors.joinClub'), error);
     } finally {
       setIsLoading(false);
     }
@@ -168,13 +168,14 @@ export function ProfilePage() {
         setCopiedCode(true);
         setTimeout(() => setCopiedCode(false), 2000); // Reset après 2 secondes
       } catch (error) {
-        console.error('Erreur lors de la copie:', error);
+        console.error(t('profile.errors.copy'), error);
       }
     }
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== 'SUPPRIMER') {
+    const deleteKeyword = currentLanguage === 'en' ? 'DELETE' : 'SUPPRIMER';
+    if (deleteConfirmText !== deleteKeyword) {
       return;
     }
 
@@ -185,8 +186,8 @@ export function ProfilePage() {
       await authActions.logout();
       setIsDeletingAccount(false);
     } catch (error) {
-      console.error('Erreur lors de la suppression du compte:', error);
-      alert('Une erreur est survenue lors de la suppression de votre compte. Veuillez réessayer.');
+      console.error(t('profile.errors.deleteAccount'), error);
+      alert(t('profile.errors.deleteAccountRetry'));
     } finally {
       setIsLoading(false);
     }
@@ -230,9 +231,9 @@ export function ProfilePage() {
               <UserIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Mon compte</h1>
+              <h1 className="text-2xl font-bold text-white">{t('profile.myAccount')}</h1>
               <p className="text-gray-400">
-                Gérez votre profil, club et invitations
+                {t('profile.manageProfile')}
               </p>
             </div>
           </div>
@@ -254,7 +255,7 @@ export function ProfilePage() {
               <Mail className="w-4 h-4 text-white" />
             </div>
             <h2 className="text-xl font-bold text-orange-300">
-              Invitations en attente ({pendingInvitations.length})
+              {t('profile.pendingInvitations')} ({pendingInvitations.length})
             </h2>
           </div>
           <div className="space-y-3">
@@ -266,10 +267,10 @@ export function ProfilePage() {
                 <div>
                   <p className="font-medium text-white">{invitation.clubName}</p>
                   <p className="text-sm text-gray-300">
-                    Invité par {invitation.invitedByName} en tant que {invitation.role}
+                    {t('profile.invitedBy', { name: invitation.invitedByName, role: invitation.role })}
                   </p>
                   <p className="text-xs text-gray-400">
-                    Expire le {new Date(invitation.expiresAt).toLocaleDateString()}
+                    {t('profile.expiresOn', { date: new Date(invitation.expiresAt).toLocaleDateString() })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -279,7 +280,7 @@ export function ProfilePage() {
                     className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]"
                   >
                     <Check className="w-3 h-3 mr-1" />
-                    Accepter
+                    {t('profile.accept')}
                   </Button>
                   <Button
                     size="sm"
@@ -288,7 +289,7 @@ export function ProfilePage() {
                     className="border-white/20 text-white hover:bg-white/10"
                   >
                     <X className="w-3 h-3 mr-1" />
-                    Refuser
+                    {t('profile.decline')}
                   </Button>
                 </div>
               </div>
@@ -310,7 +311,7 @@ export function ProfilePage() {
             <div className="w-8 h-8 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-xl flex items-center justify-center">
               <UserIcon className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-white">Profil utilisateur</h2>
+            <h2 className="text-xl font-bold text-white">{t('profile.title')}</h2>
           </div>
           <Button variant="outline" onClick={() => setIsEditingProfile(true)} className="border-white/20 text-white hover:bg-white/10">
             <Settings className="w-4 h-4 mr-2" />
@@ -428,7 +429,7 @@ export function ProfilePage() {
             <div className="w-8 h-8 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-xl flex items-center justify-center">
               <Users className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-white">Mon club</h2>
+            <h2 className="text-xl font-bold text-white">{t('profile.myClub')}</h2>
           </div>
           {!auth.club && (
             <Button variant="outline" onClick={() => setIsCreatingClub(true)} className="border-white/20 text-white hover:bg-white/10">
@@ -518,7 +519,7 @@ export function ProfilePage() {
               <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-full flex items-center justify-center opacity-50">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="font-medium mb-2 text-white text-xl">Aucun club</h3>
+              <h3 className="font-medium mb-2 text-white text-xl">{t('profile.noClub')}</h3>
               <p className="text-gray-400 mb-8">
                 Créez un club ou rejoignez-en un avec un code d'invitation
               </p>
