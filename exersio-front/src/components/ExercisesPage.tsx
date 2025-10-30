@@ -1,5 +1,6 @@
 import { ScrollText } from 'lucide-react';
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useExercises } from '../contexts/ExercisesContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useFavorites } from '../contexts/FavoritesContext';
@@ -16,6 +17,7 @@ import { initializeArrows, initializeBalls, initializePlayers, initializeZones }
 import { SportCourtViewer } from './ExerciseEditor/SportCourtViewer';
 
 export function ExercisesPage() {
+  const { t } = useTranslation();
   const { exercises, actions, state } = useExercises();
   const { navigate } = useNavigation();
   const { actions: favoritesActions } = useFavorites();
@@ -311,10 +313,10 @@ export function ExercisesPage() {
     return (
       <div className="min-h-screen bg-slate-900">
         <MobileHeader
-          title="Exercices"
+          title={t('exercises.title')}
           onAction={() => navigate('exercise-create')}
           actionIcon={<ScrollText className="w-5 h-5" />}
-          actionLabel="Nouvel exercice"
+          actionLabel={t('exercises.newExercise')}
         />
 
         <MobileFilters
