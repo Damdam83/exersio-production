@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useExercises } from "../contexts/ExercisesContext";
 import { useNavigation } from "../contexts/NavigationContext";
 import { useSessions } from "../contexts/SessionsContext";
@@ -8,6 +9,7 @@ import { MobileFilters } from "./MobileFilters";
 import { ResultsCounter } from "./ResultsCounter";
 
 export function HistoryPage() {
+  const { t } = useTranslation();
   const { state, actions } = useSessions();
   const { exercises } = useExercises();
   const { navigate } = useNavigation();
@@ -245,9 +247,9 @@ export function HistoryPage() {
     return (
       <div className="min-h-screen bg-slate-900">
         <MobileHeader
-          title="Historique"
+          title={t('history.title')}
           actionIcon={<span className="text-lg">📅</span>}
-          actionLabel="Séances"
+          actionLabel={t('sessions.title')}
           onAction={() => navigate('sessions')}
         />
 
