@@ -818,7 +818,86 @@ px-1.5 sm:px-2 py-0.5 sm:py-1
 
 **Branche :** feat/next-features
 **Temps réalisé :** ~2h
-**Status :** ✅ Phases 2-3 Mobile UX terminées, ⏳ Phase 4 à faire (Detail/Create pages)
+**Status :** ✅ Phases 2-3 Mobile UX terminées
+
+### Session du 30/10/2025 - Mobile UX Phase 4 Complétée ✅
+**Phase finale d'optimisation mobile : Pages Detail et Create**
+
+#### Phase 4 - Pages Detail & Create (7h)
+**ExerciseDetailView mobile :**
+- ✅ Header card: `mb-4 sm:mb-6 md:mb-8`, `pb-4 sm:pb-6`
+- ✅ Main grid: `gap-4 sm:gap-6 md:gap-8`
+- ✅ Content areas: `space-y-4 sm:space-y-6 md:space-y-8`
+- ✅ Stats grid: `gap-2 sm:gap-3 md:gap-4` avec `p-3 sm:p-4`
+- ✅ Text sizes: `text-lg sm:text-xl`, `text-[10px] sm:text-xs`
+- ✅ Instructions: `gap-2 sm:gap-3`, `space-y-3 sm:space-y-4`
+- ✅ Sidebar: `space-y-4 sm:space-y-6`
+
+**ExerciseCreatePage mobile :**
+- ✅ Sidebar form: `p-4 sm:p-5 md:p-6`, `mb-4 sm:mb-6 md:mb-8`
+- ✅ Section headers: `gap-2 sm:gap-3`, `mb-3 sm:mb-4`, `text-base sm:text-lg`
+- ✅ Content spacing: `space-y-3 sm:space-y-4`
+- ✅ Grid gaps: `gap-2 sm:gap-3`
+- ✅ Steps/Criteria sections: `mt-6 sm:mt-8`
+- ✅ Item cards: `gap-2 sm:gap-3`, `p-2 sm:p-3`
+- ✅ Editor header: `p-4 sm:p-5 md:px-6 md:pb-4`
+- ✅ Sport button: `px-3 sm:px-4 py-2`, `text-xs sm:text-sm`
+- ✅ Properties button: `p-3 sm:p-4`
+- ✅ Modal: `p-4 sm:p-5 md:px-6`
+
+**SessionDetailView mobile :**
+- ✅ Header info: `p-3 sm:p-4`, `mb-2 sm:mb-3`
+- ✅ Stats grid: `gap-3 sm:gap-4`
+- ✅ Stats values: `text-base sm:text-lg`, `text-[10px] sm:text-xs`
+- ✅ Exercise list: `p-3 sm:p-4`, `space-y-3 sm:space-y-4`
+- ✅ Empty state: `p-6 sm:p-8`
+- ✅ Exercise cards: `p-3 sm:p-4`, `mb-2 sm:mb-3`
+- ✅ Tags: `gap-1.5 sm:gap-2`
+- ✅ Notes section: `p-3 sm:p-4`
+- ✅ Textarea: `h-20 sm:h-24`, `p-2 sm:p-3`
+- ✅ Buttons: `py-2 sm:py-3`, `text-sm sm:text-base`
+
+**SessionCreatePage mobile :**
+- ✅ Container: `p-2 sm:p-3 pt-20`
+- ✅ Form sections: `p-4 sm:p-5`, `mb-3 sm:mb-4`
+- ✅ Labels: `text-xs sm:text-sm`, `mb-1.5 sm:mb-2`
+- ✅ Grid layouts: `gap-2 sm:gap-3`
+- ✅ Section headers: `gap-2 sm:gap-3`, `text-sm sm:text-base`
+
+**Pattern responsive uniformisé :**
+```css
+/* Padding */
+p-3 sm:p-4 md:p-5    /* Conteneurs */
+p-2 sm:p-3           /* Cards internes */
+
+/* Text sizes */
+text-xs sm:text-sm          /* Labels */
+text-[10px] sm:text-xs      /* Très petit */
+text-base sm:text-lg        /* Titres */
+text-sm sm:text-base        /* Texte normal */
+
+/* Spacing */
+gap-2 sm:gap-3              /* Gaps */
+mb-2 sm:mb-3 md:mb-4        /* Marges */
+space-y-2 sm:space-y-3      /* Vertical spacing */
+mt-6 sm:mt-8                /* Sections */
+```
+
+📁 **Fichiers modifiés :**
+- `src/components/ExerciseDetailView.tsx` : 10 optimisations spacing
+- `src/components/ExerciseCreatePage.tsx` : 15+ optimisations (sidebar, éditeur, modal)
+- `src/components/SessionDetailView.tsx` : 15+ optimisations (header, stats, notes)
+- `src/components/SessionCreatePage.tsx` : 12+ optimisations (formulaire, sections)
+
+**Commits créés :**
+- `aeafd66` - feat(mobile): optimize ExerciseDetailView spacing for mobile
+- `20cd9a6` - feat(mobile): optimize ExerciseCreatePage spacing for mobile
+- `f540e17` - feat(mobile): optimize SessionDetailView spacing for mobile
+- `30f4f86` - feat(mobile): optimize SessionCreatePage spacing for mobile
+
+**Branche :** feat/next-features
+**Temps réalisé :** ~2.5h
+**Status :** ✅ Phases 2-3-4 Mobile UX TERMINÉES - Pattern responsive unifié sur TOUTES les pages
 
 ### Session du 15/10/2025 - Corrections Filtres Multi-Sport + ExerciseDetailView ✅
 **Phase Frontend multi-sport complétée:**
