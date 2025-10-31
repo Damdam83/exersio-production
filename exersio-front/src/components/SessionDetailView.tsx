@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Session, Exercise } from '../types';
 import { SportCourtViewer } from './ExerciseEditor/SportCourtViewer';
 import { initializeArrows, initializeBalls, initializePlayers, initializeZones } from '../utils/exerciseEditorHelpers';
@@ -26,6 +27,7 @@ export function SessionDetailView({
   onEditSession,
   onAddExercise
 }: SessionDetailViewProps) {
+  const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [sessionNotes, setSessionNotes] = useState(session.notes || '');
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -204,14 +206,14 @@ export function SessionDetailView({
         {/* Liste des exercices mobile */}
         <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
           <h2 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-            📋 Programme ({sessionExercises.length} exercices)
+            📋 {t('sessions.programWithCount', { count: sessionExercises.length })}
           </h2>
           
           {sessionExercises.length === 0 ? (
             <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 text-center">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📋</div>
-              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">Aucun exercice planifié</h3>
-              <p className="text-sm sm:text-base text-gray-400 mb-3 sm:mb-4">Ajoutez des exercices à cette séance pour commencer</p>
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">{t('sessions.noExercises')}</h3>
+              <p className="text-sm sm:text-base text-gray-400 mb-3 sm:mb-4">{t('sessions.addExercisesToStart')}</p>
               <button 
                 onClick={onAddExercise}
                 className="bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-6 py-3 rounded-lg font-medium transition-colors"
@@ -328,12 +330,12 @@ export function SessionDetailView({
         {/* Section notes en bas */}
         <div className="p-3 sm:p-4 border-t border-white/10 bg-slate-800/30">
           <h3 className="text-base sm:text-lg font-semibold text-white mb-2 sm:mb-3 flex items-center gap-2">
-            📝 Notes de séance
+            📝 {t('sessions.sessionNotes')}
           </h3>
           <textarea
             value={sessionNotes}
             onChange={(e) => setSessionNotes(e.target.value)}
-            placeholder="Ajouter des notes sur le déroulement de la séance..."
+            placeholder={t('sessions.addNotes')}
             className="w-full h-20 sm:h-24 bg-slate-700/50 border border-white/10 rounded-lg p-2 sm:p-3 text-sm sm:text-base text-white placeholder-gray-400 resize-none"
           />
           <button
@@ -351,7 +353,7 @@ export function SessionDetailView({
               onClick={handleCompleteSession}
               className="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-colors flex items-center justify-center gap-2"
             >
-              ✅ Terminer la séance
+              ✅ {t('sessions.finishSession')}
             </button>
           </div>
         )}
@@ -530,7 +532,7 @@ export function SessionDetailView({
               <div className="card-title">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div className="card-icon">📋</div>
-                  Programme de la séance
+                  {t('sessions.program')}
                 </div>
                 <button 
                   onClick={onAddExercise}
@@ -556,9 +558,9 @@ export function SessionDetailView({
                   <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
                     <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
                     <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: '#ffffff' }}>
-                      Aucun exercice planifié
+                      {t('sessions.noExercises')}
                     </h3>
-                    <p>Ajoutez des exercices à cette séance pour commencer</p>
+                    <p>{t('sessions.addExercisesToStart')}</p>
                   </div>
                 ) : (
                   sessionExercises.map((exercise, index) => {
@@ -622,7 +624,7 @@ export function SessionDetailView({
                                 alignItems: 'center',
                                 gap: '6px'
                               }}>
-                                ✅ Critères de réussite
+                                ✅ {t('sessions.successCriteria')}
                               </div>
                               <ul style={{ margin: 0, paddingLeft: '16px', color: '#d1d5db' }}>
                                 {exercise.successCriteria.map((criterion, idx) => (
@@ -809,7 +811,7 @@ export function SessionDetailView({
               <div className="card-title">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div className="card-icon">📝</div>
-                  Notes de séance
+                  {t('sessions.sessionNotes')}
                 </div>
               </div>
               
@@ -817,7 +819,7 @@ export function SessionDetailView({
                 className="notes-area"
                 value={sessionNotes}
                 onChange={(e) => setSessionNotes(e.target.value)}
-                placeholder="Ajouter des notes sur le déroulement de la séance..."
+                placeholder={t('sessions.addNotes')}
               />
               
               <button 
@@ -864,7 +866,7 @@ export function SessionDetailView({
                     gap: '8px'
                   }}
                 >
-                  ✅ Terminer la séance
+                  ✅ {t('sessions.finishSession')}
                 </button>
               </div>
             )}

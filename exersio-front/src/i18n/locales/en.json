@@ -169,7 +169,12 @@
     "completeSession": "Complete session",
     "addExercise": "Add exercise",
     "noExercises": "No exercises planned",
-    "addExercisesToStart": "Add exercises to this session to start"
+    "addExercisesToStart": "Add exercises to this session to start",
+    "program": "Program",
+    "programWithCount": "Program ({{count}} exercises)",
+    "sessionNotes": "Session notes",
+    "successCriteria": "Success criteria",
+    "finishSession": "Finish session"
   },
   "exercises": {
     "title": "Exercises",
