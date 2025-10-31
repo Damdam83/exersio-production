@@ -207,7 +207,7 @@ export function HistoryPage() {
             animation: 'spin 1s linear infinite',
             margin: '0 auto 16px'
           }}></div>
-          <p style={{ color: '#94a3b8' }}>Chargement de l'historique...</p>
+          <p style={{ color: '#94a3b8' }}>{t('history.loading')}</p>
         </div>
       </div>
     );
@@ -217,28 +217,28 @@ export function HistoryPage() {
   const mobileFilters = [
     {
       key: 'team',
-      label: 'Équipe',
+      label: t('sessions.filters.category'),
       value: teamFilter || 'all',
       onChange: (value: string) => setTeamFilter(value === 'all' ? '' : value),
       options: [
-        { value: 'all', label: 'Toutes' },
-        { value: 'seniors', label: 'Seniors' },
-        { value: 'minimes', label: 'Minimes' },
-        { value: 'enfants', label: 'Enfants' },
-        { value: 'mixte', label: 'Mixte' }
+        { value: 'all', label: t('history.allTeams') },
+        { value: 'seniors', label: t('sessions.filters.seniors') },
+        { value: 'minimes', label: t('sessions.filters.minimes') },
+        { value: 'enfants', label: t('sessions.filters.children') },
+        { value: 'mixte', label: t('sessions.filters.mixed') }
       ]
     },
     {
       key: 'period',
-      label: 'Période',
+      label: t('common.filter'),
       value: periodFilter,
       onChange: setPeriodFilter,
       options: [
-        { value: 'all', label: 'Toutes' },
-        { value: 'week', label: '7 derniers jours' },
-        { value: 'month', label: '30 derniers jours' },
-        { value: 'quarter', label: '3 derniers mois' },
-        { value: 'year', label: 'Dernière année' }
+        { value: 'all', label: t('history.periods.all') },
+        { value: 'week', label: t('history.periods.week') },
+        { value: 'month', label: t('history.periods.month') },
+        { value: 'quarter', label: t('history.periods.quarter') },
+        { value: 'year', label: t('history.periods.year') }
       ]
     }
   ];
@@ -262,7 +262,7 @@ export function HistoryPage() {
         <ResultsCounter
           total={historySessions.length}
           filtered={sortedSessions.length}
-          itemType="séance terminée"
+          itemType={t('history.itemType')}
           isLoading={isLoading}
         />
 
@@ -271,11 +271,11 @@ export function HistoryPage() {
           <div className="grid grid-cols-2 gap-3 sm:gap-4 text-center">
             <div>
               <div className="text-xl sm:text-2xl font-bold text-emerald-400">{totalSessions}</div>
-              <div className="text-[10px] sm:text-xs text-gray-400">Séances totales</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">{t('history.totalSessions')}</div>
             </div>
             <div>
               <div className="text-xl sm:text-2xl font-bold text-blue-400">{totalHours}h</div>
-              <div className="text-[10px] sm:text-xs text-gray-400">Temps total</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">{t('history.totalTime')}</div>
             </div>
           </div>
         </div>
@@ -284,24 +284,24 @@ export function HistoryPage() {
           {isLoading ? (
             <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 text-center">
               <div className="w-8 h-8 border-2 border-[#00d4aa] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-sm text-gray-400">Chargement de l'historique...</p>
+              <p className="text-sm text-gray-400">{t('history.loading')}</p>
             </div>
           ) : sortedSessions.length === 0 ? (
             <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 text-center">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📋</div>
               <h3 className="text-base sm:text-lg font-semibold text-white mb-2">
-                Aucune séance dans l'historique
+                {t('history.noSessionsInHistory')}
               </h3>
               <p className="text-sm text-gray-400 mb-3 sm:mb-4">
                 {historySessions.length === 0
-                  ? "Vous n'avez pas encore de séances terminées."
-                  : "Aucune séance ne correspond à vos critères."}
+                  ? t('history.noCompletedSessions')
+                  : t('history.noMatchingCriteria')}
               </p>
               <button
                 onClick={() => navigate('sessions')}
                 className="bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-medium transition-colors"
               >
-                📅 Voir les séances
+                📅 {t('history.viewSessions')}
               </button>
             </div>
           ) : (
@@ -546,36 +546,36 @@ export function HistoryPage() {
               <div style={{ fontSize: '32px', fontWeight: '800', color: '#10b981' }}>
                 {totalSessions}
               </div>
-              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Séances totales</div>
+              <div style={{ fontSize: '14px', color: '#94a3b8' }}>{t('history.totalSessions')}</div>
               <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                {completedSessions.length} terminées • {cancelledSessions.length} annulées
+                {completedSessions.length} {t('history.completed')} • {cancelledSessions.length} {t('history.cancelled')}
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '32px', fontWeight: '800', color: '#3b82f6' }}>
                 {totalHours}h
               </div>
-              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Temps total</div>
+              <div style={{ fontSize: '14px', color: '#94a3b8' }}>{t('history.totalTime')}</div>
               <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                {totalMinutes} minutes d'entraînement
+                {totalMinutes} {t('history.trainingMinutes')}
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '32px', fontWeight: '800', color: '#f59e0b' }}>
                 {averageDuration}min
               </div>
-              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Durée moyenne</div>
+              <div style={{ fontSize: '14px', color: '#94a3b8' }}>{t('history.averageDuration')}</div>
               <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                Par séance terminée
+                {t('history.perCompletedSession')}
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '32px', fontWeight: '800', color: '#8b5cf6' }}>
                 {totalExercises}
               </div>
-              <div style={{ fontSize: '14px', color: '#94a3b8' }}>Exercices réalisés</div>
+              <div style={{ fontSize: '14px', color: '#94a3b8' }}>{t('history.exercisesCompleted')}</div>
               <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                Dans les séances terminées
+                {t('history.inCompletedSessions')}
               </div>
             </div>
           </div>
@@ -610,7 +610,7 @@ export function HistoryPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher dans l'historique..."
+                placeholder={t('history.searchPlaceholder')}
                 style={{
                   width: '100%',
                   padding: '12px 20px 12px 45px',
@@ -627,7 +627,7 @@ export function HistoryPage() {
 
             {/* Tri */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: '500' }}>Trier par :</span>
+              <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: '500' }}>{t('history.sortBy')}</span>
               <select
                 value={`${sortBy}-${sortOrder}`}
                 onChange={(e) => {
@@ -646,14 +646,14 @@ export function HistoryPage() {
                   minWidth: '160px'
                 }}
               >
-                <option value="date-desc">Plus récentes</option>
-                <option value="date-asc">Plus anciennes</option>
-                <option value="name-asc">Nom A-Z</option>
-                <option value="name-desc">Nom Z-A</option>
-                <option value="duration-desc">Plus longues</option>
-                <option value="duration-asc">Plus courtes</option>
-                <option value="exercises-desc">Plus d'exercices</option>
-                <option value="exercises-asc">Moins d'exercices</option>
+                <option value="date-desc">{t('history.sort.dateDesc')}</option>
+                <option value="date-asc">{t('history.sort.dateAsc')}</option>
+                <option value="name-asc">{t('history.sort.nameAsc')}</option>
+                <option value="name-desc">{t('history.sort.nameDesc')}</option>
+                <option value="duration-desc">{t('history.sort.durationDesc')}</option>
+                <option value="duration-asc">{t('history.sort.durationAsc')}</option>
+                <option value="exercises-desc">{t('history.sort.exercisesDesc')}</option>
+                <option value="exercises-asc">{t('history.sort.exercisesAsc')}</option>
               </select>
             </div>
           </div>
@@ -665,7 +665,7 @@ export function HistoryPage() {
             flexWrap: 'wrap'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: '500' }}>Équipe :</span>
+              <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: '500' }}>{t('history.team')}</span>
               <select
                 value={teamFilter}
                 onChange={(e) => setTeamFilter(e.target.value)}
@@ -680,11 +680,11 @@ export function HistoryPage() {
                   minWidth: '120px'
                 }}
               >
-                <option value="">Toutes</option>
-                <option value="seniors">Seniors</option>
-                <option value="minimes">Minimes</option>
-                <option value="enfants">Enfants</option>
-                <option value="mixte">Mixte</option>
+                <option value="">{t('history.allTeams')}</option>
+                <option value="seniors">{t('sessions.filters.seniors')}</option>
+                <option value="minimes">{t('sessions.filters.minimes')}</option>
+                <option value="enfants">{t('sessions.filters.children')}</option>
+                <option value="mixte">{t('sessions.filters.mixed')}</option>
               </select>
             </div>
             
@@ -705,11 +705,11 @@ export function HistoryPage() {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {period === 'all' ? 'Toutes' : 
-                   period === 'week' ? '7 derniers jours' :
-                   period === 'month' ? '30 derniers jours' :
-                   period === 'quarter' ? '3 derniers mois' :
-                   'Dernière année'}
+                  {period === 'all' ? t('history.periods.all') :
+                   period === 'week' ? t('history.periods.week') :
+                   period === 'month' ? t('history.periods.month') :
+                   period === 'quarter' ? t('history.periods.quarter') :
+                   t('history.periods.year')}
                 </div>
               ))}
             </div>
@@ -730,15 +730,15 @@ export function HistoryPage() {
             }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>📚</div>
               <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: '#ffffff' }}>
-                Aucune séance dans l'historique
+                {t('history.noSessionsInHistory')}
               </h3>
               <p>
-                {historySessions.length === 0 
-                  ? "Vous n'avez pas encore de séances terminées." 
-                  : "Aucune séance ne correspond à vos critères de recherche."
+                {historySessions.length === 0
+                  ? t('history.noCompletedSessions')
+                  : t('history.noMatchingSearch')
                 }
               </p>
-              <button 
+              <button
                 onClick={() => navigate('sessions')}
                 style={{
                   marginTop: '16px',
@@ -752,7 +752,7 @@ export function HistoryPage() {
                   cursor: 'pointer'
                 }}
               >
-                📅 Voir les séances
+                📅 {t('history.viewSessions')}
               </button>
             </div>
           ) : (
@@ -910,7 +910,7 @@ export function HistoryPage() {
                           </div>
                         )) : (
                           <div style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>
-                            Aucun exercice programmé
+                            {t('history.noExercisesProgrammed')}
                           </div>
                         )}
                         {sessionExercises.length > 4 && (
