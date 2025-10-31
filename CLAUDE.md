@@ -2,8 +2,8 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 27/10/2025
-**Session actuelle :** MOBILE UX PHASES 2-3 TERMINÉES
+**Dernière mise à jour :** 31/10/2025
+**Session actuelle :** I18N COMPLÈTE (FR/EN) - 8 PAGES PRINCIPALES TRADUITES
 **Documents de référence** :
 - [ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md) - Synthèse complète projet
 - [AUDIT-NOTIFICATIONS.md](AUDIT-NOTIFICATIONS.md) - Audit système notifications (24/10/2025)
@@ -316,6 +316,7 @@ C:\PROJETS\Exersio\front/
 ### ✅ Fonctionnalités complètes implémentées
 - **Authentification complète** : JWT + confirmation email + reset password ✅ PRODUCTION
 - **Interface responsive** : Desktop + mobile optimisée avec APK Android
+- **Internationalisation (i18n)** : Support FR/EN complet sur toutes les pages principales (31/10/2025)
 - **Mode offline complet** : IndexedDB + synchronisation bidirectionnelle
 - **Système multi-sport** : 5 sports avec éditeurs terrain spécialisés
 - **Logging professionnel** : Winston avec rotation + logs spécialisés
@@ -899,6 +900,168 @@ mt-6 sm:mt-8                /* Sections */
 **Temps réalisé :** ~2.5h
 **Status :** ✅ Phases 2-3-4 Mobile UX TERMINÉES - Pattern responsive unifié sur TOUTES les pages
 
+### Session du 31/10/2025 - Internationalisation (i18n) Complète FR/EN ✅
+**Traduction complète de toutes les pages principales en Français/Anglais**
+
+#### Objectif : Couverture i18n 100% sur les 8 pages principales
+
+**Infrastructure i18n existante :**
+- ✅ react-i18next configuré avec language detector
+- ✅ Fichiers de traduction fr.json et en.json (469 lignes chacun)
+- ✅ ProfilePage avec sélecteur de langue fonctionnel
+- ✅ Utils i18nFormatters.ts pour dates/temps
+
+#### Pages traduites (8/8 = 100%)
+
+**1. SessionsPage** - Liste des séances
+- ✅ Import useTranslation hook
+- ✅ Titre, boutons, filtres traduits
+- ✅ Empty states et tooltips
+- ✅ Statuts séances (completed, cancelled, scheduled)
+- ✅ Formatage dates avec formatSessionDate()
+- Commit : `c6280ad` feat(i18n): complete SessionsPage translations
+
+**2. ExercisesPage** - Catalogue d'exercices
+- ✅ Filtres sport/catégorie/âge/scope traduits
+- ✅ Empty states conditionnels (filtered vs empty)
+- ✅ Tooltips favoris (add/remove)
+- ✅ Actions exercices (edit, copy, share, delete)
+- ✅ Compteurs exercices avec interpolation
+- Commit : `9d23b80` feat(i18n): complete ExercisesPage translations
+
+**3. HistoryPage** - Historique des séances
+- ✅ Statistiques header avec interpolation (completedSessions, cancelledSessions)
+- ✅ Filtres tri (date, nom, durée) et périodes (all, week, month, year)
+- ✅ Empty states avec conditions
+- ✅ Formatage temps écoulé (time ago)
+- ✅ Badges statut et durée
+- Commit : `ec9ae43` feat(i18n): complete HistoryPage translations
+
+**4. SessionDetailView** - Vue détaillée séance
+- ✅ Titre et actions (edit, delete, finish)
+- ✅ Programme avec count interpolation : `programWithCount`
+- ✅ Empty states programme
+- ✅ Notes de séance
+- ✅ Statistiques rapides (duration, players, status)
+- Commit : `609e6c4` feat(i18n): complete SessionDetailView translations
+
+**5. ExerciseDetailView** - Vue détaillée exercice
+- ✅ Quick stats (duration, playerCount, ageRange)
+- ✅ Sections (detailedInstructions, exerciseCategory, description)
+- ✅ Field stats avec interpolation multiple : `players, arrows, balls, zones`
+- ✅ Steps et successCriteria avec counts
+- ✅ Actions header (edit, copy, share, delete)
+- Commit : `5aa1d17` feat(i18n): complete ExerciseDetailView translations
+
+**6. SessionCreatePage** - Création/édition séance
+- ✅ Titre dynamique (newTitle vs modifyTitle)
+- ✅ Labels formulaire (sessionName, description, ageCategory, dateTime, objectives)
+- ✅ Placeholders (descriptionPlaceholder, searchExercises, objectivesPlaceholder)
+- ✅ Popup sélection exercices (addExercises, exercisesSelected)
+- ✅ Bouton submit conditionnel (createSession vs modifySession)
+- ✅ 25+ clés de traduction ajoutées
+- Commit : `a272436` feat(i18n): complete SessionCreatePage translations
+
+**7. ExerciseCreatePage** - Création/édition exercice
+- ✅ Titre dynamique 3 modes (newExerciseTitle, editExerciseTitle, copyExerciseTitle)
+- ✅ Labels formulaire (exerciseName, duration, categories, intensity, material)
+- ✅ Sections dynamiques avec counts : `stepsWithCount`, `successCriteriaWithCount`
+- ✅ Field stats interpolation : `fieldStats`
+- ✅ Placeholders (newStep, newCriterion, addCategory)
+- ✅ Sport selection modal avec terrains
+- ✅ 30+ clés de traduction ajoutées
+- Commit : `8b5d496` feat(i18n): complete ExerciseCreatePage translations
+
+**8. NotificationCenter** - Centre notifications
+- ✅ Titre et filtres (unread/all)
+- ✅ Actions (markAllRead, settings)
+- ✅ Empty states multiples (noNotifications, allRead, noNotificationsYet)
+- ✅ Formatage temps avec formatRelativeTime() (réutilisation i18nFormatters)
+- ✅ Suppression fonction locale formatTime() en faveur de l'utilitaire existant
+- Commit : `8c560b8` feat(i18n): translate NotificationCenter component
+
+#### Fonctionnalités i18n implémentées
+
+**Traductions simples :**
+```typescript
+{t('sessions.title')}
+{t('exercises.newExercise')}
+```
+
+**Interpolation avec variables :**
+```typescript
+{t('sessions.programWithCount', { count: exercises.length })}
+{t('exercises.fieldStats', { players, arrows, balls, zones })}
+{t('history.completedCount', { count: completedSessions.length })}
+```
+
+**Traductions conditionnelles :**
+```typescript
+{isEditMode ? t('sessions.modifyTitle') : t('sessions.newTitle')}
+{hasActiveFilters ? t('exercises.noExercisesFound') : t('exercises.noExercisesAvailable')}
+{period === 'all' ? t('history.periods.all') : t('history.periods.week')}
+```
+
+**Formatage dates/temps :**
+```typescript
+import { formatRelativeTime } from '../utils/i18nFormatters';
+{formatRelativeTime(notification.createdAt)}
+// Utilise les clés history.timeAgo.* (justNow, minutesAgo, hoursAgo, etc.)
+```
+
+#### Organisation des traductions
+
+**Structure des fichiers JSON (469 lignes chacun) :**
+- **sessions** : 50+ clés (filtres, statuts, formulaires, actions)
+- **exercises** : 70+ clés (catégories, filtres, création, édition, field stats)
+- **history** : 45+ clés (statistiques, tri, périodes, temps écoulé)
+- **notifications** : 15+ clés (centre notifications, paramètres, timeAgo)
+- **common** : Clés partagées (save, cancel, delete, loading, confirm)
+
+**Clés avec interpolation (exemples) :**
+```json
+"programWithCount": "Programme ({{count}} exercices)",
+"fieldStats": "Joueurs: {{players}} | Flèches: {{arrows}} | Ballons: {{balls}} | Zones: {{zones}}",
+"exercisesSelected": "{{count}} exercice(s) sélectionné(s)",
+"completedCount": "{{count}} complété(s)"
+```
+
+#### Statistiques techniques
+
+- **Fichiers de traduction** : 469 lignes chacun (fr.json + en.json)
+- **Clés ajoutées cette session** : ~220 nouvelles clés
+- **Commits effectués** : 8 commits détaillés avec messages explicites
+- **Build final** : ✅ 333.73 kB (gzip: 91.71 kB)
+- **Augmentation bundle** : +2.83 kB (~0.85% du total)
+- **Erreurs** : 0 ❌
+- **Pages 100% traduites** : 8/8 (SessionsPage, ExercisesPage, HistoryPage, SessionDetailView, ExerciseDetailView, SessionCreatePage, ExerciseCreatePage, NotificationCenter)
+
+📁 **Fichiers modifiés :**
+- `src/i18n/locales/fr.json` : +220 clés (sessions, exercises, history, notifications)
+- `src/i18n/locales/en.json` : +220 clés (traductions anglaises parallèles)
+- `src/components/SessionsPage.tsx` : 15+ strings remplacés
+- `src/components/ExercisesPage.tsx` : 20+ strings remplacés
+- `src/components/HistoryPage.tsx` : 40+ strings remplacés
+- `src/components/SessionDetailView.tsx` : 12+ strings remplacés
+- `src/components/ExerciseDetailView.tsx` : 15+ strings remplacés
+- `src/components/SessionCreatePage.tsx` : 25+ strings remplacés
+- `src/components/ExerciseCreatePage.tsx` : 30+ strings remplacés
+- `src/components/NotificationCenter.tsx` : 10+ strings remplacés + refactor formatTime
+
+**Commits créés :**
+1. `c6280ad` - feat(i18n): complete SessionsPage translations
+2. `9d23b80` - feat(i18n): complete ExercisesPage translations
+3. `ec9ae43` - feat(i18n): complete HistoryPage translations
+4. `609e6c4` - feat(i18n): complete SessionDetailView translations
+5. `5aa1d17` - feat(i18n): complete ExerciseDetailView translations
+6. `a272436` - feat(i18n): complete SessionCreatePage translations
+7. `8b5d496` - feat(i18n): complete ExerciseCreatePage translations
+8. `8c560b8` - feat(i18n): translate NotificationCenter component
+
+**Branche :** feat/next-features
+**Temps réalisé :** ~3h
+**Status :** ✅ Application Exersio 100% bilingue (FR/EN) sur toutes les pages principales
+
 ### Session du 15/10/2025 - Corrections Filtres Multi-Sport + ExerciseDetailView ✅
 **Phase Frontend multi-sport complétée:**
 - ✅ **Fix filtres ExercisesPage** : Réinitialisation catégories/âges au changement de sport
@@ -1006,12 +1169,13 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 ### 🔧 Améliorations futures
 - [ ] **🔄 Vérification version mobile** - Check mise à jour au démarrage app
 
-### 📊 Priorité Moyenne  
+### 📊 Priorité Moyenne
+- [x] **🌍 i18n FR/EN** - Internationalisation Français/Anglais ✅ (31/10/2025)
 - [ ] **📈 Analytics** - Tracking usage et métriques utilisateurs
 - [ ] **🎨 Thèmes** - Mode sombre/clair + personnalisation
 - [ ] **🔔 Notifications push** - Rappels séances et nouveautés
 - [ ] **📱 iOS App** - Version iOS avec Capacitor
-- [ ] **🌍 i18n** - Internationalisation (EN, ES, etc.)
+- [ ] **🌐 i18n langues supplémentaires** - ES, DE, IT, etc.
 
 ### 🚀 Priorité Faible
 - [ ] **🔍 Recherche avancée** - Filtres complexes exercices/séances  
