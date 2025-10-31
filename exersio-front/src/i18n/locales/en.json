@@ -121,6 +121,10 @@
     "continue": "Continue session",
     "share": "Share",
     "calendarView": "Calendar view will be available soon.",
+    "noName": "Unnamed session",
+    "noDescription": "No description available.",
+    "team": "Team",
+    "allPeriods": "All",
     "filters": {
       "status": "Status:",
       "category": "Category:",

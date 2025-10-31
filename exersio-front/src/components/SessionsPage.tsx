@@ -47,8 +47,8 @@ export function SessionsPage() {
     tomorrow.setDate(today.getDate() + 1);
     const isTomorrow = date.toDateString() === tomorrow.toDateString();
     
-    if (isToday) return 'Aujourd\'hui';
-    if (isTomorrow) return 'Demain';
+    if (isToday) return t('sessions.filters.today');
+    if (isTomorrow) return t('sessions.filters.tomorrow');
     
     return date.toLocaleDateString('fr-FR', { 
       weekday: 'long', 
@@ -258,7 +258,7 @@ export function SessionsPage() {
                   <div className="flex items-start justify-between mb-2 sm:mb-3">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-white text-base sm:text-lg truncate mb-1">
-                        {session.name || 'Séance sans nom'}
+                        {session.name || t('sessions.noName')}
                       </h3>
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-400 mb-1">
                         <span className="flex items-center gap-1">
@@ -269,7 +269,7 @@ export function SessionsPage() {
                         </span>
                       </div>
                       <div className="text-xs sm:text-sm text-[#00d4aa] font-medium">
-                        Équipe {session.ageCategory || 'Seniors'}
+                        {t('sessions.team')} {session.ageCategory || t('sessions.filters.seniors')}
                       </div>
                     </div>
                     <div className={`px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-semibold ${
@@ -460,7 +460,7 @@ export function SessionsPage() {
                 type="text"
                 value={state.filters.search || ''}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Rechercher une séance..."
+                placeholder={t('sessions.searchPlaceholder')}
                 style={{
                   width: '100%',
                   padding: isMobile ? '10px 16px 10px 40px' : '12px 20px 12px 45px',
@@ -571,10 +571,10 @@ export function SessionsPage() {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {period === 'all' ? 'Toutes' : 
-                   period === 'today' ? 'Aujourd\'hui' :
-                   period === 'week' ? 'Cette semaine' :
-                   'Ce mois'}
+                  {period === 'all' ? t('sessions.allPeriods') :
+                   period === 'today' ? t('sessions.filters.today') :
+                   period === 'week' ? t('sessions.filters.thisWeek') :
+                   t('sessions.filters.thisMonth')}
                 </div>
               ))}
             </div>
@@ -666,7 +666,7 @@ export function SessionsPage() {
                             color: '#ffffff',
                             marginBottom: '4px'
                           }}>
-                            {session.name || 'Séance sans nom'}
+                            {session.name || t('sessions.noName')}
                           </div>
                           <div className="session-datetime" style={{
                             fontSize: '13px',
@@ -686,7 +686,7 @@ export function SessionsPage() {
                             color: '#3b82f6',
                             fontWeight: '600'
                           }}>
-                            Équipe {session.ageCategory || 'Seniors'} • Niveau Intermédiaire
+                            {t('sessions.team')} {session.ageCategory || t('sessions.filters.seniors')} • Niveau Intermédiaire
                           </div>
                         </div>
                         <div className={`session-status ${statusInfo.class}`} style={{
@@ -727,7 +727,7 @@ export function SessionsPage() {
                             lineHeight: '1.5',
                             marginBottom: '10px'
                           }}>
-                            {session.description || 'Pas de description disponible.'}
+                            {session.description || t('sessions.noDescription')}
                           </div>
                           <div className="session-stats" style={{
                             display: 'flex',
@@ -807,7 +807,7 @@ export function SessionsPage() {
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
                               fontSize: '14px'
-                            }} title="Continuer la séance">
+                            }} title={t('sessions.continue')}>
                               ▶️
                             </div>
                           )}
@@ -830,7 +830,7 @@ export function SessionsPage() {
                               transition: 'all 0.3s ease',
                               fontSize: '14px',
                               color: '#94a3b8'
-                            }} title="Voir détails">
+                            }} title={t('sessions.viewDetails')}>
                             👁️
                           </div>
                           <div 
@@ -852,7 +852,7 @@ export function SessionsPage() {
                               transition: 'all 0.3s ease',
                               fontSize: '14px',
                               color: '#94a3b8'
-                            }} title="Modifier">
+                            }} title={t('sessions.edit')}>
                             ✏️
                           </div>
                           <div className="control-btn" style={{
@@ -868,7 +868,7 @@ export function SessionsPage() {
                             transition: 'all 0.3s ease',
                             fontSize: '14px',
                             color: '#94a3b8'
-                          }} title="Partager">
+                          }} title={t('sessions.share')}>
                             📤
                           </div>
                         </div>

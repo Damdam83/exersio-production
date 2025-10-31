@@ -121,6 +121,10 @@
     "continue": "Continuer la séance",
     "share": "Partager",
     "calendarView": "La vue calendrier sera bientôt disponible.",
+    "noName": "Séance sans nom",
+    "noDescription": "Pas de description disponible.",
+    "team": "Équipe",
+    "allPeriods": "Toutes",
     "filters": {
       "status": "Statut :",
       "category": "Catégorie :",
