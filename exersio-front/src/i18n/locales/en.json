@@ -334,6 +334,26 @@
       "monthsAgo": "{{count}}mo ago"
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "unread": "Unread",
+    "all": "All",
+    "markAllRead": "Mark all read",
+    "markAsRead": "Mark as read",
+    "settings": "Notification settings",
+    "noNotifications": "No notifications",
+    "allRead": "All notifications are read",
+    "noNotificationsYet": "You don't have any notifications yet",
+    "fewMinutesAgo": "A few minutes ago",
+    "timeAgo": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago",
+      "weeksAgo": "{{count}}w ago",
+      "monthsAgo": "{{count}}mo ago"
+    }
+  },
   "profile": {
     "title": "Profile",
     "myAccount": "My account",
