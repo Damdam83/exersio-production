@@ -220,6 +220,10 @@
     "tryModifyFiltersLong": "Try modifying your filters or search to see more exercises.",
     "createFirstExerciseLong": "Start by creating your first exercise to build your database.",
     "searchPlaceholder": "Search for an exercise...",
+    "detailedInstructions": "Detailed instructions",
+    "exerciseCategory": "Exercise category",
+    "ageRange": "Age range",
+    "tagsAndShare": "Tags & Share",
     "filters": {
       "sport": "Sport",
       "category": "Category",

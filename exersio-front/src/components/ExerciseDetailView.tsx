@@ -1,5 +1,6 @@
 import { ArrowLeft, Clock, Copy, Edit3, Heart, Lightbulb, Package, Plus, Share2, StickyNote, Tag, Target, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useSessions } from '../contexts/SessionsContext';
 import { useExercises } from '../contexts/ExercisesContext';
@@ -32,6 +33,7 @@ export function ExerciseDetailView({
   isFavorite = false,
   contextInfo
 }: ExerciseDetailViewProps) {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [permissions, setPermissions] = useState({ canEdit: false, canDelete: false });
   const [isSharing, setIsSharing] = useState(false);
@@ -219,7 +221,7 @@ export function ExerciseDetailView({
                 className="border-white/20 hover:bg-white/10"
               >
                 <Copy className="w-4 h-4 md:mr-2" />
-                <span className="hidden md:inline">Copier</span>
+                <span className="hidden md:inline">{t('exercises.copy')}</span>
               </Button>
               {permissions.canEdit && (
                 <Button
@@ -303,7 +305,7 @@ export function ExerciseDetailView({
                 <div className="w-6 h-6 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-md flex items-center justify-center">
                   <StickyNote className="w-4 h-4 text-white" />
                 </div>
-                Consignes détaillées
+                {t('exercises.detailedInstructions')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -351,13 +353,13 @@ export function ExerciseDetailView({
                   <div className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
                     {exercise.duration}min
                   </div>
-                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">Durée</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">{t('exercises.duration')}</div>
                 </div>
                 <div className="bg-white/5 rounded-xl p-3 sm:p-4 text-center hover:bg-white/8 transition-colors">
                   <div className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
                     {exercise.playersMin}-{exercise.playersMax}
                   </div>
-                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">Joueurs</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">{t('exercises.playerCount')}</div>
                 </div>
                 <div className="bg-white/5 rounded-xl p-3 sm:p-4 text-center hover:bg-white/8 transition-colors">
                   <div className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
@@ -369,7 +371,7 @@ export function ExerciseDetailView({
                   <div className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#00d4aa] to-[#00b894] bg-clip-text text-transparent">
                     {exercise.ageCategory}
                   </div>
-                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">Tranche d'âge</div>
+                  <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide font-medium">{t('exercises.ageRange')}</div>
                 </div>
               </div>
 
@@ -379,7 +381,7 @@ export function ExerciseDetailView({
                   <div className="w-5 h-5 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-md flex items-center justify-center">
                     <Tag className="w-3 h-3 text-white" />
                   </div>
-                  Catégorie d'exercice
+                  {t('exercises.exerciseCategory')}
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
@@ -394,7 +396,7 @@ export function ExerciseDetailView({
                   <div className="w-5 h-5 bg-gradient-to-br from-amber-400 to-amber-600 rounded-md flex items-center justify-center">
                     <Tag className="w-3 h-3 text-white" />
                   </div>
-                  Tranche d'âge
+                  {t('exercises.ageRange')}
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 border-amber-500/30">
@@ -410,7 +412,7 @@ export function ExerciseDetailView({
                     <div className="w-5 h-5 bg-gradient-to-br from-blue-400 to-blue-600 rounded-md flex items-center justify-center">
                       <Tag className="w-3 h-3 text-white" />
                     </div>
-                    Tags
+                    {t('exercises.tags')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {exercise.clubId && (
@@ -455,7 +457,7 @@ export function ExerciseDetailView({
                   <div className="w-5 h-5 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-md flex items-center justify-center">
                     <Lightbulb className="w-3 h-3 text-white" />
                   </div>
-                  Description
+                  {t('exercises.description')}
                 </h4>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-gray-300 text-sm leading-relaxed">
                   {exercise.description}
