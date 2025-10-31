@@ -37,8 +37,8 @@
 - ✅ **Phase 4** : ExerciseDetailView, ExerciseCreatePage, SessionDetailView, SessionCreatePage - TERMINÉ (30/10)
 
 ### 🎯 Tâche Actuelle
-**AUCUNE** - Mobile UX Phases 1-4 complètes ✅
-**Prochaine option** : i18n, version mobile check, tests, ou autres améliorations
+**AUCUNE** - Internationalisation FR/EN complète ✅ (31/10/2025)
+**Prochaine option** : version mobile check, tests, langues supplémentaires (ES, DE, IT), ou autres améliorations
 
 ---
 
@@ -55,6 +55,7 @@
 
 #### 🎨 Fonctionnalités Complètes
 - **Authentification** : JWT + confirmation email + reset password
+- **Internationalisation (i18n)** : Support FR/EN complet sur 8 pages principales (31/10/2025)
 - **Notifications** : Système complet (rappels séances, exercices club, admin) + EventEmitter temps réel
 - **Mode offline** : IndexedDB + synchronisation bidirectionnelle
 - **Multi-sport** : 5 sports (volleyball, football, tennis, handball, basketball)
@@ -497,18 +498,27 @@ async shareWithClub(exerciseId: string, userId: string) {
 
 ---
 
-### Internationalisation i18n (12-15h)
-**Problème** : Application en français hardcodé
+### ✅ Internationalisation i18n (TERMINÉ - 31/10/2025)
+**Statut** : ✅ Application 100% bilingue FR/EN sur toutes les pages principales
 
-**Solution** :
-- Intégrer `react-i18next` ou `react-intl`
-- Fichiers traduction FR/EN
-- Wrapper tous les textes
+**Implémentation réalisée** :
+- ✅ react-i18next intégré et configuré
+- ✅ 469 lignes de traductions FR/EN (~220 clés ajoutées)
+- ✅ 8 pages principales traduites : SessionsPage, ExercisesPage, HistoryPage, SessionDetailView, ExerciseDetailView, SessionCreatePage, ExerciseCreatePage, NotificationCenter
+- ✅ Support interpolation : `t('key', { count, players, etc. })`
+- ✅ Traductions conditionnelles : `{isEditMode ? t('edit') : t('create')}`
+- ✅ Formatage dates/temps avec i18nFormatters.ts
+- ✅ Sélecteur de langue dans ProfilePage
 
-**Fichiers** :
-- TOUS les composants (refactoring massif)
-- Nouveau dossier : `src/locales/`
-- Config : `src/i18n.ts`
+**Fichiers créés/modifiés** :
+- `src/i18n/` : Configuration react-i18next
+- `src/i18n/locales/fr.json` : 469 lignes (sessions, exercises, history, notifications, common)
+- `src/i18n/locales/en.json` : 469 lignes (traductions parallèles)
+- `src/utils/i18nFormatters.ts` : Utilitaires formatage dates/temps
+- 8 composants principaux avec useTranslation() hook
+
+**Commits** : 8 commits détaillés (c6280ad → 8c560b8)
+**Bundle impact** : +2.83 kB (~0.85%)
 
 ---
 
@@ -555,13 +565,13 @@ npm run test:run
 
 ---
 
-### 🟢 AMÉLIORATIONS (25-28h)
-| Tâche | Durée |
-|-------|-------|
-| Phase 4 Mobile (Detail, Create) | 7h |
-| Système version mobile | 4h |
-| Internationalisation i18n | 12-15h |
-| Tests complets | 2h |
+### 🟢 AMÉLIORATIONS (22-25h restants)
+| Tâche | Durée | Status |
+|-------|-------|--------|
+| Phase 4 Mobile (Detail, Create) | 7h | ✅ TERMINÉ |
+| Système version mobile | 4h | ⏳ À FAIRE |
+| Internationalisation i18n | 12-15h → 3h réalisé | ✅ TERMINÉ (31/10) |
+| Tests complets | 2h | ⏳ À FAIRE |
 
 ---
 
