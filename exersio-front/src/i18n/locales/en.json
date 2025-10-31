@@ -204,9 +204,27 @@
       "favorites": "Favorites"
     },
     "copyExercise": "Copy exercise",
+    "copy": "Copy",
+    "createCopy": "Create a copy",
     "shareWithClub": "Share with club",
     "addToFavorites": "Add to favorites",
-    "removeFromFavorites": "Remove from favorites"
+    "removeFromFavorites": "Remove from favorites",
+    "noExercisesFound": "No exercises found",
+    "noExercisesAvailable": "No exercises available",
+    "tryModifyFilters": "Try modifying your filters or search.",
+    "tryModifyFiltersLong": "Try modifying your filters or search to see more exercises.",
+    "createFirstExerciseLong": "Start by creating your first exercise to build your database.",
+    "searchPlaceholder": "Search for an exercise...",
+    "filters": {
+      "sport": "Sport",
+      "category": "Category",
+      "ageRange": "Age range",
+      "favorites": "Favorites"
+    },
+    "errors": {
+      "share": "Error sharing",
+      "favorite": "Error modifying favorite"
+    }
   },
   "history": {
     "title": "History",

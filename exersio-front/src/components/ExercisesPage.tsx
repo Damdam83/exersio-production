@@ -157,7 +157,7 @@ export function ExercisesPage() {
     try {
       await actions.shareWithClub(exercise.id);
     } catch (error) {
-      console.error('Erreur lors du partage:', error);
+      console.error(t('exercises.errors.share'), error);
     }
   };
 
@@ -166,7 +166,7 @@ export function ExercisesPage() {
     try {
       await favoritesActions.toggleFavorite(exerciseId);
     } catch (error) {
-      console.error('Erreur lors de la modification du favori:', error);
+      console.error(t('exercises.errors.favorite'), error);
       // L'erreur sera gérée par le contexte avec une notification
     }
   };
@@ -260,7 +260,7 @@ export function ExercisesPage() {
     return [
       {
         key: 'sport',
-        label: 'Sport',
+        label: t('exercises.filters.sport'),
         value: selectedSport,
         onChange: (value: string) => {
           setSelectedSport(value);
@@ -274,7 +274,7 @@ export function ExercisesPage() {
       },
       {
         key: 'category',
-        label: 'Catégorie',
+        label: t('exercises.filters.category'),
         value: selectedCategory,
         onChange: (value: string) => setSelectedCategory(value),
         options: categoryFilters.map(filter => ({
@@ -286,7 +286,7 @@ export function ExercisesPage() {
       },
       {
         key: 'age',
-        label: 'Tranche d\'âge',
+        label: t('exercises.filters.ageRange'),
         value: selectedAge,
         onChange: (value: string) => setSelectedAge(value),
         options: ageFilters.map(filter => ({
@@ -298,7 +298,7 @@ export function ExercisesPage() {
       },
       {
         key: 'favorites',
-        label: 'Favoris',
+        label: t('exercises.filters.favorites'),
         value: showFavoritesOnly ? 'favorites' : 'all',
         onChange: (value: string) => setShowFavoritesOnly(value === 'favorites'),
         options: [
@@ -345,14 +345,14 @@ export function ExercisesPage() {
               <div className="text-4xl mb-4">🏐</div>
               <h3 className="text-lg font-semibold text-white mb-2">
                 {hasActiveFilters
-                  ? 'Aucun exercice trouvé'
-                  : 'Aucun exercice disponible'
+                  ? t('exercises.noExercisesFound')
+                  : t('exercises.noExercisesAvailable')
                 }
               </h3>
               <p className="text-gray-400 mb-4">
                 {hasActiveFilters
-                  ? 'Essayez de modifier vos filtres ou recherche.'
-                  : 'Commencez par créer votre premier exercice.'
+                  ? t('exercises.tryModifyFilters')
+                  : t('exercises.createFirstExercise')
                 }
               </p>
               {!hasActiveFilters && (
@@ -437,7 +437,7 @@ export function ExercisesPage() {
                         navigate('exercise-detail', { exerciseId: exercise.id });
                       }}
                       className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
-                      title="Voir détails"
+                      title={t('exercises.viewDetails')}
                     >
                       👁️
                     </button>
@@ -447,7 +447,7 @@ export function ExercisesPage() {
                         navigate('exercise-edit', { exerciseId: exercise.id });
                       }}
                       className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
-                      title="Modifier"
+                      title={t('exercises.edit')}
                     >
                       ✏️
                     </button>
@@ -457,7 +457,7 @@ export function ExercisesPage() {
                         copyExercise(exercise);
                       }}
                       className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
-                      title="Copier"
+                      title={t('exercises.copy')}
                     >
                       📋
                     </button>
@@ -544,7 +544,7 @@ export function ExercisesPage() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Rechercher un exercice..."
+                placeholder={t('exercises.searchPlaceholder')}
                 style={{
                   width: '100%',
                   padding: '14px 20px 14px 50px',
@@ -823,8 +823,8 @@ export function ExercisesPage() {
               marginBottom: '12px'
             }}>
               {hasActiveFilters
-                ? 'Aucun exercice trouvé'
-                : 'Aucun exercice disponible'
+                ? t('exercises.noExercisesFound')
+                : t('exercises.noExercisesAvailable')
               }
             </h3>
             <p style={{
@@ -834,8 +834,8 @@ export function ExercisesPage() {
               lineHeight: '1.6'
             }}>
               {hasActiveFilters
-                ? 'Essayez de modifier vos filtres ou votre recherche pour voir plus d\'exercices.'
-                : 'Commencez par créer votre premier exercice pour enrichir votre base de données.'
+                ? t('exercises.tryModifyFiltersLong')
+                : t('exercises.createFirstExerciseLong')
               }
             </p>
             {!hasActiveFilters && (
@@ -1110,7 +1110,7 @@ export function ExercisesPage() {
                         e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                         e.currentTarget.style.color = 'inherit';
                       }}
-                      title="Créer une copie"
+                      title={t('exercises.createCopy')}
                     >
                       📋
                     </button>
@@ -1143,7 +1143,7 @@ export function ExercisesPage() {
                         e.currentTarget.style.borderColor = isFavorite(exercise.id) ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.1)';
                         e.currentTarget.style.color = isFavorite(exercise.id) ? '#ef4444' : 'inherit';
                       }}
-                      title={isFavorite(exercise.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                      title={isFavorite(exercise.id) ? t('exercises.removeFromFavorites') : t('exercises.addToFavorites')}
                     >
                       {isFavorite(exercise.id) ? '❤️' : '🤍'}
                     </button>

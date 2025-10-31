@@ -204,9 +204,27 @@
       "favorites": "Favoris"
     },
     "copyExercise": "Copier l'exercice",
+    "copy": "Copier",
+    "createCopy": "Créer une copie",
     "shareWithClub": "Partager avec le club",
     "addToFavorites": "Ajouter aux favoris",
-    "removeFromFavorites": "Retirer des favoris"
+    "removeFromFavorites": "Retirer des favoris",
+    "noExercisesFound": "Aucun exercice trouvé",
+    "noExercisesAvailable": "Aucun exercice disponible",
+    "tryModifyFilters": "Essayez de modifier vos filtres ou recherche.",
+    "tryModifyFiltersLong": "Essayez de modifier vos filtres ou votre recherche pour voir plus d'exercices.",
+    "createFirstExerciseLong": "Commencez par créer votre premier exercice pour enrichir votre base de données.",
+    "searchPlaceholder": "Rechercher un exercice...",
+    "filters": {
+      "sport": "Sport",
+      "category": "Catégorie",
+      "ageRange": "Tranche d'âge",
+      "favorites": "Favoris"
+    },
+    "errors": {
+      "share": "Erreur lors du partage",
+      "favorite": "Erreur lors de la modification du favori"
+    }
   },
   "history": {
     "title": "Historique",
