@@ -49,10 +49,10 @@ export class AppVersionController {
     const versionInfo: AppVersionInfo = {
       currentVersion: '1.0.0',
       minimumVersion: '1.0.0', // Version minimum requise pour fonctionner
-      latestVersion: '1.1.0',  // Dernière version disponible
+      latestVersion: '1.0.0',  // Dernière version disponible (même que current = pas de mise à jour)
       updateRequired: false,   // Mise à jour obligatoire si la version utilisateur < minimumVersion
-      updateOptional: true,    // Mise à jour optionnelle si une nouvelle version est disponible
-      releaseNotes: 'Nouvelles fonctionnalités :\n• Mode hors connexion\n• Critères de réussite pour les exercices\n• Interface mobile optimisée\n• Corrections de bugs et améliorations',
+      updateOptional: false,   // Mise à jour optionnelle si une nouvelle version est disponible
+      releaseNotes: 'Version actuelle 1.0.0 :\n• Internationalisation FR/EN complète\n• Système de notifications temps réel\n• Mode hors connexion avec synchronisation\n• Interface mobile optimisée\n• Splash screen au démarrage',
       downloadUrl: {
         android: 'https://github.com/exersio/app/releases/latest/download/exersio-release.apk',
         ios: 'https://apps.apple.com/app/exersio/id123456789' // Placeholder

@@ -2,10 +2,11 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 31/10/2025
-**Session actuelle :** I18N COMPLÈTE (FR/EN) - 8 PAGES PRINCIPALES TRADUITES
+**Dernière mise à jour :** 04/11/2025
+**Session actuelle :** SPLASH SCREEN + VERSION CHECK COMPLET
 **Documents de référence** :
 - [ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md) - Synthèse complète projet
+- [SPLASH-SCREEN-VERSION-CHECK.md](exersio-front/SPLASH-SCREEN-VERSION-CHECK.md) - Documentation splash screen (04/11/2025)
 - [AUDIT-NOTIFICATIONS.md](AUDIT-NOTIFICATIONS.md) - Audit système notifications (24/10/2025)
 - [NOTIFICATIONS-SYSTEME-COMPLET.md](NOTIFICATIONS-SYSTEME-COMPLET.md) - Documentation technique complète (25/10/2025)
 
@@ -1061,6 +1062,111 @@ import { formatRelativeTime } from '../utils/i18nFormatters';
 **Branche :** feat/next-features
 **Temps réalisé :** ~3h
 **Status :** ✅ Application Exersio 100% bilingue (FR/EN) sur toutes les pages principales
+
+### Session du 04/11/2025 - Splash Screen + Version Check System ✅
+**Implémentation complète du splash screen avec vérification de version automatique**
+
+#### Fonctionnalités ajoutées
+**1. Composant SplashScreen React (`src/components/SplashScreen.tsx`)**
+- ✅ Animation élégante avec logo Exersio (icône Dumbbell)
+- ✅ Gradient de fond slate-900 → slate-800
+- ✅ Animation ping sur le cercle du logo
+- ✅ Barre de progression indéterminée (`loading-bar` animation)
+- ✅ Fade out automatique après durée minimale (1500ms)
+- ✅ Props: `isVisible`, `onComplete`, `minDuration`
+
+**2. Animation Tailwind personnalisée (`tailwind.config.js`)**
+- ✅ Keyframes `loading-bar` : translateX(-100% → 0% → 100%)
+- ✅ Animation 1.5s ease-in-out infinite
+
+**3. Intégration App.tsx**
+- ✅ Import et utilisation du composant SplashScreen
+- ✅ Affichage pendant l'initialisation auth ou version check
+- ✅ Remplacement du simple texte "Chargement…"
+
+**4. Backend API Version (déjà existant)**
+- ✅ Endpoint `/api/app/version` - Informations de version
+- ✅ Endpoint `/api/app/maintenance` - Statut maintenance
+- ✅ Documentation Swagger complète
+- ✅ Mise à jour des release notes avec nouvelles fonctionnalités
+
+**5. Système Version Check (déjà existant)**
+- ✅ Hook `useVersionCheck` pour vérification automatique au démarrage
+- ✅ Service `versionService` avec comparaison semver
+- ✅ Modals `UpdateModal` et `MaintenanceModal`
+- ✅ Gestion mises à jour obligatoires vs optionnelles
+- ✅ Rappel automatique après 24h pour updates optionnelles
+
+#### Fichiers créés/modifiés
+**Frontend:**
+- `src/components/SplashScreen.tsx` (nouveau) : Composant avec animation
+- `tailwind.config.js` : Animation loading-bar ajoutée
+- `src/App.tsx` : Import SplashScreen, suppression imports inutilisés
+- `SPLASH-SCREEN-VERSION-CHECK.md` (nouveau) : Documentation complète 600+ lignes
+
+**Backend:**
+- `src/modules/app/app-version.controller.ts` : Mise à jour release notes version 1.0.0
+
+#### Documentation créée
+- ✅ **SPLASH-SCREEN-VERSION-CHECK.md** : Guide complet (600+ lignes)
+  - Vue d'ensemble du système
+  - Documentation des composants (SplashScreen, useVersionCheck, UpdateModal)
+  - API backend détaillée
+  - Flux d'exécution et scénarios
+  - Configuration Capacitor
+  - Guide développeur pour mise à jour de version
+  - Tests et checklist
+  - TODO futur
+
+#### Flux d'exécution
+1. App démarre → SplashScreen affiché (isVisible=true)
+2. useVersionCheck appelle `/api/app/version` et `/api/app/maintenance` (mobile uniquement)
+3. Comparaison version locale (1.0.0) avec serveur
+4. hasChecked=true, isChecking=false → Splash disparaît après 1.5s
+5. Si mise à jour disponible → UpdateModal s'affiche
+6. Si maintenance → MaintenanceModal bloque l'accès
+
+#### État actuel
+**Version actuelle:** 1.0.0
+- `latestVersion = currentVersion = 1.0.0`
+- Aucune mise à jour disponible
+- `updateRequired = false`, `updateOptional = false`
+- Splash screen fonctionne parfaitement
+
+#### Tests effectués
+- ✅ Serveur dev lancé sur http://localhost:5174
+- ✅ SplashScreen s'affiche avec animation loading-bar
+- ✅ Fade out fluide après 1.5s
+- ✅ Import nettoyé (supprimé initializeDefaultData, bundleAnalyzer, exActions inutilisés)
+
+#### TODO Futur
+**Mobile:**
+- [ ] Installer `npm install @capacitor/splash-screen`
+- [ ] Générer assets splash screen natifs avec `@capacitor/assets`
+- [ ] Tester transition splash natif → splash React
+- [ ] Vérifier appels API version sur mobile réel
+
+**Assets:**
+- [ ] Créer logo vectoriel Exersio professionnel
+- [ ] Générer splash screens optimisés (portrait + landscape)
+- [ ] Variations dark/light mode
+- [ ] Animations Lottie avancées
+
+**Backend:**
+- [ ] Stocker versions dans base de données
+- [ ] Interface admin pour gérer versions/maintenance
+- [ ] Notifications push avant maintenance programmée
+
+**Fichiers concernés:**
+- Frontend: `SplashScreen.tsx`, `App.tsx`, `tailwind.config.js`, `useVersionCheck.ts`, `versionService.ts`
+- Backend: `app-version.controller.ts`
+- Documentation: `SPLASH-SCREEN-VERSION-CHECK.md`
+
+**Branche:** feat/next-features
+**Temps réalisé:** ~2h
+**Status:** ✅ Splash screen React fonctionnel, ⏳ Plugin Capacitor à installer pour mobile natif
+
+---
 
 ### Session du 15/10/2025 - Corrections Filtres Multi-Sport + ExerciseDetailView ✅
 **Phase Frontend multi-sport complétée:**
