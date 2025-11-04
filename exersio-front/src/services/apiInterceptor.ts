@@ -1,14 +1,17 @@
 import { authService } from './authService';
 
 // Variables globales pour les gestionnaires
-let globalErrorHandler: ((message: string, details?: string) => void) | null = null;
+let globalErrorHandler: ((message: string, details?: string) => void) | null =
+  null;
 let globalLoadingHandler: {
   start: (id: string, message?: string, type?: string) => void;
   stop: (id: string) => void;
 } | null = null;
 
 // Fonction pour définir le gestionnaire d'erreur global
-export const setGlobalErrorHandler = (handler: (message: string, details?: string) => void) => {
+export const setGlobalErrorHandler = (
+  handler: (message: string, details?: string) => void
+) => {
   globalErrorHandler = handler;
 };
 
@@ -32,13 +35,15 @@ const showUserError = (message: string, details?: string) => {
 // Helpers pour le loading
 const startLoading = (url: string) => {
   if (!globalLoadingHandler) return null;
-  
-  const requestId = `request_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+  const requestId = `request_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2, 9)}`;
   const endpoint = url.split('/api/')[1] || url;
-  
+
   let message = 'Chargement...';
   let type = 'default';
-  
+
   // Messages spécifiques selon l'endpoint
   if (endpoint.includes('auth')) {
     message = 'Connexion en cours...';
@@ -53,7 +58,7 @@ const startLoading = (url: string) => {
   } else if (endpoint.includes('categories')) {
     message = 'Chargement des catégories...';
   }
-  
+
   globalLoadingHandler.start(requestId, message, type);
   return requestId;
 };
@@ -93,9 +98,12 @@ const pendingRequests: Array<{
 export const createApiInterceptor = () => {
   const originalFetch = window.fetch;
 
-  window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  window.fetch = async (
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ): Promise<Response> => {
     const url = input.toString();
-    
+
     // Ignorer les requêtes qui ne sont pas vers notre API
     if (!url.includes('/api/')) {
       return originalFetch(input, init);
@@ -106,13 +114,13 @@ export const createApiInterceptor = () => {
 
     // Configuration par défaut avec headers d'authentification
     const config = await prepareRequest(init, url);
-    
+
     try {
       const response = await originalFetch(input, config);
-      
+
       // Arrêter le loading avant de traiter la réponse
       stopLoading(loadingId);
-      
+
       // Si la requête réussit, retourner la réponse
       if (response.ok) {
         return response;
@@ -120,12 +128,15 @@ export const createApiInterceptor = () => {
 
       // Gestion des erreurs d'authentification (401)
       if (response.status === 401) {
-        return await handleUnauthorizedError(input, config);
+        return await handleUnauthorizedError(input, config, response);
       }
 
-      // Gestion des autres erreurs HTTP
-      if (response.status >= 400) {
-        await handleHttpError(response, url);
+      // Gestion des erreurs serveur uniquement (500+)
+      // Les erreurs client (400-499) sont laissées pour que l'appelant les gère
+      if (response.status >= 500) {
+        // Cloner la réponse avant de la lire pour ne pas la consommer
+        const responseClone = response.clone();
+        await handleHttpError(responseClone, url);
       }
 
       // Pour les autres erreurs, retourner la réponse pour que l'appelant la traite
@@ -133,14 +144,15 @@ export const createApiInterceptor = () => {
     } catch (error) {
       // Arrêter le loading en cas d'erreur
       stopLoading(loadingId);
-      
+
       console.warn('Network error, attempting retry:', error);
       showUserError(
         'Problème de connexion réseau. Tentative de reconnexion...',
         error instanceof Error ? error.message : String(error)
       );
       // En cas d'erreur réseau, essayer de refaire la requête
-      return await retryRequest(input, config);
+      const { signal, ...configWithoutSignal } = config;
+      return await retryRequest(input, configWithoutSignal);
     }
   };
 };
@@ -152,10 +164,10 @@ async function handleHttpError(response: Response, url: string) {
   try {
     const errorData = await response.json();
     const endpoint = url.split('/api/')[1] || url;
-    
-    let userMessage = 'Une erreur s\'est produite';
+
+    let userMessage = "Une erreur s'est produite";
     let details = `Status: ${response.status}`;
-    
+
     // Messages spécifiques selon le type d'erreur
     switch (response.status) {
       case 400:
@@ -194,12 +206,12 @@ async function handleHttpError(response: Response, url: string) {
       default:
         userMessage = `Erreur ${response.status}`;
     }
-    
+
     // Ajouter le contexte de l'endpoint
     if (endpoint) {
       details = `${details} - Endpoint: ${endpoint}`;
     }
-    
+
     showUserError(userMessage, details);
   } catch (parseError) {
     // Si on ne peut pas parser la réponse, utiliser un message générique
@@ -213,16 +225,21 @@ async function handleHttpError(response: Response, url: string) {
 /**
  * Préparer la requête avec les headers d'authentification
  */
-async function prepareRequest(init?: RequestInit, url?: string): Promise<RequestInit> {
+async function prepareRequest(
+  init?: RequestInit,
+  url?: string
+): Promise<RequestInit> {
   // Éviter l'auto-refresh pour les endpoints d'authentification
-  const isAuthEndpoint = url && (
-    url.includes('/auth/login') || 
-    url.includes('/auth/register') || 
-    url.includes('/auth/refresh')
-  );
-  
-  const token = isAuthEndpoint ? authService.getToken() : await authService.ensureValidToken();
-  
+  const isAuthEndpoint =
+    url &&
+    (url.includes('/auth/login') ||
+      url.includes('/auth/register') ||
+      url.includes('/auth/refresh'));
+
+  const token = isAuthEndpoint
+    ? authService.getToken()
+    : await authService.ensureValidToken();
+
   return {
     ...init,
     headers: {
@@ -238,20 +255,34 @@ async function prepareRequest(init?: RequestInit, url?: string): Promise<Request
  */
 async function handleUnauthorizedError(
   input: RequestInfo | URL,
-  config: RequestInit
+  config: RequestInit,
+  originalResponse: Response
 ): Promise<Response> {
   const url = input.toString();
-  
+
   // Ne pas essayer de refresh sur les endpoints d'authentification
-  if (url.includes('/auth/login') || url.includes('/auth/register')) {
-    // Pour les erreurs d'auth, juste retourner la réponse 401 pour que le contexte la traite
-    return new Response('Unauthorized', { status: 401 });
+  if (
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/profile') ||
+    url.includes('/auth/refresh')
+  ) {
+    // Pour les erreurs d'auth, retourner la réponse originale intacte
+    // pour que l'appelant puisse lire le message d'erreur
+    return originalResponse;
   }
-  
+
   try {
-    // Essayer de rafraîchir le token
+    // Essayer de rafraîchir le token UNE SEULE FOIS
     const newToken = await refreshTokenIfNeeded();
-    
+
+    // Si pas de nouveau token, déconnecter sans boucle
+    if (!newToken) {
+      await authService.logout();
+      window.location.href = '/login';
+      return new Response('Unauthorized', { status: 401 });
+    }
+
     // Refaire la requête avec le nouveau token
     const newConfig = {
       ...config,
@@ -262,21 +293,21 @@ async function handleUnauthorizedError(
     };
 
     const response = await fetch(input, newConfig);
-    
+
     // Si la requête échoue encore avec 401, déconnecter l'utilisateur
     if (response.status === 401) {
       await authService.logout();
-      // Rediriger vers la page de connexion ou émettre un événement
       window.location.href = '/login';
-      throw new Error('Session expired, please login again');
+      return new Response('Session expired', { status: 401 });
     }
 
     return response;
   } catch (error) {
-    // Si le refresh échoue, déconnecter l'utilisateur
+    // Si le refresh échoue, déconnecter l'utilisateur SANS relancer de requête
+    console.error('Unauthorized error handled, logging out:', error);
     await authService.logout();
     window.location.href = '/login';
-    throw error;
+    return new Response('Unauthorized', { status: 401 });
   }
 }
 
@@ -309,7 +340,7 @@ async function refreshTokenIfNeeded(): Promise<string> {
     // Rejeter toutes les requêtes en attente
     pendingRequests.forEach(({ reject }) => reject(error as Error));
     pendingRequests.length = 0;
-    
+
     throw error;
   } finally {
     isRefreshing = false;
@@ -331,11 +362,11 @@ async function retryRequest(
 
   // Délai exponentiel entre les tentatives
   const delay = RETRY_DELAY_BASE * Math.pow(2, retryCount);
-  await new Promise(resolve => setTimeout(resolve, delay));
+  await new Promise((resolve) => setTimeout(resolve, delay));
 
   try {
     const response = await fetch(input, config);
-    
+
     // Si la requête réussit, retourner la réponse
     if (response.ok) {
       return response;
@@ -369,10 +400,12 @@ export const setupGlobalErrorHandlers = () => {
   // Gestionnaire pour les erreurs non capturées
   window.addEventListener('unhandledrejection', (event) => {
     console.error('Unhandled promise rejection:', event.reason);
-    
+
     // Si c'est une erreur d'authentification, on peut la traiter ici
-    if (event.reason?.message?.includes('unauthorized') || 
-        event.reason?.message?.includes('401')) {
+    if (
+      event.reason?.message?.includes('unauthorized') ||
+      event.reason?.message?.includes('401')
+    ) {
       authService.logout();
       window.location.href = '/login';
     }
@@ -390,6 +423,4 @@ export const setupGlobalErrorHandlers = () => {
 export const initializeApiInterceptors = () => {
   createApiInterceptor();
   setupGlobalErrorHandlers();
-  
-  console.log('API interceptors initialized');
 };

@@ -9,6 +9,7 @@ import { CategoriesProvider } from './CategoriesContext';
 import { ErrorProvider } from './ErrorContext';
 import { LoadingProvider } from './LoadingContext';
 import { FavoritesProvider } from './FavoritesContext';
+import { SportsProvider } from './SportsContext';
 import type { NavigationPage } from '../types';
 
 interface AppState {
@@ -156,17 +157,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <LoadingProvider>
           <AuthProvider>
             <UserProvider>
-              <CategoriesProvider>
-                <FavoritesProvider>
-                  <NavigationProvider>
-                    <SessionsProvider>
-                      <ExercisesProvider>
-                        {children}
-                      </ExercisesProvider>
-                    </SessionsProvider>
-                  </NavigationProvider>
-                </FavoritesProvider>
-              </CategoriesProvider>
+              <SportsProvider>
+                <CategoriesProvider>
+                  <FavoritesProvider>
+                    <NavigationProvider>
+                      <SessionsProvider>
+                        <ExercisesProvider>
+                          {children}
+                        </ExercisesProvider>
+                      </SessionsProvider>
+                    </NavigationProvider>
+                  </FavoritesProvider>
+                </CategoriesProvider>
+              </SportsProvider>
             </UserProvider>
           </AuthProvider>
         </LoadingProvider>

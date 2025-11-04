@@ -1,27 +1,27 @@
 import { useEffect } from "react";
 import { useAuth } from "./contexts/AuthContext";
-import { useExercises } from "./contexts/ExercisesContext";
 import { useSessions } from "./contexts/SessionsContext";
 import { useError } from "./contexts/ErrorContext";
 import { useLoading } from "./contexts/LoadingContext";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { useSwipeBack } from "./hooks/useSwipeBack";
 import { useVersionCheck } from "./hooks/useVersionCheck";
-import { initializeDefaultData } from "./utils/storage";
 import { MainLayout } from "./components/MainLayout";
 import { AuthForm } from "./components/AuthForm";
 import { UpdateModal, MaintenanceModal } from "./components/UpdateModal";
+import { SplashScreen } from "./components/SplashScreen";
+import { PrivacyPolicyPage } from "./components/PrivacyPolicyPage";
+import { TermsOfServicePage } from "./components/TermsOfServicePage";
 import { Toaster } from "./components/ui/sonner";
 import { AppProvider } from "./contexts/AppProvider";
 import ErrorNotifications from "./components/ErrorNotifications";
 import DynamicLoader from "./components/DynamicLoader";
 import { setGlobalErrorHandler, setGlobalLoadingHandler } from "./services/apiInterceptor";
-import { bundleAnalyzer } from "./utils/bundleAnalysis";
 import { notificationService } from "./services/notificationService";
+import { offlineStorage } from "./services/offlineStorage";
 
 function AppContent() {
   const { state: auth, actions: authActions } = useAuth();
-  const { actions: exActions } = useExercises();
   const { actions: sesActions } = useSessions();
   const { showError } = useError();
   const { startLoading, stopLoading } = useLoading();
@@ -48,17 +48,22 @@ function AppContent() {
   });
 
   useEffect(() => {
-    initializeDefaultData();
+    // Note: initializeDefaultData() removed - no longer needed with real backend API
+
     // Configurer les gestionnaires globaux
     setGlobalErrorHandler(showError);
     setGlobalLoadingHandler({
       start: startLoading,
       stop: stopLoading
     });
-    
+
+    // Initialiser le système offline
+    offlineStorage.init().catch(error => {
+      console.error('Error initializing offline storage:', error);
+    });
+
     // Initialiser l'analyse de performance (uniquement en dev)
     if (import.meta.env.DEV) {
-      console.log('🚀 Bundle analyzer initialized');
       // L'analyseur est automatiquement initialisé via son constructeur
     }
   }, [showError, startLoading, stopLoading]);
@@ -76,8 +81,25 @@ function AppContent() {
     }
   }, [auth.isAuthenticated]);
 
+  // Routes publiques (accessibles sans authentification)
+  const pathname = window.location.pathname;
+
+  if (pathname === '/privacy') {
+    return <PrivacyPolicyPage onBack={() => window.history.back()} />;
+  }
+
+  if (pathname === '/terms') {
+    return <TermsOfServicePage onBack={() => window.history.back()} />;
+  }
+
+  // Afficher le splash screen pendant l'initialisation ou la vérification de version
   if (!auth.isInitialized || (isChecking && !hasChecked)) {
-    return <div>Chargement…</div>;
+    return (
+      <>
+        <SplashScreen isVisible={true} minDuration={1500} />
+        <Toaster />
+      </>
+    );
   }
 
   // Si en maintenance, afficher la modal de maintenance

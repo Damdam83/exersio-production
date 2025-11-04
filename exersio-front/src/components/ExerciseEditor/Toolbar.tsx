@@ -1,7 +1,7 @@
-import React from 'react';
-import { Button } from '../ui/button';
-import { Move, Grid3X3, Trash2, RotateCcw, Hash, Tag, Plus, Undo, Redo } from 'lucide-react';
-import { roleColors, roleLabels, displayModes, PlayerDisplayMode } from '../../constants/exerciseEditor';
+import { Grid3X3, Move, Redo, RotateCcw, Trash2, Undo } from 'lucide-react';
+import { displayModes, PlayerDisplayMode } from '../../constants/exerciseEditor';
+import { SPORTS_CONFIG, SportType } from '../../constants/sportsConfig';
+import { ARROW_TYPES, ArrowActionType } from '../../constants/arrowTypes';
 
 interface ToolbarProps {
   selectedTool: string;
@@ -17,14 +17,15 @@ interface ToolbarProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  sport?: SportType;
 }
 
-export function Toolbar({ 
-  selectedTool, 
-  onToolChange, 
-  showGrid, 
-  onToggleGrid, 
-  selectedElement, 
+export function Toolbar({
+  selectedTool,
+  onToolChange,
+  showGrid,
+  onToggleGrid,
+  selectedElement,
   onDeleteElement,
   onClearField,
   displayMode = 'role',
@@ -32,16 +33,24 @@ export function Toolbar({
   onUndo,
   onRedo,
   canUndo = false,
-  canRedo = false
+  canRedo = false,
+  sport = 'volleyball'
 }: ToolbarProps) {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 770;
+
+  // Obtenir les rôles et couleurs selon le sport sélectionné
+  const sportConfig = SPORTS_CONFIG[sport];
+  const roleColors = sportConfig.roleColors;
+  const roleLabels = sportConfig.playerRoles;
+
   return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.08)',
       backdropFilter: 'blur(20px)',
       border: '1px solid rgba(255, 255, 255, 0.12)',
       borderRadius: '16px',
-      margin: '16px',
-      padding: '16px',
+      margin: isMobile ? '0' : '16px',
+      padding: isMobile ? '8px' : '16px',
       marginBottom: '0'
     }}>
       {/* Header */}
@@ -125,39 +134,73 @@ export function Toolbar({
           }}>
             👥 Joueurs
           </div>
-          
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {Object.entries(roleColors).map(([role, color], index) => (
-              <button
-                key={role}
-                onClick={() => onToolChange(displayMode === 'number' ? `player-${role}-${index + 1}` : `player-${role}`)}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '8px',
-                  border: (selectedTool === `player-${role}` || (displayMode === 'number' && selectedTool === `player-${role}-${index + 1}`))
-                    ? '2px solid #00d4aa' 
-                    : '1px solid rgba(255, 255, 255, 0.2)',
-                  background: (selectedTool === `player-${role}` || (displayMode === 'number' && selectedTool === `player-${role}-${index + 1}`))
-                    ? 'rgba(0, 212, 170, 0.3)'
-                    : 'rgba(255, 255, 255, 0.08)',
-                  color: displayMode === 'number' ? '#ffffff' : color,
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                title={displayMode === 'number' 
-                  ? `Joueur ${index + 1}` 
-                  : `${role} (${roleLabels[role as keyof typeof roleLabels]})`
-                }
-              >
-                {displayMode === 'number' ? (index + 1).toString() : roleLabels[role as keyof typeof roleLabels]}
-              </button>
-            ))}
+
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            flexWrap: 'wrap',
+            maxWidth: isMobile ? '100%' : 'none'
+          }}>
+            {displayMode === 'number'
+              ? // Mode numéro : afficher de 1 à maxPlayers
+                Array.from({ length: sportConfig.maxPlayers }, (_, index) => (
+                  <button
+                    key={`player-${index + 1}`}
+                    onClick={() => onToolChange(`player-number-${index + 1}`)}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '8px',
+                      border: selectedTool === `player-number-${index + 1}`
+                        ? '2px solid #00d4aa'
+                        : '1px solid rgba(255, 255, 255, 0.2)',
+                      background: selectedTool === `player-number-${index + 1}`
+                        ? 'rgba(0, 212, 170, 0.3)'
+                        : 'rgba(255, 255, 255, 0.08)',
+                      color: '#ffffff',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    title={`Joueur ${index + 1}`}
+                  >
+                    {index + 1}
+                  </button>
+                ))
+              : // Mode rôle : afficher les rôles disponibles
+                Object.entries(roleColors).map(([role, color]) => (
+                  <button
+                    key={role}
+                    onClick={() => onToolChange(`player-${role}`)}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '8px',
+                      border: selectedTool === `player-${role}`
+                        ? '2px solid #00d4aa'
+                        : '1px solid rgba(255, 255, 255, 0.2)',
+                      background: selectedTool === `player-${role}`
+                        ? 'rgba(0, 212, 170, 0.3)'
+                        : 'rgba(255, 255, 255, 0.08)',
+                      color: color,
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    title={`${role} - ${roleLabels[role]}`}
+                  >
+                    {role}
+                  </button>
+                ))
+            }
           </div>
         </div>
 
@@ -183,8 +226,8 @@ export function Toolbar({
                 width: '28px',
                 height: '28px',
                 borderRadius: '8px',
-                border: selectedTool === 'ball' 
-                  ? '2px solid #00d4aa' 
+                border: selectedTool === 'ball'
+                  ? '2px solid #00d4aa'
                   : '1px solid rgba(255, 255, 255, 0.2)',
                 background: selectedTool === 'ball'
                   ? 'rgba(0, 212, 170, 0.3)'
@@ -201,36 +244,13 @@ export function Toolbar({
               🏐
             </button>
             <button
-              onClick={() => onToolChange('arrow')}
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                border: selectedTool === 'arrow' 
-                  ? '2px solid #00d4aa' 
-                  : '1px solid rgba(255, 255, 255, 0.2)',
-                background: selectedTool === 'arrow'
-                  ? 'rgba(0, 212, 170, 0.3)'
-                  : 'rgba(255, 255, 255, 0.08)',
-                fontSize: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              title="Flèche"
-            >
-              ➡️
-            </button>
-            <button
               onClick={() => onToolChange('zone')}
               style={{
                 width: '28px',
                 height: '28px',
                 borderRadius: '8px',
-                border: selectedTool === 'zone' 
-                  ? '2px solid #00d4aa' 
+                border: selectedTool === 'zone'
+                  ? '2px solid #00d4aa'
                   : '1px solid rgba(255, 255, 255, 0.2)',
                 background: selectedTool === 'zone'
                   ? 'rgba(0, 212, 170, 0.3)'
@@ -248,7 +268,52 @@ export function Toolbar({
             </button>
           </div>
         </div>
-        
+
+        {/* Arrows Section */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: '600',
+            color: '#94a3b8',
+            whiteSpace: 'nowrap'
+          }}>
+            🏹 Flèches
+          </div>
+
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            {Object.values(ARROW_TYPES).map((arrowType) => (
+              <button
+                key={arrowType.id}
+                onClick={() => onToolChange(`arrow-${arrowType.id}`)}
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '8px',
+                  border: selectedTool === `arrow-${arrowType.id}`
+                    ? `2px solid ${arrowType.color}`
+                    : '1px solid rgba(255, 255, 255, 0.2)',
+                  background: selectedTool === `arrow-${arrowType.id}`
+                    ? `${arrowType.color}33`
+                    : 'rgba(255, 255, 255, 0.08)',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title={arrowType.label}
+              >
+                {arrowType.icon}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Tools Section */}
         <div style={{ 
           display: 'flex',
@@ -294,8 +359,8 @@ export function Toolbar({
                 width: '28px',
                 height: '28px',
                 borderRadius: '8px',
-                border: showGrid 
-                  ? '2px solid #00d4aa' 
+                border: showGrid
+                  ? '2px solid #00d4aa'
                   : '1px solid rgba(255, 255, 255, 0.2)',
                 background: showGrid
                   ? 'rgba(0, 212, 170, 0.3)'

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, BellOff, Check, CheckCheck, X, Settings, Clock, Users } from 'lucide-react';
 import { notificationService, Notification } from '../services/notificationService';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useNavigation } from '../contexts/NavigationContext';
+import { formatRelativeTime } from '../utils/i18nFormatters';
 
 interface NotificationCenterProps {
   isOpen: boolean;
@@ -10,6 +12,7 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -39,8 +42,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
       await notificationService.markAsRead(notificationId);
-      setNotifications(prev => 
-        prev.map(notif => 
+      // L'événement est émis automatiquement dans le service
+      setNotifications(prev =>
+        prev.map(notif =>
           notif.id === notificationId ? { ...notif, isRead: true } : notif
         )
       );
@@ -53,7 +57,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
   const handleMarkAllAsRead = async () => {
     try {
       await notificationService.markAllAsRead();
-      setNotifications(prev => 
+      // L'événement est émis automatiquement dans le service
+      setNotifications(prev =>
         prev.map(notif => ({ ...notif, isRead: true }))
       );
       setUnreadCount(0);
@@ -68,23 +73,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
         return <Clock className="w-5 h-5 text-blue-500" />;
       case 'exercise_added_to_club':
         return <Users className="w-5 h-5 text-green-500" />;
+      case 'member_joined_club':
+        return <Users className="w-5 h-5 text-purple-500" />;
       default:
         return <Bell className="w-5 h-5 text-gray-500" />;
     }
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffHours < 1) return 'Il y a quelques minutes';
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffDays < 7) return `Il y a ${diffDays}j`;
-    return date.toLocaleDateString();
-  };
 
   if (!isOpen) return null;
 
@@ -98,17 +93,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
 
       {/* Panel */}
       <div className={`
-        relative bg-white rounded-lg shadow-xl
-        ${isMobile 
-          ? 'w-full h-full overflow-hidden' 
+        relative bg-slate-800 rounded-lg shadow-xl text-white
+        ${isMobile
+          ? 'w-full h-full overflow-hidden'
           : 'w-96 max-h-[600px] mr-16 mt-16'
         }
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <div className="flex items-center space-x-2">
-            <Bell className="w-5 h-5 text-gray-700" />
-            <h2 className="text-lg font-semibold">Notifications</h2>
+            <Bell className="w-5 h-5 text-white" />
+            <h2 className="text-lg font-semibold text-white">{t('notifications.title')}</h2>
             {unreadCount > 0 && (
               <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
                 {unreadCount}
@@ -118,37 +113,37 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
 
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-slate-700 rounded-full transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setShowUnreadOnly(!showUnreadOnly)}
               className={`
-                px-3 py-1 rounded-full text-sm transition-colors
-                ${showUnreadOnly 
-                  ? 'bg-blue-100 text-blue-700' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                flex items-center px-3 py-1 rounded-full text-sm transition-colors
+                ${showUnreadOnly
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
                 }
               `}
             >
               {showUnreadOnly ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
-              <span className="ml-1">{showUnreadOnly ? 'Non lues' : 'Toutes'}</span>
+              <span className="ml-1">{showUnreadOnly ? t('notifications.unread') : t('notifications.all')}</span>
             </button>
           </div>
 
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}
-              className="flex items-center space-x-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm hover:bg-green-200 transition-colors"
+              className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors"
             >
               <CheckCheck className="w-4 h-4" />
-              <span>Tout lire</span>
+              <span>{t('notifications.markAllRead')}</span>
             </button>
           )}
         </div>
@@ -163,21 +158,21 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="text-center p-8 text-gray-500">
-              <Bell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-lg font-medium mb-2">Aucune notification</p>
+            <div className="text-center p-8 text-gray-400">
+              <Bell className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+              <p className="text-lg font-medium mb-2 text-gray-300">{t('notifications.noNotifications')}</p>
               <p className="text-sm">
-                {showUnreadOnly ? 'Toutes les notifications sont lues' : 'Vous n\'avez pas encore de notifications'}
+                {showUnreadOnly ? t('notifications.allRead') : t('notifications.noNotificationsYet')}
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-slate-700">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
                   className={`
-                    p-4 hover:bg-gray-50 transition-colors cursor-pointer relative
-                    ${!notification.isRead ? 'bg-blue-50' : ''}
+                    p-4 hover:bg-slate-700 transition-colors cursor-pointer relative
+                    ${!notification.isRead ? 'bg-slate-700/50' : ''}
                   `}
                   onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
                 >
@@ -190,7 +185,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                        <h3 className="text-sm font-medium text-white truncate">
                           {notification.title}
                         </h3>
                         {!notification.isRead && (
@@ -199,21 +194,21 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                               e.stopPropagation();
                               handleMarkAsRead(notification.id);
                             }}
-                            className="ml-2 p-1 hover:bg-gray-200 rounded-full transition-colors"
+                            className="ml-2 p-1 hover:bg-slate-600 rounded-full transition-colors"
                           >
-                            <Check className="w-4 h-4 text-green-500" />
+                            <Check className="w-4 h-4 text-green-400" />
                           </button>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                      <p className="text-sm text-gray-300 line-clamp-2 mb-2">
                         {notification.message}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400">
-                          {formatTime(notification.createdAt)}
+                        <span className="text-xs text-gray-500">
+                          {formatRelativeTime(notification.createdAt)}
                         </span>
                         {!notification.isRead && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                          <div className="w-2 h-2 bg-blue-400 rounded-full" />
                         )}
                       </div>
                     </div>
@@ -225,16 +220,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-4">
-          <button 
-            className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+        <div className="border-t border-slate-700 p-4">
+          <button
+            className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
             onClick={() => {
               onClose();
               setCurrentPage('notification-settings');
             }}
           >
             <Settings className="w-4 h-4" />
-            <span>Paramètres des notifications</span>
+            <span>{t('notifications.settings')}</span>
           </button>
         </div>
       </div>
@@ -254,18 +249,26 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ onClick, c
   useEffect(() => {
     const loadUnreadCount = async () => {
       try {
-        const data = await notificationService.getNotifications(true, 1);
+        // Mode silencieux pour éviter les popups de loading
+        const data = await notificationService.getNotifications(true, 1, 0, true);
         setUnreadCount(data.unreadCount || 0);
       } catch (error) {
         console.error('Error loading unread count:', error);
       }
     };
 
+    // Charger au montage
     loadUnreadCount();
-    
-    // Refresh every 30 seconds
-    const interval = setInterval(loadUnreadCount, 30000);
-    return () => clearInterval(interval);
+
+    // S'abonner aux changements de notifications
+    const unsubscribe = notificationService.onNotificationChange(() => {
+      loadUnreadCount();
+    });
+
+    // Se désabonner au démontage
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (

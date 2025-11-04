@@ -64,15 +64,26 @@ export class AuthService {
    * Déconnexion utilisateur
    */
   async logout(): Promise<void> {
+    // Éviter les appels multiples simultanés
+    if (this.isLoggingOut) {
+      return;
+    }
+
+    this.isLoggingOut = true;
+
     try {
-      // Appeler l'endpoint de logout (stateless mais peut être utile pour des logs côté serveur)
-      await api.post('/auth/logout');
+      // Seulement appeler l'endpoint si on a un token valide
+      const token = this.getToken();
+      if (token && !this.isTokenExpired()) {
+        await api.post('/auth/logout');
+      }
     } catch (error) {
       console.warn('Logout API call failed:', error);
     } finally {
       // Supprimer les données locales même si l'API échoue
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_id');
+      this.isLoggingOut = false;
     }
   }
 
@@ -152,22 +163,38 @@ export class AuthService {
     }
   }
 
+  // Flags pour éviter les boucles infinies
+  private isRefreshing = false;
+  private isLoggingOut = false;
+
   /**
    * Auto-refresh du token si nécessaire
    */
   async ensureValidToken(): Promise<string | null> {
     const token = this.getToken();
-    
+
     if (!token) {
       return null;
     }
 
+    // Si un refresh est déjà en cours, retourner le token actuel
+    if (this.isRefreshing) {
+      return token;
+    }
+
     if (this.isTokenExpired()) {
       try {
+        this.isRefreshing = true;
         const response = await this.refreshToken();
         return response.token;
-      } catch {
+      } catch (error) {
+        // En cas d'erreur 401 sur le refresh, déconnecter et rediriger
+        console.error('Failed to refresh token:', error);
+        await this.logout();
+        window.location.href = '/login';
         return null;
+      } finally {
+        this.isRefreshing = false;
       }
     }
 

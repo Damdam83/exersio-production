@@ -31,23 +31,29 @@ export const initializePlayers = (exercise?: Exercise): Player[] => {
 
 export const initializeArrows = (exercise?: Exercise): Arrow[] => {
   if (!exercise?.fieldData) return [];
-  
+
   // Check new format first
   if (exercise.fieldData.arrows && exercise.fieldData.arrows[0]?.startPosition) {
     return exercise.fieldData.arrows.map(arrow => ({
       id: arrow.id,
       startPosition: arrow.startPosition,
       endPosition: arrow.endPosition,
-      type: arrow.type || 'movement'
+      type: arrow.type || 'movement',
+      actionType: arrow.actionType || 'pass',
+      step: arrow.step,
+      isCurved: arrow.isCurved,
+      controlX: arrow.controlX,
+      controlY: arrow.controlY
     }));
   }
-  
+
   // Fallback to old format
   return exercise.fieldData.arrows.map(arrow => ({
     id: arrow.id,
     startPosition: { x: arrow.startX, y: arrow.startY },
     endPosition: { x: arrow.endX, y: arrow.endY },
-    type: 'movement'
+    type: 'movement',
+    actionType: 'pass'
   }));
 };
 
@@ -166,14 +172,20 @@ export const getEventPosition = (
     return { x: 0, y: 0 };
   }
   
-  // Essayer de trouver le terrain intérieur
-  const actualCourt = courtRef.current.querySelector('#actual-court') as HTMLElement;
-  const targetRect = actualCourt ? actualCourt.getBoundingClientRect() : courtRef.current.getBoundingClientRect();
-  
-  // Calculer directement par rapport au terrain intérieur
-  const x = ((clientX - targetRect.left) / targetRect.width) * 100;
-  const y = ((clientY - targetRect.top) / targetRect.height) * 100;
-  
+  // courtRef pointe directement vers le terrain (#actual-court)
+  const targetRect = courtRef.current.getBoundingClientRect();
+
+  // Soustraire la bordure (3px de chaque côté)
+  const borderWidth = 3;
+  const innerWidth = targetRect.width - (borderWidth * 2);
+  const innerHeight = targetRect.height - (borderWidth * 2);
+  const innerLeft = targetRect.left + borderWidth;
+  const innerTop = targetRect.top + borderWidth;
+
+  // Calculer par rapport à la zone intérieure (sans bordure)
+  const x = ((clientX - innerLeft) / innerWidth) * 100;
+  const y = ((clientY - innerTop) / innerHeight) * 100;
+
   // Permettre placement dans une zone élargie autour du terrain
   return { x: Math.max(-30, Math.min(130, x)), y: Math.max(-30, Math.min(130, y)) };
 };

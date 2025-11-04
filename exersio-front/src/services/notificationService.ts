@@ -1,5 +1,4 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
-// import { PushNotifications, PushNotificationSchema, ActionPerformed, Token } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { api } from './api';
 
@@ -12,7 +11,7 @@ export interface NotificationSettings {
 
 export interface Notification {
   id: string;
-  type: 'session_reminder' | 'exercise_added_to_club' | 'system_notification';
+  type: 'session_reminder' | 'exercise_added_to_club' | 'member_joined_club' | 'system_notification';
   title: string;
   message: string;
   data?: any;
@@ -20,9 +19,29 @@ export interface Notification {
   createdAt: string;
 }
 
+// Simple EventEmitter pour les notifications
+type NotificationEventListener = () => void;
+
+class NotificationEventEmitter {
+  private listeners: NotificationEventListener[] = [];
+
+  subscribe(listener: NotificationEventListener): () => void {
+    this.listeners.push(listener);
+    // Retourner la fonction de désinscription
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  emit() {
+    this.listeners.forEach(listener => listener());
+  }
+}
+
 class NotificationService {
   private isInitialized = false;
   private pushToken: string | null = null;
+  private eventEmitter = new NotificationEventEmitter();
 
   async initialize() {
     if (this.isInitialized || !Capacitor.isNativePlatform()) {
@@ -32,10 +51,8 @@ class NotificationService {
     try {
       // Demander les permissions pour les notifications locales
       const localResult = await LocalNotifications.requestPermissions();
-      console.log('Local notifications permission:', localResult.display);
 
-      // Push notifications temporairement désactivées (pas de Firebase configuré)
-      console.log('Push notifications disabled - no Firebase config');
+      // TODO: Push notifications désactivées temporairement (problème Firebase)
 
       this.isInitialized = true;
     } catch (error) {
@@ -44,8 +61,7 @@ class NotificationService {
   }
 
   private setupListeners() {
-    // Push notifications listeners désactivés (pas de Firebase configuré)
-    console.log('Push notification listeners disabled - no Firebase config');
+    // Push notifications désactivées temporairement
   }
 
   private async registerTokenOnServer(token: string) {
@@ -55,7 +71,6 @@ class NotificationService {
         token,
         platform
       });
-      console.log('Push token registered on server');
     } catch (error) {
       console.error('Error registering push token:', error);
     }
@@ -103,12 +118,13 @@ class NotificationService {
   }
 
   // API calls pour les notifications
-  async getNotifications(unreadOnly = false, limit = 20, offset = 0) {
+  async getNotifications(unreadOnly = false, limit = 20, offset = 0, silent = false) {
     try {
       const params = new URLSearchParams({
         limit: limit.toString(),
         offset: offset.toString(),
-        ...(unreadOnly && { unreadOnly: 'true' })
+        ...(unreadOnly && { unreadOnly: 'true' }),
+        ...(silent && { skipGlobalLoading: 'true' })
       });
 
       const response = await api.get(`/notifications?${params}`);
@@ -122,6 +138,8 @@ class NotificationService {
   async markAsRead(notificationId: string) {
     try {
       await api.put(`/notifications/${notificationId}/read`);
+      // Émettre l'événement pour notifier les composants
+      this.eventEmitter.emit();
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -130,9 +148,16 @@ class NotificationService {
   async markAllAsRead() {
     try {
       await api.put('/notifications/read-all');
+      // Émettre l'événement pour notifier les composants
+      this.eventEmitter.emit();
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
+  }
+
+  // Méthode pour s'abonner aux changements de notifications
+  onNotificationChange(listener: NotificationEventListener): () => void {
+    return this.eventEmitter.subscribe(listener);
   }
 
   async getNotificationSettings(): Promise<NotificationSettings> {
@@ -163,13 +188,11 @@ class NotificationService {
   // Test notifications (pour debug)
   async testSessionReminders() {
     if (!Capacitor.isNativePlatform()) {
-      console.log('Test session reminders not available on web');
       return;
     }
 
     try {
       await api.post('/notifications/test-session-reminders');
-      console.log('Test session reminders triggered');
     } catch (error) {
       console.error('Error testing session reminders:', error);
     }
@@ -188,7 +211,7 @@ class NotificationService {
 
     return {
       local: localPerms.display,
-      push: 'disabled' // Push notifications désactivées
+      push: 'disabled' // Push notifications temporairement désactivées
     };
   }
 

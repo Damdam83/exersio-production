@@ -5,15 +5,21 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class CategoriesService {
   constructor(private prisma: PrismaService) {}
 
-  async getExerciseCategories() {
+  async getExerciseCategories(sportId?: string) {
+    const where = sportId ? { sportId } : {};
     return this.prisma.exerciseCategory.findMany({
-      orderBy: { order: 'asc' }
+      where,
+      orderBy: { order: 'asc' },
+      include: { sport: true }
     });
   }
 
-  async getAgeCategories() {
+  async getAgeCategories(sportId?: string) {
+    const where = sportId ? { sportId } : {};
     return this.prisma.ageCategory.findMany({
-      orderBy: { order: 'asc' }
+      where,
+      orderBy: { order: 'asc' },
+      include: { sport: true }
     });
   }
 

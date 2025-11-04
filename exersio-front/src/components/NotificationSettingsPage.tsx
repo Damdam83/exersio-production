@@ -86,26 +86,6 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
     }));
   };
 
-  const testNotification = async () => {
-    try {
-      await notificationService.scheduleLocalNotification(
-        '🎯 Test Notification',
-        'Les notifications fonctionnent correctement !',
-        5000 // 5 secondes
-      );
-    } catch (error) {
-      console.error('Error testing notification:', error);
-    }
-  };
-
-  const testSessionReminders = async () => {
-    try {
-      await notificationService.testSessionReminders();
-    } catch (error) {
-      console.error('Error testing session reminders:', error);
-    }
-  };
-
   const getPermissionStatus = (permission: string) => {
     switch (permission) {
       case 'granted': 
@@ -126,7 +106,7 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isMobile ? '' : 'max-w-2xl mx-auto'}`}>
+    <div className={`min-h-screen bg-slate-900 ${isMobile ? '' : 'max-w-2xl mx-auto'}`}>
       {isMobile ? (
         <MobileHeader
           title="Paramètres notifications"
@@ -141,29 +121,29 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
           ].filter(Boolean)}
         />
       ) : (
-        <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <div className="bg-slate-800 shadow-sm border-b border-slate-700 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <button
                 onClick={onBack}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-slate-700 rounded-full transition-colors text-white"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-xl font-semibold">Paramètres des notifications</h1>
+              <h1 className="text-xl font-semibold text-white">Paramètres des notifications</h1>
             </div>
             {hasChanges() && (
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handleReset}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
                   {saving ? 'Enregistrement...' : 'Enregistrer'}
                 </button>
@@ -175,15 +155,15 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
 
       <div className="p-4 space-y-6">
         {/* Permissions Status */}
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <h2 className="text-lg font-medium mb-4 flex items-center">
+        <div className="bg-slate-800 rounded-lg p-4 shadow-sm">
+          <h2 className="text-lg font-medium mb-4 flex items-center text-white">
             <Smartphone className="w-5 h-5 mr-2" />
             État des permissions
           </h2>
           
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Notifications locales</span>
+              <span className="text-gray-300">Notifications locales</span>
               <div className="flex items-center space-x-2">
                 {(() => {
                   const status = getPermissionStatus(permissions.local);
@@ -198,7 +178,7 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Notifications push</span>
+              <span className="text-gray-300">Notifications push</span>
               <div className="flex items-center space-x-2">
                 {(() => {
                   const status = getPermissionStatus(permissions.push);
@@ -221,7 +201,7 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
         </div>
 
         {/* Notification Types */}
-        <div className="bg-white rounded-lg p-4 shadow-sm">
+        <div className="bg-slate-800 rounded-lg p-4 shadow-sm">
           <h2 className="text-lg font-medium mb-4 flex items-center">
             <Bell className="w-5 h-5 mr-2" />
             Types de notifications
@@ -245,7 +225,7 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
                 `}
               >
                 <span className={`
-                  inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                  inline-block h-4 w-4 transform rounded-full bg-slate-800 transition-transform
                   ${settings.sessionReminders ? 'translate-x-6' : 'translate-x-1'}
                 `} />
               </button>
@@ -268,7 +248,7 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
                 `}
               >
                 <span className={`
-                  inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                  inline-block h-4 w-4 transform rounded-full bg-slate-800 transition-transform
                   ${settings.exerciseNotifications ? 'translate-x-6' : 'translate-x-1'}
                 `} />
               </button>
@@ -291,7 +271,7 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
                 `}
               >
                 <span className={`
-                  inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                  inline-block h-4 w-4 transform rounded-full bg-slate-800 transition-transform
                   ${settings.systemNotifications ? 'translate-x-6' : 'translate-x-1'}
                 `} />
               </button>
@@ -301,14 +281,14 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
 
         {/* Reminder Timing */}
         {settings.sessionReminders && (
-          <div className="bg-white rounded-lg p-4 shadow-sm">
+          <div className="bg-slate-800 rounded-lg p-4 shadow-sm">
             <h2 className="text-lg font-medium mb-4 flex items-center">
               <Clock className="w-5 h-5 mr-2" />
               Délai des rappels
             </h2>
             
             <div className="space-y-3">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-300">
                 Recevoir un rappel avant les séances planifiées :
               </p>
               
@@ -333,36 +313,66 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
           </div>
         )}
 
-        {/* Test Section */}
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <h2 className="text-lg font-medium mb-4 flex items-center">
-            <Settings className="w-5 h-5 mr-2" />
-            Tests et diagnostic
-          </h2>
-          
+        {/* Test Section - TEMPORAIRE pour tester EventEmitter */}
+        <div className="bg-slate-800 rounded-lg shadow p-6 border border-slate-700">
+          <div className="flex items-center space-x-3 mb-4">
+            <Settings className="w-5 h-5 text-blue-400" />
+            <h2 className="text-lg font-semibold text-white">Test Notifications (DEV)</h2>
+          </div>
+          <p className="text-sm text-gray-300 mb-4">
+            Créer des notifications de test pour vérifier le système EventEmitter
+          </p>
           <div className="space-y-3">
             <button
-              onClick={testNotification}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              onClick={async () => {
+                try {
+                  await fetch('http://localhost:3000/api/notifications/admin/send-notification', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    },
+                    body: JSON.stringify({
+                      title: 'Test notification',
+                      message: 'Ceci est une notification de test pour vérifier le système EventEmitter',
+                      type: 'system_notification'
+                    })
+                  });
+                  alert('Notification créée ! Ouvre le centre de notifications pour la voir.');
+                } catch (error) {
+                  alert('Erreur: ' + error);
+                }
+              }}
+              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
-              <Bell className="w-4 h-4" />
-              <span>Tester une notification locale</span>
+              Créer 1 notification de test
             </button>
-            
             <button
-              onClick={testSessionReminders}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              onClick={async () => {
+                try {
+                  for (let i = 1; i <= 5; i++) {
+                    await fetch('http://localhost:3000/api/notifications/admin/send-notification', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                      },
+                      body: JSON.stringify({
+                        title: `Test notification ${i}`,
+                        message: `Notification de test numéro ${i} pour vérifier le badge`,
+                        type: 'system_notification'
+                      })
+                    });
+                  }
+                  alert('5 notifications créées ! Ouvre le centre de notifications.');
+                } catch (error) {
+                  alert('Erreur: ' + error);
+                }
+              }}
+              className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
             >
-              <Clock className="w-4 h-4" />
-              <span>Tester les rappels de séances</span>
+              Créer 5 notifications de test
             </button>
-          </div>
-          
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600">
-              Les tests permettent de vérifier que les notifications fonctionnent correctement sur votre appareil.
-              La notification locale apparaîtra dans 5 secondes, les rappels de séances sont envoyés immédiatement pour les séances planifiées.
-            </p>
           </div>
         </div>
 

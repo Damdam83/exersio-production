@@ -5,6 +5,7 @@ interface FilterOption {
   value: string;
   label: string;
   count?: number;
+  id?: string; // ID unique pour les clés React (évite les doublons entre sports)
 }
 
 interface MobileFiltersProps {
@@ -18,13 +19,17 @@ interface MobileFiltersProps {
     onChange: (value: string) => void;
   }>;
   showSearch?: boolean;
+  onResetFilters?: () => void;
+  hasActiveFilters?: boolean;
 }
 
-export function MobileFilters({ 
-  searchValue = '', 
-  onSearchChange, 
-  filters = [], 
-  showSearch = true 
+export function MobileFilters({
+  searchValue = '',
+  onSearchChange,
+  filters = [],
+  showSearch = true,
+  onResetFilters,
+  hasActiveFilters = false
 }: MobileFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
   const activeFiltersCount = filters.filter(f => f.value && f.value !== 'all').length;
@@ -83,9 +88,9 @@ export function MobileFilters({
               <div className="flex flex-wrap gap-2">
                 {filter.options.map((option) => (
                   <button
-                    key={option.value}
+                    key={option.id || option.value}
                     onClick={() => filter.onChange(option.value)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
                       filter.value === option.value
                         ? 'bg-[#00d4aa] text-slate-900'
                         : 'bg-slate-700/50 text-gray-300 hover:bg-slate-700/70'
@@ -101,13 +106,27 @@ export function MobileFilters({
             </div>
           ))}
 
+          {/* Bouton réinitialiser (si filtres actifs) */}
+          {hasActiveFilters && onResetFilters && (
+            <button
+              onClick={() => {
+                onResetFilters();
+                setShowFilters(false);
+              }}
+              className="w-full mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2 font-medium"
+            >
+              <X size={16} />
+              Réinitialiser les filtres
+            </button>
+          )}
+
           {/* Bouton pour fermer les filtres */}
           <button
             onClick={() => setShowFilters(false)}
-            className="w-full mt-4 p-3 bg-slate-700/50 border border-white/10 rounded-lg text-gray-300 hover:bg-slate-700/70 transition-colors flex items-center justify-center gap-2"
+            className="w-full mt-2 p-3 bg-slate-700/50 border border-white/10 rounded-lg text-gray-300 hover:bg-slate-700/70 transition-colors flex items-center justify-center gap-2"
           >
             <X size={16} />
-            Fermer les filtres
+            Fermer
           </button>
         </div>
       )}

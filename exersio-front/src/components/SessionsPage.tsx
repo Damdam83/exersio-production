@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useExercises } from "../contexts/ExercisesContext";
 import { useNavigation } from "../contexts/NavigationContext";
 import { useSessions } from "../contexts/SessionsContext";
@@ -8,6 +9,7 @@ import { MobileFilters } from "./MobileFilters";
 import { ResultsCounter } from "./ResultsCounter";
 
 export function SessionsPage() {
+  const { t } = useTranslation();
   const { state, actions } = useSessions();
   const { exercises } = useExercises();
   const { navigate } = useNavigation();
@@ -45,8 +47,8 @@ export function SessionsPage() {
     tomorrow.setDate(today.getDate() + 1);
     const isTomorrow = date.toDateString() === tomorrow.toDateString();
     
-    if (isToday) return 'Aujourd\'hui';
-    if (isTomorrow) return 'Demain';
+    if (isToday) return t('sessions.filters.today');
+    if (isTomorrow) return t('sessions.filters.tomorrow');
     
     return date.toLocaleDateString('fr-FR', { 
       weekday: 'long', 
@@ -111,15 +113,15 @@ export function SessionsPage() {
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'planned':
-        return { label: 'À venir', class: 'status-upcoming' };
+        return { label: t('sessions.status.planned'), class: 'status-upcoming' };
       case 'in-progress':
-        return { label: 'En cours', class: 'status-in-progress' };
+        return { label: t('sessions.status.inProgress'), class: 'status-in-progress' };
       case 'completed':
-        return { label: 'Terminée', class: 'status-completed' };
+        return { label: t('sessions.status.completed'), class: 'status-completed' };
       case 'cancelled':
-        return { label: 'Annulée', class: 'status-cancelled' };
+        return { label: t('sessions.status.cancelled'), class: 'status-cancelled' };
       default:
-        return { label: 'À venir', class: 'status-upcoming' };
+        return { label: t('sessions.status.planned'), class: 'status-upcoming' };
     }
   };
 
@@ -141,27 +143,10 @@ export function SessionsPage() {
 
   if (isLoading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundImage: 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%)',
-        backgroundAttachment: 'fixed',
-        color: '#ffffff',
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            border: '2px solid rgba(59, 130, 246, 0.2)',
-            borderTop: '2px solid #3b82f6',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }}></div>
-          <p style={{ color: '#94a3b8' }}>Chargement des séances...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Chargement des séances...</p>
         </div>
       </div>
     );
@@ -171,41 +156,41 @@ export function SessionsPage() {
   const mobileFilters = [
     {
       key: 'ageCategory',
-      label: 'Catégorie',
+      label: t('sessions.filters.category'),
       value: state.filters.ageCategory || 'all',
       onChange: handleAgeCategoryFilter,
       options: [
-        { value: 'all', label: 'Toutes' },
-        { value: 'seniors', label: 'Seniors' },
-        { value: 'minimes', label: 'Minimes' },
-        { value: 'enfants', label: 'Enfants' },
-        { value: 'mixte', label: 'Mixte' }
+        { value: 'all', label: t('sessions.filters.allFeminine') },
+        { value: 'seniors', label: t('sessions.filters.seniors') },
+        { value: 'minimes', label: t('sessions.filters.minimes') },
+        { value: 'enfants', label: t('sessions.filters.children') },
+        { value: 'mixte', label: t('sessions.filters.mixed') }
       ]
     },
     {
       key: 'status',
-      label: 'Statut',
+      label: t('sessions.filters.status'),
       value: state.filters.status || 'all',
       onChange: handleStatusFilter,
       options: [
-        { value: 'all', label: 'Tous' },
-        { value: 'planned', label: 'À venir' },
-        { value: 'in-progress', label: 'En cours' },
-        { value: 'completed', label: 'Terminées' },
-        { value: 'cancelled', label: 'Annulées' }
+        { value: 'all', label: t('sessions.filters.all') },
+        { value: 'planned', label: t('sessions.filters.upcoming') },
+        { value: 'in-progress', label: t('sessions.filters.inProgress') },
+        { value: 'completed', label: t('sessions.filters.completed') },
+        { value: 'cancelled', label: t('sessions.filters.cancelled') }
       ]
     },
     {
       key: 'level',
-      label: 'Niveau',
+      label: t('sessions.filters.level'),
       value: state.filters.level || 'all',
       onChange: handleLevelFilter,
       options: [
-        { value: 'all', label: 'Tous' },
-        { value: 'debutant', label: 'Débutant' },
-        { value: 'intermediaire', label: 'Intermédiaire' },
-        { value: 'avance', label: 'Avancé' },
-        { value: 'expert', label: 'Expert' }
+        { value: 'all', label: t('sessions.filters.all') },
+        { value: 'debutant', label: t('sessions.filters.beginner') },
+        { value: 'intermediaire', label: t('sessions.filters.intermediate') },
+        { value: 'avance', label: t('sessions.filters.advanced') },
+        { value: 'expert', label: t('sessions.filters.expert') }
       ]
     }
   ];
@@ -214,10 +199,10 @@ export function SessionsPage() {
     return (
       <div className="min-h-screen bg-slate-900">
         <MobileHeader
-          title="Séances"
+          title={t('sessions.title')}
           onAction={() => navigate('session-create')}
           actionIcon={<span className="text-lg">➕</span>}
-          actionLabel="Nouvelle séance"
+          actionLabel={t('sessions.newSession')}
         />
 
         <MobileFilters
@@ -233,19 +218,19 @@ export function SessionsPage() {
           isLoading={isLoading}
         />
 
-        <div className="p-4 space-y-4">
+        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
           {filteredSessions.length === 0 && !isLoading ? (
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-8 text-center">
-              <div className="text-4xl mb-4">📅</div>
-              <h3 className="text-lg font-semibold text-white mb-2">
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 text-center">
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📅</div>
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">
                 Aucune séance trouvée
               </h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-sm text-gray-400 mb-3 sm:mb-4">
                 Aucune séance ne correspond à vos critères.
               </p>
               <button
                 onClick={() => navigate('session-create')}
-                className="bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-6 py-3 rounded-lg font-medium transition-colors"
+                className="bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-medium transition-colors"
               >
                 ➕ Créer une séance
               </button>
@@ -261,7 +246,7 @@ export function SessionsPage() {
                 <div
                   key={`session-${session.id || index}`}
                   onClick={() => navigate('session-detail', { sessionId: session.id })}
-                  className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-4 relative overflow-hidden active:scale-[0.98] transition-all duration-200"
+                  className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-3 sm:p-4 relative overflow-hidden active:scale-[0.98] transition-all duration-200"
                 >
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${
                     cardClass === 'upcoming' ? 'bg-blue-500' :
@@ -270,12 +255,12 @@ export function SessionsPage() {
                     'bg-red-500'
                   }`}></div>
 
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-2 sm:mb-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-lg truncate mb-1">
-                        {session.name || 'Séance sans nom'}
+                      <h3 className="font-semibold text-white text-base sm:text-lg truncate mb-1">
+                        {session.name || t('sessions.noName')}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-400 mb-1">
                         <span className="flex items-center gap-1">
                           📅 {formatDate(session.date)}
                         </span>
@@ -283,11 +268,11 @@ export function SessionsPage() {
                           ⏰ {formatTime(session.date)}
                         </span>
                       </div>
-                      <div className="text-sm text-[#00d4aa] font-medium">
-                        Équipe {session.ageCategory || 'Seniors'}
+                      <div className="text-xs sm:text-sm text-[#00d4aa] font-medium">
+                        {t('sessions.team')} {session.ageCategory || t('sessions.filters.seniors')}
                       </div>
                     </div>
-                    <div className={`px-2 py-1 rounded-lg text-xs font-semibold ${
+                    <div className={`px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-semibold ${
                       cardClass === 'upcoming' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
                       cardClass === 'in-progress' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
                       cardClass === 'completed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
@@ -298,13 +283,13 @@ export function SessionsPage() {
                   </div>
 
                   {session.description && (
-                    <p className="text-gray-300 text-sm mb-3 line-clamp-2">
+                    <p className="text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2">
                       {session.description}
                     </p>
                   )}
 
-                  <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       <span>⏱️ {session.duration || totalDuration} min</span>
                       <span>🎯 {sessionExercises.length} exercice{sessionExercises.length !== 1 ? 's' : ''}</span>
                     </div>
@@ -312,20 +297,20 @@ export function SessionsPage() {
 
                   {sessionExercises.length > 0 && (
                     <div className="space-y-1">
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      <div className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Programme
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {sessionExercises.slice(0, 3).map(exercise => (
                           <div
                             key={exercise.id}
-                            className="bg-white/5 text-xs text-gray-300 px-2 py-1 rounded"
+                            className="bg-white/5 text-[10px] sm:text-xs text-gray-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded"
                           >
                             {exercise.name}
                           </div>
                         ))}
                         {sessionExercises.length > 3 && (
-                          <div className="bg-white/5 text-xs text-gray-400 px-2 py-1 rounded">
+                          <div className="bg-white/5 text-[10px] sm:text-xs text-gray-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
                             +{sessionExercises.length - 3}
                           </div>
                         )}
@@ -333,13 +318,13 @@ export function SessionsPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-white/5">
+                  <div className="flex items-center justify-end gap-1.5 sm:gap-2 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/5">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         navigate('session-detail', { sessionId: session.id });
                       }}
-                      className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+                      className="p-1.5 sm:p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
                       title="Voir détails"
                     >
                       👁️
@@ -349,7 +334,7 @@ export function SessionsPage() {
                         e.stopPropagation();
                         navigate('session-create', { sessionId: session.id, mode: 'edit' });
                       }}
-                      className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+                      className="p-1.5 sm:p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
                       title="Modifier"
                     >
                       ✏️
@@ -365,153 +350,75 @@ export function SessionsPage() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      backgroundAttachment: 'fixed',
-      color: '#ffffff',
-      position: 'relative',
-      padding: '5px'
-    }}>
+    <div className="min-h-screen text-white relative p-1">
       {/* Background effects */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: `
-          radial-gradient(circle at 15% 85%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-          radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.1) 0%, transparent 50%)
-        `,
-        pointerEvents: 'none',
-        zIndex: -1
-      }}></div>
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute inset-0 bg-gradient-radial from-blue-500/15 via-transparent to-transparent"
+             style={{ backgroundPosition: '15% 85%' }}></div>
+        <div className="absolute inset-0 bg-gradient-radial from-emerald-500/10 via-transparent to-transparent"
+             style={{ backgroundPosition: '85% 15%' }}></div>
+      </div>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+      <div className="max-w-[1400px] mx-auto relative z-10">
         {/* Header */}
-        <header style={{
-          // background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(20px)',
-          // border: '1px solid rgba(255, 255, 255, 0.12)',
-          // borderRadius: '24px',
-          padding: '5px 35px',
-          marginBottom: '30px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          // boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-        }}>
+        <header className="backdrop-blur-xl px-4 lg:px-9 py-4 lg:py-1 mb-4 lg:mb-8 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 lg:gap-0">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#94a3b8', marginBottom: '8px' }}>
-              <button onClick={() => navigate('home')} style={{ color: '#3b82f6', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+              <button onClick={() => navigate('home')} className="text-blue-400 hover:text-blue-300 bg-transparent border-none cursor-pointer">
                 🏠 Dashboard
               </button>
               <span>›</span>
               <span>Séances</span>
             </div>
-            <div className="flex justify-center items-center">
-            <h1 style={{
-              fontSize: '28px',
-              fontWeight: '800',
-              background: 'linear-gradient(135deg, #ffffff, #94a3b8)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-             
-            }}>
-              📅
-            </h1><h1 style={{
-              fontSize: '28px',
-              fontWeight: '800',
-              background: 'linear-gradient(135deg, #ffffff, #94a3b8)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              Gestion des Séances
-            </h1>
+            <div className="flex flex-col lg:justify-center items-start lg:items-center gap-1">
+              <h1 className="text-xl lg:text-3xl font-extrabold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent flex items-center gap-2">
+                <span>📅</span>
+                <span className="hidden lg:inline">Gestion des </span>Séances
+              </h1>
             </div>
-            
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button style={{
-              padding: '12px 20px',
-              borderRadius: '14px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+          <div className="flex gap-2 lg:gap-3 flex-wrap lg:flex-nowrap">
+            <button className="hidden lg:flex px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer bg-white/8 text-white border border-white/12 items-center gap-2 hover:bg-white/12 transition-colors">
               📤 Exporter
             </button>
-            <button style={{
-              padding: '12px 20px',
-              borderRadius: '14px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+            <button className="hidden lg:flex px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer bg-white/8 text-white border border-white/12 items-center gap-2 hover:bg-white/12 transition-colors">
               📋 Dupliquer
             </button>
-            <button 
+            <button
               onClick={() => navigate('session-create')}
-              style={{
-                padding: '12px 20px',
-                borderRadius: '14px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                border: 'none',
-                background: 'linear-gradient(135deg, #3b82f6, #10b981)',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
+              className="lg:px-5 lg:py-3 p-2 lg:rounded-2xl rounded-full text-sm lg:text-sm font-semibold cursor-pointer border-none bg-gradient-to-r from-blue-500 to-emerald-500 text-white flex items-center justify-center gap-0 lg:gap-2 w-10 h-10 lg:w-auto lg:h-auto hover:opacity-90 transition-opacity"
+              title="Nouvelle séance"
             >
-              ➕ Nouvelle séance
+              <span>➕</span>
+              <span className="hidden lg:inline">Nouvelle séance</span>
             </button>
           </div>
         </header>
 
         {/* Contrôles et filtres */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '20px',
-          padding: '25px',
-          marginBottom: '30px'
-        }}>
+        <div className="bg-white/8 backdrop-blur-xl border border-white/12 rounded-3xl p-4 lg:p-6 mb-4 lg:mb-8">
           <div style={{
             display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
             justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px'
+            alignItems: isMobile ? 'stretch' : 'center',
+            marginBottom: isMobile ? '16px' : '20px',
+            gap: isMobile ? '12px' : '0'
           }}>
             <div style={{
               display: 'flex',
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '12px',
               padding: '4px',
-              gap: '4px'
+              gap: '4px',
+              alignSelf: isMobile ? 'flex-start' : 'auto'
             }}>
               <button
                 onClick={() => setActiveView('list')}
                 style={{
-                  padding: '8px 16px',
+                  padding: isMobile ? '6px 12px' : '8px 16px',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize: isMobile ? '12px' : '14px',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -525,9 +432,9 @@ export function SessionsPage() {
               <button
                 onClick={() => setActiveView('calendar')}
                 style={{
-                  padding: '8px 16px',
+                  padding: isMobile ? '6px 12px' : '8px 16px',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize: isMobile ? '12px' : '14px',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -539,29 +446,29 @@ export function SessionsPage() {
                 📅 Calendrier
               </button>
             </div>
-            
-            <div style={{ position: 'relative', width: '300px' }}>
+
+            <div style={{ position: 'relative', width: isMobile ? '100%' : '300px' }}>
               <div style={{
                 position: 'absolute',
                 left: '16px',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: '#94a3b8',
-                fontSize: '16px'
+                fontSize: isMobile ? '14px' : '16px'
               }}>🔍</div>
               <input
                 type="text"
                 value={state.filters.search || ''}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Rechercher une séance..."
+                placeholder={t('sessions.searchPlaceholder')}
                 style={{
                   width: '100%',
-                  padding: '12px 20px 12px 45px',
+                  padding: isMobile ? '10px 16px 10px 40px' : '12px 20px 12px 45px',
                   background: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '14px',
                   color: 'white',
-                  fontSize: '14px',
+                  fontSize: isMobile ? '14px' : '14px',
                   outline: 'none',
                   transition: 'all 0.3s ease'
                 }}
@@ -664,10 +571,10 @@ export function SessionsPage() {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {period === 'all' ? 'Toutes' : 
-                   period === 'today' ? 'Aujourd\'hui' :
-                   period === 'week' ? 'Cette semaine' :
-                   'Ce mois'}
+                  {period === 'all' ? t('sessions.allPeriods') :
+                   period === 'today' ? t('sessions.filters.today') :
+                   period === 'week' ? t('sessions.filters.thisWeek') :
+                   t('sessions.filters.thisMonth')}
                 </div>
               ))}
             </div>
@@ -759,7 +666,7 @@ export function SessionsPage() {
                             color: '#ffffff',
                             marginBottom: '4px'
                           }}>
-                            {session.name || 'Séance sans nom'}
+                            {session.name || t('sessions.noName')}
                           </div>
                           <div className="session-datetime" style={{
                             fontSize: '13px',
@@ -779,7 +686,7 @@ export function SessionsPage() {
                             color: '#3b82f6',
                             fontWeight: '600'
                           }}>
-                            Équipe {session.ageCategory || 'Seniors'} • Niveau Intermédiaire
+                            {t('sessions.team')} {session.ageCategory || t('sessions.filters.seniors')} • Niveau Intermédiaire
                           </div>
                         </div>
                         <div className={`session-status ${statusInfo.class}`} style={{
@@ -820,7 +727,7 @@ export function SessionsPage() {
                             lineHeight: '1.5',
                             marginBottom: '10px'
                           }}>
-                            {session.description || 'Pas de description disponible.'}
+                            {session.description || t('sessions.noDescription')}
                           </div>
                           <div className="session-stats" style={{
                             display: 'flex',
@@ -900,7 +807,7 @@ export function SessionsPage() {
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
                               fontSize: '14px'
-                            }} title="Continuer la séance">
+                            }} title={t('sessions.continue')}>
                               ▶️
                             </div>
                           )}
@@ -923,7 +830,7 @@ export function SessionsPage() {
                               transition: 'all 0.3s ease',
                               fontSize: '14px',
                               color: '#94a3b8'
-                            }} title="Voir détails">
+                            }} title={t('sessions.viewDetails')}>
                             👁️
                           </div>
                           <div 
@@ -945,7 +852,7 @@ export function SessionsPage() {
                               transition: 'all 0.3s ease',
                               fontSize: '14px',
                               color: '#94a3b8'
-                            }} title="Modifier">
+                            }} title={t('sessions.edit')}>
                             ✏️
                           </div>
                           <div className="control-btn" style={{
@@ -961,7 +868,7 @@ export function SessionsPage() {
                             transition: 'all 0.3s ease',
                             fontSize: '14px',
                             color: '#94a3b8'
-                          }} title="Partager">
+                          }} title={t('sessions.share')}>
                             📤
                           </div>
                         </div>
@@ -994,46 +901,6 @@ export function SessionsPage() {
         )}
       </div>
 
-      {/* CSS pour les animations et effets hover */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        .session-card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(59, 130, 246, 0.3);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .control-btn:hover {
-          background: rgba(59, 130, 246, 0.15) !important;
-          border-color: rgba(59, 130, 246, 0.3) !important;
-          color: #3b82f6 !important;
-        }
-        
-        .control-btn.primary:hover {
-          transform: scale(1.05);
-        }
-        
-        select option {
-          background-color: #1e293b !important;
-          color: white !important;
-        }
-        
-        @media (max-width: 768px) {
-          .session-content {
-            grid-template-columns: 1fr !important;
-          }
-          
-          .session-header {
-            flex-direction: column !important;
-            gap: 8px !important;
-            align-items: flex-start !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

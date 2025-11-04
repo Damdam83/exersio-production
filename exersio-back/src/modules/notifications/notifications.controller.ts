@@ -1,21 +1,23 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Body, 
-  Query, 
-  Param, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Query,
+  Param,
   UseGuards,
   Request
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../../common/auth/roles.guard';
+import { Roles } from '../../common/auth/roles.decorator';
 import { NotificationsService } from './notifications.service';
 import { NotificationSchedulerService } from './notification-scheduler.service';
-import { 
-  RegisterPushTokenDto, 
-  UpdateNotificationSettingsDto, 
-  NotificationQueryDto 
+import {
+  RegisterPushTokenDto,
+  UpdateNotificationSettingsDto,
+  NotificationQueryDto
 } from './dto/notification.dto';
 
 @Controller('notifications')
@@ -30,41 +32,41 @@ export class NotificationsController {
 
   @Get()
   async getUserNotifications(@Request() req: any, @Query() query: NotificationQueryDto) {
-    return await this.notificationsService.getUserNotifications(req.user.userId, query);
+    return await this.notificationsService.getUserNotifications(req.user.id, query);
   }
 
   @Put(':id/read')
   async markAsRead(@Request() req: any, @Param('id') notificationId: string) {
-    return await this.notificationsService.markAsRead(req.user.userId, notificationId);
+    return await this.notificationsService.markAsRead(req.user.id, notificationId);
   }
 
   @Put('read-all')
   async markAllAsRead(@Request() req: any) {
-    return await this.notificationsService.markAllAsRead(req.user.userId);
+    return await this.notificationsService.markAllAsRead(req.user.id);
   }
 
   // ===== GESTION DES PUSH TOKENS =====
 
   @Post('push-token')
   async registerPushToken(@Request() req: any, @Body() dto: RegisterPushTokenDto) {
-    return await this.notificationsService.registerPushToken(req.user.userId, dto);
+    return await this.notificationsService.registerPushToken(req.user.id, dto);
   }
 
   @Get('push-tokens')
   async getUserPushTokens(@Request() req: any) {
-    return await this.notificationsService.getUserPushTokens(req.user.userId);
+    return await this.notificationsService.getUserPushTokens(req.user.id);
   }
 
   // ===== PARAMÈTRES NOTIFICATIONS =====
 
   @Get('settings')
   async getNotificationSettings(@Request() req: any) {
-    return await this.notificationsService.getUserNotificationSettings(req.user.userId);
+    return await this.notificationsService.getUserNotificationSettings(req.user.id);
   }
 
   @Put('settings')
   async updateNotificationSettings(@Request() req: any, @Body() dto: UpdateNotificationSettingsDto) {
-    return await this.notificationsService.updateNotificationSettings(req.user.userId, dto);
+    return await this.notificationsService.updateNotificationSettings(req.user.id, dto);
   }
 
   // ===== ENDPOINTS ADMIN/DEBUG =====
@@ -79,6 +81,8 @@ export class NotificationsController {
   // ===== ENDPOINTS ADMIN =====
 
   @Post('admin/send-notification')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async sendAdminNotification(
     @Request() req: any,
     @Body() body: {
@@ -90,8 +94,7 @@ export class NotificationsController {
     }
   ) {
     try {
-      // TODO: Add admin authorization check
-      const userId = req.user.userId;
+      const userId = req.user.id;
       
       if (body.recipientIds && body.recipientIds.length > 0) {
         // Envoyer à des utilisateurs spécifiques
@@ -127,9 +130,10 @@ export class NotificationsController {
   }
 
   @Get('admin/stats')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async getNotificationStats(@Request() req: any) {
     try {
-      // TODO: Add admin authorization check
       const stats = await this.notificationsService.getNotificationStats();
       return { success: true, data: stats };
     } catch (error) {
@@ -138,11 +142,23 @@ export class NotificationsController {
   }
 
   @Get('admin/recent')
-  async getRecentNotifications(@Request() req: any) {
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async getRecentNotifications(
+    @Request() req: any,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string
+  ) {
     try {
-      // TODO: Add admin authorization check
-      const notifications = await this.notificationsService.getRecentNotifications(50);
-      return { success: true, data: notifications };
+      const limitNum = limit ? parseInt(limit, 10) : 50;
+      const offsetNum = offset ? parseInt(offset, 10) : 0;
+
+      const { notifications, total } = await this.notificationsService.getRecentNotifications(limitNum, offsetNum);
+      return {
+        success: true,
+        data: notifications,
+        total: total
+      };
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
     }

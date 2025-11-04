@@ -1,25 +1,25 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { useNavigation } from "../contexts/NavigationContext";
 
-import { Navigation } from "./Navigation";
-import { PageLayout } from "./PageLayout";
+import { AdminNotificationsPage } from "./AdminNotificationsPage";
 import { MobileLayout } from "./MobileLayout";
 import { NotificationSettingsPage } from "./NotificationSettingsPage";
-import { AdminNotificationsPage } from "./AdminNotificationsPage";
+import { PageLayout } from "./PageLayout";
 // Import des composants lazy pour optimisation du bundle
+import { useExercises } from "../contexts/ExercisesContext";
+import { useSessions } from "../contexts/SessionsContext";
 import {
-  HomePage,
-  SessionsPage,
+  ExerciseCreatePage,
+  ExerciseDetailView,
   ExercisesPage,
   HistoryPage,
+  HomePage,
   ProfilePage,
-  ExerciseCreatePage,
   SessionCreatePage,
   SessionDetailView,
-  ExerciseDetailView
+  SessionsPage
 } from "../utils/lazyComponents";
-import { useSessions } from "../contexts/SessionsContext";
-import { useExercises } from "../contexts/ExercisesContext";
+import { Navigation } from "./Navigation";
 
 interface MainLayoutProps {
   isMobile: boolean;
@@ -69,7 +69,6 @@ function SessionDetailPageWrapper({ sessionId }: { sessionId?: string }) {
       onBack={() => setCurrentPage('sessions')}
       onUpdateSession={sessionsActions.updateSession}
       onExportSession={(session) => {
-        console.log('Export session:', session);
         // Ici on pourrait implémenter l'export
       }}
       onViewExercise={(exerciseId) => {
@@ -94,8 +93,10 @@ function SessionDetailPageWrapper({ sessionId }: { sessionId?: string }) {
 // Wrapper pour ExerciseDetailView avec gestion des données
 function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
   const { setCurrentPage, navigate, goBack, params } = useNavigation();
-  const { exercises } = useExercises();
+  const { exercises, actions: exerciseActions } = useExercises();
   const { state: sessionsState } = useSessions();
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
 
   // Handle preview mode
   if (exerciseId === 'preview_temp' && params?.previewData) {
@@ -133,7 +134,7 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
             setCurrentPage('sessions');
           }}
           onToggleFavorite={() => {
-            console.log('Preview mode: cannot toggle favorite');
+            // Preview mode: favorites disabled
           }}
           isFavorite={false}
           contextInfo={contextInfo}
@@ -142,11 +143,40 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
     );
   }
 
+  // Charger l'exercice depuis l'API si absent du contexte
+  useEffect(() => {
+    const loadExercise = async () => {
+      // Ne charger que si :
+      // 1. On a un exerciceId
+      // 2. L'exercice n'est pas dans la liste
+      // 3. On n'a pas déjà tenté de charger
+      // 4. Pas déjà en cours de chargement
+      if (exerciseId && !exercises.find(ex => ex.id === exerciseId) && !hasAttemptedLoad && !isLoading) {
+        setIsLoading(true);
+        setHasAttemptedLoad(true);
+        try {
+          await exerciseActions.loadExerciseById(exerciseId); // Charger UN SEUL exercice
+        } catch (error) {
+          console.error('Erreur lors du chargement de l\'exercice:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadExercise();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exerciseId]); // Ne se déclenche qu'au changement d'ID
+
+  // Reset hasAttemptedLoad quand l'exerciceId change
+  useEffect(() => {
+    setHasAttemptedLoad(false);
+  }, [exerciseId]);
+
   if (!exerciseId) {
     return (
       <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
         <p>Exercice non trouvé</p>
-        <button 
+        <button
           onClick={() => setCurrentPage('exercises')}
           style={{ marginTop: '16px', padding: '8px 16px', background: 'none', border: '1px solid #3b82f6', color: '#3b82f6', borderRadius: '6px', cursor: 'pointer' }}
         >
@@ -158,11 +188,19 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
 
   const exercise = exercises.find(ex => ex.id === exerciseId);
 
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+        <p>Chargement de l'exercice...</p>
+      </div>
+    );
+  }
+
   if (!exercise) {
     return (
       <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
         <p>Exercice non trouvé</p>
-        <button 
+        <button
           onClick={() => setCurrentPage('exercises')}
           style={{ marginTop: '16px', padding: '8px 16px', background: 'none', border: '1px solid #3b82f6', color: '#3b82f6', borderRadius: '6px', cursor: 'pointer' }}
         >
@@ -191,7 +229,7 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
         setCurrentPage('sessions');
       }}
       onToggleFavorite={() => {
-        console.log('Toggle favorite for exercise:', exerciseId);
+        // TODO: Implement toggle favorite
       }}
       isFavorite={false}
       contextInfo={contextInfo}

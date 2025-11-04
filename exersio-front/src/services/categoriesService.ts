@@ -33,10 +33,12 @@ export class CategoriesService {
   
   /**
    * Récupérer toutes les catégories d'exercice
+   * @param sportId - Filtrer par sport (optionnel)
    */
-  async getExerciseCategories(): Promise<ExerciseCategory[]> {
+  async getExerciseCategories(sportId?: string): Promise<ExerciseCategory[]> {
     try {
-      return await api.get<ExerciseCategory[]>('/categories/exercise-categories');
+      const params = sportId ? { sportId } : undefined;
+      return await api.get<ExerciseCategory[]>('/categories/exercise-categories', params);
     } catch (error) {
       console.error('Get exercise categories error:', error);
       throw error;
@@ -45,10 +47,12 @@ export class CategoriesService {
 
   /**
    * Récupérer toutes les catégories d'âge
+   * @param sportId - Filtrer par sport (optionnel)
    */
-  async getAgeCategories(): Promise<AgeCategory[]> {
+  async getAgeCategories(sportId?: string): Promise<AgeCategory[]> {
     try {
-      return await api.get<AgeCategory[]>('/categories/age-categories');
+      const params = sportId ? { sportId } : undefined;
+      return await api.get<AgeCategory[]>('/categories/age-categories', params);
     } catch (error) {
       console.error('Get age categories error:', error);
       throw error;

@@ -32,6 +32,7 @@ describe('AuthService', () => {
     emailVerificationExpires: null,
     passwordResetToken: null,
     passwordResetExpires: null,
+    preferredSportId: null,
     club: null,
   };
 

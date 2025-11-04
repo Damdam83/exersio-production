@@ -1,0 +1,197 @@
+{
+  "Volley-ball": [
+    {
+      "categorie": "M7 / Baby",
+      "age": "≤7 ans",
+      "libelle": "Initiation"
+    },
+    {
+      "categorie": "M9 / Pupilles / Poussins",
+      "age": "8–9 ans",
+      "libelle": "Débutants"
+    },
+    {
+      "categorie": "M11 / Poussin / Benjamins",
+      "age": "10–11 ans",
+      "libelle": "Jeunes en progression"
+    },
+    {
+      "categorie": "M13 / Benjamin",
+      "age": "12–13 ans",
+      "libelle": "Jeunes confirmés"
+    },
+    {
+      "categorie": "M15 / Minime",
+      "age": "14–15 ans",
+      "libelle": "Pré-compétition"
+    },
+    {
+      "categorie": "M18 / Cadet",
+      "age": "16–18 ans",
+      "libelle": "Compétition jeunes"
+    },
+    {
+      "categorie": "M21 / Junior",
+      "age": "19–21 ans",
+      "libelle": "Post formation"
+    },
+    {
+      "categorie": "Senior",
+      "age": "22 ans et +",
+      "libelle": "Compétition adulte"
+    },
+    {
+      "categorie": "Master / Vétéran",
+      "age": "selon fédération",
+      "libelle": "Adultes expérimentés"
+    }
+  ],
+  "Football": [
+    {
+      "categorie": "U6–U7",
+      "age": "≤7 ans",
+      "libelle": "Initiation"
+    },
+    {
+      "categorie": "U8–U10",
+      "age": "8–10 ans",
+      "libelle": "École de foot"
+    },
+    {
+      "categorie": "U11–U13",
+      "age": "11–13 ans",
+      "libelle": "Pré-formation"
+    },
+    {
+      "categorie": "U14–U15",
+      "age": "14–15 ans",
+      "libelle": "Formation"
+    },
+    {
+      "categorie": "U16–U17",
+      "age": "16–17 ans",
+      "libelle": "Pré-compétition"
+    },
+    {
+      "categorie": "U18–U19",
+      "age": "18–19 ans",
+      "libelle": "Compétition jeunes"
+    },
+    {
+      "categorie": "Senior",
+      "age": "20 ans et +",
+      "libelle": "Compétition adulte"
+    }
+  ],
+  "Basketball": [
+    {
+      "categorie": "Benjamin",
+      "age": "10–12 ans",
+      "libelle": "Jeunes débutants"
+    },
+    {
+      "categorie": "Minime",
+      "age": "13–14 ans",
+      "libelle": "Jeunes intermédiaires"
+    },
+    {
+      "categorie": "Cadet",
+      "age": "15–16 ans",
+      "libelle": "Compétition jeunes"
+    },
+    {
+      "categorie": "Junior",
+      "age": "17–18 ans",
+      "libelle": "Pré-senior"
+    },
+    {
+      "categorie": "Senior",
+      "age": "19 ans et +",
+      "libelle": "Compétition adulte"
+    },
+    {
+      "categorie": "Vétéran / Master",
+      "age": "selon ligue",
+      "libelle": "Adultes expérimentés"
+    }
+  ],
+  "Handball": [
+    {
+      "categorie": "Poussins",
+      "age": "8–10 ans",
+      "libelle": "Initiation"
+    },
+    {
+      "categorie": "Benjamin",
+      "age": "11–12 ans",
+      "libelle": "Jeunes en formation"
+    },
+    {
+      "categorie": "Minime",
+      "age": "13–14 ans",
+      "libelle": "Compétition jeunes"
+    },
+    {
+      "categorie": "Cadet",
+      "age": "15–16 ans",
+      "libelle": "Compétition avancée"
+    },
+    {
+      "categorie": "Junior",
+      "age": "17–18 ans",
+      "libelle": "Pré-senior"
+    },
+    {
+      "categorie": "Senior",
+      "age": "19 ans et +",
+      "libelle": "Compétition adulte"
+    },
+    {
+      "categorie": "Vétéran / Master",
+      "age": "selon fédération",
+      "libelle": "Adultes expérimentés"
+    }
+  ],
+  "Tennis": [
+    {
+      "categorie": "M7 / Baby tennis",
+      "age": "≤7 ans",
+      "libelle": "Initiation ludique"
+    },
+    {
+      "categorie": "M9 / Mini-tennis",
+      "age": "8–9 ans",
+      "libelle": "Découverte"
+    },
+    {
+      "categorie": "M11",
+      "age": "10–11 ans",
+      "libelle": "Jeunes en progression"
+    },
+    {
+      "categorie": "M13",
+      "age": "12–13 ans",
+      "libelle": "Jeunes confirmés"
+    },
+    {
+      "categorie": "M15",
+      "age": "14–15 ans",
+      "libelle": "Compétition jeunes"
+    },
+    {
+      "categorie": "M18",
+      "age": "16–18 ans",
+      "libelle": "Pré-senior"
+    },
+    {
+      "categorie": "Senior",
+      "age": "19 ans et +",
+      "libelle": "Compétition adulte"
+    },
+    {
+      "categorie": "Vétéran",
+      "age": "selon fédération",
+      "libelle": "Adultes expérimentés"
+    }
+  ]
+}

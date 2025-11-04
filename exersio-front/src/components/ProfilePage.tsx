@@ -1,25 +1,31 @@
+import { AlertTriangle, Bell, Building2, Check, Copy, Crown, Edit3, Globe, Mail, Plus, Settings, Shield, Trash2, User as UserIcon, UserPlus, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Badge } from './ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Textarea } from './ui/textarea';
-import { Mail, Plus, Copy, Check, X, Settings, Shield, Crown, UserPlus, Users, User as UserIcon, Edit3, Building2, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { clubsService } from '../services/clubsService';
 import { invitationsService } from '../services/invitationsService';
 import { usersService } from '../services/usersService';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../hooks/useLanguage';
+
 
 export function ProfilePage() {
   const { state: auth, actions: authActions } = useAuth();
   const { setCurrentPage } = useNavigation();
+  const { t } = useTranslation();
+  const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isCreatingClub, setIsCreatingClub] = useState(false);
   const [isInvitingUser, setIsInvitingUser] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [joinClubCode, setJoinClubCode] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [invitations, setInvitations] = useState<typeof import('../types').Invitation[]>([]);
@@ -30,10 +36,11 @@ export function ProfilePage() {
     const loadInvitations = async () => {
       if (auth.user) {
         try {
-          const response = await invitationsService.getByEmail(auth.user.email);
+          // Le backend filtre automatiquement par l'email du JWT, pas besoin de passer l'email
+          const response = await invitationsService.list(1, 50);
           setInvitations(response?.data || []);
         } catch (error) {
-          console.error('Erreur lors du chargement des invitations:', error);
+          console.error(t('profile.errors.loadInvitations'), error);
           setInvitations([]);
         }
       }
@@ -44,7 +51,7 @@ export function ProfilePage() {
   if (!auth.user) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-muted-foreground">Chargement du profil...</p>
+        <p className="text-muted-foreground">{t('profile.loading')}</p>
       </div>
     );
   }
@@ -71,7 +78,7 @@ export function ProfilePage() {
       authActions.updateUser(profileForm);
       setIsEditingProfile(false);
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du profil:', error);
+      console.error(t('profile.errors.updateProfile'), error);
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +95,7 @@ export function ProfilePage() {
       setClubForm({ name: '', description: '' });
       setIsCreatingClub(false);
     } catch (error) {
-      console.error('Erreur lors de la création du club:', error);
+      console.error(t('profile.errors.createClub'), error);
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +116,7 @@ export function ProfilePage() {
       setInviteForm({ email: '', role: 'assistant' });
       setIsInvitingUser(false);
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'invitation:', error);
+      console.error(t('profile.errors.sendInvitation'), error);
     } finally {
       setIsLoading(false);
     }
@@ -118,19 +125,20 @@ export function ProfilePage() {
   const handleRespondToInvitation = async (invitationId: string, response: 'accepted' | 'declined') => {
     setIsLoading(true);
     try {
-      await invitationsService.respond(invitationId, { status: response });
-      
+      // Utiliser updateStatus au lieu de respond (qui n'existe plus)
+      await invitationsService.updateStatus(invitationId, response);
+
       // Mettre à jour la liste des invitations localement
-      setInvitations(prev => prev.map(inv => 
+      setInvitations(prev => prev.map(inv =>
         inv.id === invitationId ? { ...inv, status: response } : inv
       ));
-      
+
       // Si acceptée, recharger le profil pour récupérer le club
       if (response === 'accepted') {
         await authActions.initialize();
       }
     } catch (error) {
-      console.error('Erreur lors de la réponse à l\'invitation:', error);
+      console.error(t('profile.errors.respondInvitation'), error);
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +151,7 @@ export function ProfilePage() {
       await authActions.initialize(); // Recharger pour récupérer le nouveau club
       setJoinClubCode('');
     } catch (error) {
-      console.error('Erreur lors de l\'adhésion au club:', error);
+      console.error(t('profile.errors.joinClub'), error);
     } finally {
       setIsLoading(false);
     }
@@ -160,8 +168,28 @@ export function ProfilePage() {
         setCopiedCode(true);
         setTimeout(() => setCopiedCode(false), 2000); // Reset après 2 secondes
       } catch (error) {
-        console.error('Erreur lors de la copie:', error);
+        console.error(t('profile.errors.copy'), error);
       }
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const deleteKeyword = currentLanguage === 'en' ? 'DELETE' : 'SUPPRIMER';
+    if (deleteConfirmText !== deleteKeyword) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await usersService.deleteOwnAccount();
+      // Déconnexion et redirection vers la page d'accueil
+      await authActions.logout();
+      setIsDeletingAccount(false);
+    } catch (error) {
+      console.error(t('profile.errors.deleteAccount'), error);
+      alert(t('profile.errors.deleteAccountRetry'));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -203,9 +231,9 @@ export function ProfilePage() {
               <UserIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Mon compte</h1>
+              <h1 className="text-2xl font-bold text-white">{t('profile.myAccount')}</h1>
               <p className="text-gray-400">
-                Gérez votre profil, club et invitations
+                {t('profile.manageProfile')}
               </p>
             </div>
           </div>
@@ -227,7 +255,7 @@ export function ProfilePage() {
               <Mail className="w-4 h-4 text-white" />
             </div>
             <h2 className="text-xl font-bold text-orange-300">
-              Invitations en attente ({pendingInvitations.length})
+              {t('profile.pendingInvitations')} ({pendingInvitations.length})
             </h2>
           </div>
           <div className="space-y-3">
@@ -239,10 +267,10 @@ export function ProfilePage() {
                 <div>
                   <p className="font-medium text-white">{invitation.clubName}</p>
                   <p className="text-sm text-gray-300">
-                    Invité par {invitation.invitedByName} en tant que {invitation.role}
+                    {t('profile.invitedBy', { name: invitation.invitedByName, role: invitation.role })}
                   </p>
                   <p className="text-xs text-gray-400">
-                    Expire le {new Date(invitation.expiresAt).toLocaleDateString()}
+                    {t('profile.expiresOn', { date: new Date(invitation.expiresAt).toLocaleDateString() })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -252,7 +280,7 @@ export function ProfilePage() {
                     className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]"
                   >
                     <Check className="w-3 h-3 mr-1" />
-                    Accepter
+                    {t('profile.accept')}
                   </Button>
                   <Button
                     size="sm"
@@ -261,7 +289,7 @@ export function ProfilePage() {
                     className="border-white/20 text-white hover:bg-white/10"
                   >
                     <X className="w-3 h-3 mr-1" />
-                    Refuser
+                    {t('profile.decline')}
                   </Button>
                 </div>
               </div>
@@ -283,7 +311,7 @@ export function ProfilePage() {
             <div className="w-8 h-8 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-xl flex items-center justify-center">
               <UserIcon className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-white">Profil utilisateur</h2>
+            <h2 className="text-xl font-bold text-white">{t('profile.title')}</h2>
           </div>
           <Button variant="outline" onClick={() => setIsEditingProfile(true)} className="border-white/20 text-white hover:bg-white/10">
             <Settings className="w-4 h-4 mr-2" />
@@ -338,6 +366,56 @@ export function ProfilePage() {
         </div>
       </div>
 
+      {/* Préférences */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '20px',
+        padding: '32px'
+      }}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-xl flex items-center justify-center">
+            <Settings className="w-4 h-4 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-white">{t('profile.preferences')}</h2>
+        </div>
+
+        {/* Sélecteur de langue */}
+        <div className="mb-6">
+          <h4 className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-3">
+            <div className="w-4 h-4 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-sm flex items-center justify-center">
+              <Globe className="w-2 h-2 text-white" />
+            </div>
+            {t('profile.language')}
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            {availableLanguages.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => changeLanguage(lang.code)}
+                className={`p-4 rounded-xl border transition-all ${
+                  currentLanguage === lang.code
+                    ? 'bg-gradient-to-r from-[#00d4aa]/20 to-[#00b894]/20 border-[#00d4aa]/50 text-white'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-2xl">{lang.flag}</span>
+                  <div className="text-left">
+                    <div className="font-semibold">{lang.name}</div>
+                    <div className="text-xs opacity-70">{lang.code.toUpperCase()}</div>
+                  </div>
+                  {currentLanguage === lang.code && (
+                    <Check className="w-5 h-5 ml-auto text-[#00d4aa]" />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Gestion du club */}
       <div style={{
         background: 'rgba(255, 255, 255, 0.08)',
@@ -351,7 +429,7 @@ export function ProfilePage() {
             <div className="w-8 h-8 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-xl flex items-center justify-center">
               <Users className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-white">Mon club</h2>
+            <h2 className="text-xl font-bold text-white">{t('profile.myClub')}</h2>
           </div>
           {!auth.club && (
             <Button variant="outline" onClick={() => setIsCreatingClub(true)} className="border-white/20 text-white hover:bg-white/10">
@@ -441,7 +519,7 @@ export function ProfilePage() {
               <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-full flex items-center justify-center opacity-50">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="font-medium mb-2 text-white text-xl">Aucun club</h3>
+              <h3 className="font-medium mb-2 text-white text-xl">{t('profile.noClub')}</h3>
               <p className="text-gray-400 mb-8">
                 Créez un club ou rejoignez-en un avec un code d'invitation
               </p>
@@ -528,6 +606,32 @@ export function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Zone de danger - Suppression de compte (RGPD) */}
+      <div style={{
+        background: 'rgba(220, 38, 38, 0.1)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(220, 38, 38, 0.3)',
+        borderRadius: '20px',
+        padding: '32px'
+      }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-red-600 to-red-700 rounded-xl flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-red-400">Zone de danger</h2>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setIsDeletingAccount(true)}
+            className="border-red-500/50 text-red-400 hover:bg-red-500/20"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Supprimer le compte
+          </Button>
+        </div>
+      </div>
 
       {/* Modal pour modification du profil */}
       <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
@@ -722,7 +826,89 @@ export function ProfilePage() {
         </DialogContent>
       </Dialog>
 
+      {/* Modal pour suppression de compte (RGPD) */}
+      <Dialog open={isDeletingAccount} onOpenChange={setIsDeletingAccount}>
+        <DialogContent className="max-w-md w-[calc(100vw-2rem)] mx-auto text-white" style={{
+          background: 'rgba(220, 38, 38, 0.15)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(220, 38, 38, 0.3)',
+          borderRadius: '20px'
+        }}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 sm:gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-r from-red-600 to-red-700 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              </div>
+              <span className="text-base sm:text-lg font-semibold text-red-400">Supprimer définitivement mon compte</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
+            <div className="p-3 sm:p-4 rounded-lg" style={{
+              background: 'rgba(220, 38, 38, 0.2)',
+              border: '1px solid rgba(220, 38, 38, 0.4)'
+            }}>
+              <p className="text-white text-xs sm:text-sm font-semibold mb-2">⚠️ Attention : Cette action est irréversible !</p>
+              <p className="text-gray-300 text-xs sm:text-sm">
+                Toutes vos données seront définitivement supprimées et ne pourront pas être récupérées :
+              </p>
+              <ul className="text-gray-300 text-xs sm:text-sm space-y-1 mt-2 ml-4 list-disc">
+                <li>Profil et informations personnelles</li>
+                <li>Exercices créés</li>
+                <li>Séances d'entraînement</li>
+                <li>Favoris et préférences</li>
+                <li>Notifications</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-300 text-xs sm:text-sm">
+                Pour confirmer, tapez <span className="font-mono font-bold text-red-400">SUPPRIMER</span> ci-dessous :
+              </Label>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+                className="bg-white/5 border-red-500/50 text-white placeholder-gray-400 mt-1 font-mono text-sm"
+                placeholder="SUPPRIMER"
+                autoComplete="off"
+              />
+              <p className="text-[10px] sm:text-xs text-gray-400 italic">
+                Conformément au RGPD (Droit à l'oubli), cette action supprimera toutes vos données personnelles de nos serveurs.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-red-500/30">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeletingAccount(false);
+                setDeleteConfirmText('');
+              }}
+              className="border-white/20 text-white hover:bg-white/10 w-full sm:w-auto"
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== 'SUPPRIMER' || isLoading}
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto text-sm"
+            >
+              {isLoading ? (
+                <>Suppression en cours...</>
+              ) : (
+                <>
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
+                  Supprimer définitivement
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
         </div>
+
       </div>
     </div>
   );

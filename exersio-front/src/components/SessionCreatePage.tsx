@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useExercises } from '../contexts/ExercisesContext';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -8,6 +9,7 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { MobileHeader } from './MobileHeader';
 
 export function SessionCreatePage() {
+  const { t } = useTranslation();
   const { actions: sessionsActions, state: sessionsState, sessionDraft } = useSessions();
   const { state: authState } = useAuth();
   const { setCurrentPage, params, navigateWithReturn } = useNavigation();
@@ -292,7 +294,7 @@ export function SessionCreatePage() {
         }}></div>
 
         <MobileHeader 
-          title={isEditMode ? "Modifier séance" : "Nouvelle séance"}
+          title={isEditMode ? t('sessions.modifyTitle') : t('sessions.newTitle')}
           icon={isEditMode ? "✏️" : "✨"}
           onBack={() => setCurrentPage('sessions')}
           actions={[
@@ -311,34 +313,32 @@ export function SessionCreatePage() {
           ]}
         />
 
-        <div style={{ padding: '8px', paddingTop: '80px' }}>
+        <div className="p-2 sm:p-3 pt-20">
           {/* Informations générales */}
-          <div style={{
+          <div className="p-4 sm:p-5 mb-3 sm:mb-4" style={{
             background: 'rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '16px'
+            borderRadius: '16px'
           }}>
-            <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 text-sm sm:text-base font-bold">
               <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #3b82f6, #10b981)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>📝</div>
-              Informations générales
+              {t('sessions.generalInfo')}
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Nom de la séance *</label>
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{t('sessions.sessionNameRequired')}</label>
               <input ref={nameInputRef} type="text" placeholder="Ex: Entraînement Seniors" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }} />
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Description</label>
-              <textarea ref={descriptionInputRef} placeholder="Objectifs et focus de la séance..." style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{t('sessions.description')}</label>
+              <textarea ref={descriptionInputRef} placeholder={t('sessions.descriptionPlaceholder')} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Catégorie d'âge</label>
+                <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{t('sessions.ageCategory')}</label>
                 <select value={ageCategory} onChange={(e) => setAgeCategory(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}>
                   {categoriesState.ageCategories.data.map(category => (
                     <option key={category.id} value={category.name.toLowerCase()}>{category.name}</option>
@@ -354,7 +354,7 @@ export function SessionCreatePage() {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Niveau</label>
+                <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">Niveau</label>
                 <select value={level} onChange={(e) => setLevel(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}>
                   {categoriesState.levels.data.map(levelOption => (
                     <option key={levelOption.id} value={levelOption.name.toLowerCase()}>{levelOption.name}</option>
@@ -371,14 +371,14 @@ export function SessionCreatePage() {
               </div>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Date et heure</label>
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{t('sessions.dateTime')}</label>
               <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Durée</label>
+                <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">Durée</label>
                 <select value={sessionDuration} onChange={(e) => setSessionDuration(parseInt(e.target.value))} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}>
                   <option value={60}>1h00</option>
                   <option value={90}>1h30</option>
@@ -387,7 +387,7 @@ export function SessionCreatePage() {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Participants</label>
+                <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">Participants</label>
                 <div className="custom-number-input">
                   <input type="number" value={participants} onChange={(e) => setParticipants(parseInt(e.target.value) || 0)} min="1" max="30" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }} />
                   <div className="custom-number-buttons">
@@ -398,27 +398,26 @@ export function SessionCreatePage() {
               </div>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Objectifs de la séance</label>
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{t('sessions.objectives')}</label>
               <textarea ref={objectivesInputRef} placeholder="Lister les objectifs pédagogiques..." style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Matériel nécessaire</label>
+              <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">Matériel nécessaire</label>
               <textarea ref={equipmentInputRef} placeholder="Lister le matériel requis..." style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
           </div>
 
           {/* Constructeur de séance mobile */}
-          <div style={{
+          <div className="p-4 sm:p-5" style={{
             background: 'rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '16px',
-            padding: '20px'
+            borderRadius: '16px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-              <div style={{ fontSize: '16px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="flex justify-between items-center mb-3 sm:mb-4 pb-2 sm:pb-3" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base font-bold">
                 <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #3b82f6, #10b981)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>🏗️</div>
                 Exercices
               </div>
@@ -491,7 +490,7 @@ export function SessionCreatePage() {
               <div style={{ padding: '16px' }}>
                 <div style={{ position: 'relative', marginBottom: '16px' }}>
                   <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '14px' }}>🔍</div>
-                  <input type="text" value={exerciseSearch} onChange={(e) => setExerciseSearch(e.target.value)} placeholder="Rechercher..." style={{ width: '100%', padding: '12px 16px 12px 40px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', color: 'white', fontSize: '14px', outline: 'none' }} />
+                  <input type="text" value={exerciseSearch} onChange={(e) => setExerciseSearch(e.target.value)} placeholder={t('sessions.searchExercises')} style={{ width: '100%', padding: '12px 16px 12px 40px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', color: 'white', fontSize: '14px', outline: 'none' }} />
                 </div>
                 
                 {/* Filtres mobile */}
@@ -507,7 +506,7 @@ export function SessionCreatePage() {
               {/* Liste exercices mobile */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
                 {filteredExercises.length === 0 ? (
-                  <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>Aucun exercice trouvé</p>
+                  <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>{t('sessions.noExercisesFound')}</p>
                 ) : (
                   filteredExercises.map(exercise => (
                     <div key={exercise.id} onClick={() => addExerciseToSession(exercise.id)} style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '16px', marginBottom: '12px', cursor: 'pointer', opacity: sessionExercises.includes(exercise.id) ? 0.5 : 1 }}>
@@ -595,7 +594,7 @@ export function SessionCreatePage() {
                 📅 Séances
               </button>
               <span>›</span>
-              <span>{isEditMode ? 'Modifier séance' : 'Nouvelle séance'}</span>
+              <span>{isEditMode ? t('sessions.modifyTitle') : t('sessions.newTitle')}</span>
             </div>
             <div className='flex items-center'>
               <h1 style={{
@@ -614,7 +613,7 @@ export function SessionCreatePage() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}>
-              {isEditMode ? ' Modifier la Séance' : 'Créer une Séance'}
+              {isEditMode ? t('sessions.modifySession') : t('sessions.createSession')}
             </h1>
             </div>
             
@@ -1430,7 +1429,7 @@ export function SessionCreatePage() {
               {/* Liste des exercices */}
               <div>
                 {filteredExercises.length === 0 ? (
-                  <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>Aucun exercice trouvé</p>
+                  <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>{t('sessions.noExercisesFound')}</p>
                 ) : (
                   filteredExercises.map(exercise => (
                     <div

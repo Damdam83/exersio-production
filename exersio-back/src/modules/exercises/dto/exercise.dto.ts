@@ -5,8 +5,15 @@ export class CreateExerciseDto {
   @ApiProperty({ example: 'Service / Réception' }) @IsString() name: string;
   @ApiProperty({ example: 'Échauffement avec passes' }) @IsString() description: string;
   @ApiProperty({ example: 15, minimum: 1 }) @IsInt() @Min(1) duration: number;
-  @ApiProperty({ example: 'échauffement' }) @IsString() category: string;
-  @ApiProperty({ example: 'tous' }) @IsString() ageCategory: string;
+
+  // Anciens champs (rétrocompatibilité)
+  @ApiPropertyOptional({ example: 'échauffement', deprecated: true }) @IsOptional() @IsString() category?: string;
+  @ApiPropertyOptional({ example: 'tous', deprecated: true }) @IsOptional() @IsString() ageCategory?: string;
+
+  // Nouveaux champs (préférés)
+  @ApiPropertyOptional({ example: 'cat_cuid123' }) @IsOptional() @IsString() categoryId?: string;
+  @ApiPropertyOptional({ example: 'age_cuid456' }) @IsOptional() @IsString() ageCategoryId?: string;
+
   @ApiProperty({ example: 'volleyball' }) @IsString() sport: string;
   @ApiProperty({ type: [String], example: ['Étape 1','Étape 2'] }) @IsArray() instructions: string[];
   @ApiPropertyOptional({ example: { shapes: [] } }) @IsOptional() fieldData?: any;

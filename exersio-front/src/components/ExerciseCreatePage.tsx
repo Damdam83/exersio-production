@@ -1,15 +1,18 @@
 import { ChevronRight, Eye, Home, Plus, Save, Upload } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Exercise } from '../types';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 
+import { SportType } from '../constants/sportsConfig';
+import { SportCourt } from './ExerciseEditor/SportCourt';
 import { Toolbar } from './ExerciseEditor/Toolbar';
-import { VolleyballCourt } from './ExerciseEditor/VolleyballCourt';
+import { SportSelectionModal } from './SportSelectionModal';
 
-import { Arrow, Ball, FIELD_AGE_CATEGORIES, FIELD_CATEGORIES, FIELD_INTENSITIES, roleLabels as importedRoleLabels, Player, PlayerDisplayMode, TAG_SUGGESTIONS, Zone } from '../constants/exerciseEditor';
+import { Arrow, Ball, FIELD_INTENSITIES, roleLabels as importedRoleLabels, Player, PlayerDisplayMode, TAG_SUGGESTIONS, Zone } from '../constants/exerciseEditor';
 import { convertToFieldData, getEventPosition, initializeArrows, initializeBalls, initializePlayers, initializeZones } from '../utils/exerciseEditorHelpers';
 
 // Backup roleLabels au cas où l'import ne marche pas
@@ -24,39 +27,115 @@ const backupRoleLabels = {
 
 const roleLabels = importedRoleLabels || backupRoleLabels;
 
+import { useAuth } from '../contexts/AuthContext';
+import { useCategories } from '../contexts/CategoriesContext';
 import { useExercises } from '../contexts/ExercisesContext';
 import { useNavigation } from '../contexts/NavigationContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useSports } from '../contexts/SportsContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useOrientation } from '../hooks/useOrientation';
 import { MobileHeader } from './MobileHeader';
 
 export function ExerciseCreatePage() {
+  const { t } = useTranslation();
   // contexts
   const { currentPage, params, navigate } = useNavigation();
-  const { state: auth } = useAuth();
+  const { user, club } = useAuth();
   const { state: exState, actions: exActions } = useExercises();
+  const { state: categoriesState } = useCategories();
+  const { state: sportsState, loadSports } = useSports();
   const isMobile = useIsMobile();
   const { isLandscape, isPortrait } = useOrientation();
+
+  // Charger les sports au montage
+  useEffect(() => {
+    loadSports();
+  }, []);
 
   // si on est en mode édition, on récupère l'exo ciblé
   const exerciseToEdit = useMemo(
     () => (params?.exerciseId ? exState.exercises.data.find(e => e.id === params.exerciseId) : undefined),
     [params?.exerciseId, exState.exercises.data]
   );
-  
+
   // Mode copie : utiliser le brouillon du contexte si disponible
   const isDraftMode = params?.mode === 'copy' && exState.draftExercise;
   const sourceExercise = isDraftMode ? exState.draftExercise : exerciseToEdit;
 
-  
+  // Sport selection - DOIT être déclaré AVANT les useMemo qui l'utilisent
+  // Ordre de priorité : 1) sport de l'exercice source, 2) sport préféré utilisateur, 3) volleyball par défaut
+  const [selectedSport, setSelectedSport] = useState<SportType>(
+    sourceExercise?.sport as SportType ||
+    (user?.preferredSport?.slug as SportType) ||
+    'volleyball'
+  );
+  const [showSportModal, setShowSportModal] = useState(false);
+
+  // Réinitialiser les catégories sélectionnées quand le sport change
+  useEffect(() => {
+    // On ne réinitialise que si on n'est pas en train de charger un exercice existant
+    if (!sourceExercise) {
+      setExerciseData(prev => ({
+        ...prev,
+        categories: [],
+        ageCategory: ''
+      }));
+    }
+  }, [selectedSport, sourceExercise]);
+
+  // Générer les catégories et âges depuis le backend (CategoriesContext)
+  // Filtrées par le sport sélectionné
+  const FIELD_CATEGORIES_FROM_BACKEND = useMemo(() => {
+    const categories = categoriesState.exerciseCategories.data || [];
+    const sports = sportsState.sports.data || [];
+
+    const currentSport = sports.find(s => s.slug === selectedSport);
+    const sportId = currentSport?.id;
+
+    const filteredCategories = sportId
+      ? categories.filter(cat => cat.sportId === sportId)
+      : categories;
+
+    return filteredCategories
+      .sort((a, b) => a.order - b.order)
+      .map(cat => ({
+        value: cat.slug,
+        label: cat.name
+      }));
+  }, [categoriesState.exerciseCategories.data, sportsState.sports.data, selectedSport]);
+
+  const FIELD_AGE_CATEGORIES_FROM_BACKEND = useMemo(() => {
+    const ages = categoriesState.ageCategories.data || [];
+    const sports = sportsState.sports.data || [];
+
+    const currentSport = sports.find(s => s.slug === selectedSport);
+    const sportId = currentSport?.id;
+
+    const filteredAges = sportId
+      ? ages.filter(age => age.sportId === sportId)
+      : ages;
+
+    return filteredAges
+      .sort((a, b) => a.order - b.order)
+      .map(age => ({
+        value: age.slug,
+        label: age.name
+      }));
+  }, [categoriesState.ageCategories.data, sportsState.sports.data, selectedSport]);
+
+
   // Modes d'édition
   const isCopyMode = !!params?.copyMode || isDraftMode;
   const isEditMode = !!params?.exerciseId && !isCopyMode;
 
   // state formulaire
   const [exerciseData, setExerciseData] = useState({
-    name: isCopyMode ? params?.copyName || `${sourceExercise?.name} (Copie)` : sourceExercise?.name || '',
+    name: isCopyMode
+      ? (params?.copyName ||
+         (sourceExercise?.name?.includes('(Copie)') || sourceExercise?.name?.includes('(copie)')
+           ? sourceExercise.name
+           : `${sourceExercise?.name} (Copie)`))
+      : sourceExercise?.name || '',
     description: sourceExercise?.description || '',
     duration: sourceExercise?.duration || 15,
     playerCount: sourceExercise?.playerCount || 6,
@@ -78,7 +157,7 @@ export function ExerciseCreatePage() {
   // éditeur
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<string>('select');
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [newStep, setNewStep] = useState('');
   const [newCriterion, setNewCriterion] = useState('');
@@ -89,8 +168,10 @@ export function ExerciseCreatePage() {
   // Drag functionality for select tool
   const [draggedElement, setDraggedElement] = useState<{
     id: string;
-    type: 'player' | 'ball' | 'zone';
+    type: 'player' | 'ball' | 'zone' | 'arrow';
     startPos: { x: number; y: number };
+    arrowOffset?: { startX: number; startY: number; endX: number; endY: number }; // Pour les flèches
+    controlOffset?: { x: number; y: number }; // Offset du point de contrôle pour flèches courbées
   } | null>(null);
   
   // Undo/Redo functionality
@@ -116,10 +197,11 @@ export function ExerciseCreatePage() {
   
   // Properties modal
   const [showPropertiesModal, setShowPropertiesModal] = useState(false);
-  
 
   const courtRef = useRef<HTMLDivElement>(null);
   const isMountedRef = useRef(true);
+  const lastPlacementTime = useRef<number>(0);
+  const lastCreationTime = useRef<number>(0);
 
   // Initialize history with current state
   useEffect(() => {
@@ -216,6 +298,16 @@ export function ExerciseCreatePage() {
   // handlers court
   const handleCourtPointerDown = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!courtRef.current || selectedTool === 'select') return;
+
+    // Throttle rapid calls to prevent duplication (150ms minimum between placements)
+    // This prevents both touch+mouse duplicate events and rapid-fire clicks
+    const now = Date.now();
+    const timeSinceLastPlacement = now - lastPlacementTime.current;
+    if (timeSinceLastPlacement < 150 && timeSinceLastPlacement > 0) {
+      return;
+    }
+    lastPlacementTime.current = now;
+
     const { x, y } = getEventPosition(e, courtRef);
 
     if (selectedTool.startsWith('player-')) {
@@ -223,36 +315,35 @@ export function ExerciseCreatePage() {
       const toolParts = selectedTool.split('-');
       const role = toolParts[1] as Player['role'];
       const selectedNumber = toolParts[2] ? parseInt(toolParts[2]) : undefined;
-      
+
       const label = displayMode === 'number' && selectedNumber
-        ? selectedNumber.toString() 
+        ? selectedNumber.toString()
         : (roleLabels[role as keyof typeof roleLabels] || 'A');
-      
-      const newPlayer: Player = { 
-        id: Date.now().toString(), 
-        role, 
-        position: { x, y }, 
+
+      const newPlayer: Player = {
+        id: Date.now().toString(),
+        role,
+        position: { x, y },
         label,
         displayMode,
         playerNumber: displayMode === 'number' ? (selectedNumber || playerCounter) : undefined
       };
-      
+
       setPlayers(prev => [...prev, newPlayer]);
-      
+
       if (displayMode === 'number') {
         setPlayerCounter(prev => prev + 1);
       }
-      
+
       // Save to history after adding element
       setTimeout(saveToHistory, 0);
     } else if (selectedTool === 'ball') {
       const newBall: Ball = { id: Date.now().toString(), position: { x, y } };
       setBalls(prev => [...prev, newBall]);
-      
+
       // Save to history after adding element
       setTimeout(saveToHistory, 0);
-    } else if (selectedTool === 'arrow' || selectedTool === 'zone') {
-      e.preventDefault();
+    } else if (selectedTool.startsWith('arrow-') || selectedTool === 'zone') {
       setIsCreating(true);
       setCreationStart({ x, y });
       setCurrentMousePos({ x, y });
@@ -282,21 +373,47 @@ export function ExerciseCreatePage() {
             : b
         ));
       } else if (draggedElement.type === 'zone') {
-        setZones(prev => prev.map(z => 
-          z.id === draggedElement.id 
+        setZones(prev => prev.map(z =>
+          z.id === draggedElement.id
             ? { ...z, position: { x: Math.max(-20, Math.min(120, x)), y: Math.max(-20, Math.min(120, y)) } }
             : z
         ));
+      } else if (draggedElement.type === 'arrow' && draggedElement.arrowOffset) {
+        // Déplacer la flèche entière (start et end)
+        setArrows(prev => prev.map(a => {
+          if (a.id === draggedElement.id) {
+            const newStartX = x + draggedElement.arrowOffset!.startX;
+            const newStartY = y + draggedElement.arrowOffset!.startY;
+            const newEndX = x + draggedElement.arrowOffset!.endX;
+            const newEndY = y + draggedElement.arrowOffset!.endY;
+
+            return {
+              ...a,
+              startPosition: {
+                x: Math.max(-30, Math.min(130, newStartX)),
+                y: Math.max(-30, Math.min(130, newStartY))
+              },
+              endPosition: {
+                x: Math.max(-30, Math.min(130, newEndX)),
+                y: Math.max(-30, Math.min(130, newEndY))
+              },
+              // Si la flèche a un point de contrôle, le déplacer aussi en utilisant l'offset
+              ...(a.controlX !== undefined && a.controlY !== undefined && draggedElement.controlOffset ? {
+                controlX: Math.max(-30, Math.min(130, x + draggedElement.controlOffset.x)),
+                controlY: Math.max(-30, Math.min(130, y + draggedElement.controlOffset.y))
+              } : {})
+            };
+          }
+          return a;
+        }));
       }
-      
-      e.preventDefault();
+
       return;
     }
     
     // Handle creating elements - always update mouse position when creating
-    if ((selectedTool === 'arrow' || selectedTool === 'zone') && (isCreating || creationStart)) {
+    if ((selectedTool.startsWith('arrow-') || selectedTool === 'zone') && (isCreating || creationStart)) {
       setCurrentMousePos({ x, y });
-      e.preventDefault();
     }
   }, [isCreating, creationStart, draggedElement, selectedTool]);
 
@@ -308,18 +425,27 @@ export function ExerciseCreatePage() {
       setTimeout(saveToHistory, 0);
       return;
     }
-    
+
     // Handle creation
     if (!isCreating || !creationStart || !currentMousePos) return;
 
-    if (selectedTool === 'arrow') {
+    if (selectedTool.startsWith('arrow-')) {
       const deltaX = currentMousePos.x - creationStart.x;
       const deltaY = currentMousePos.y - creationStart.y;
       const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       if (length > 3) {
-        const newArrow: Arrow = { id: Date.now().toString(), startPosition: creationStart, endPosition: currentMousePos, type: 'movement' };
+        // Extract action type from selectedTool (e.g., 'arrow-pass' -> 'pass')
+        const actionType = selectedTool.replace('arrow-', '') as 'pass' | 'shot' | 'movement' | 'dribble' | 'defense';
+        const newArrow: Arrow = {
+          id: Date.now().toString(),
+          startPosition: creationStart,
+          endPosition: currentMousePos,
+          type: 'movement', // Deprecated field for backwards compatibility
+          actionType: actionType // New field for styled arrows
+        };
+
         setArrows(prev => [...prev, newArrow]);
-        
+
         // Save to history after adding element
         setTimeout(saveToHistory, 0);
       }
@@ -342,19 +468,43 @@ export function ExerciseCreatePage() {
     setCurrentMousePos(null);
   }, [isCreating, creationStart, currentMousePos, selectedTool, zones.length, draggedElement, saveToHistory]);
 
-  const handleElementPointerDown = (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone') => {
+  const handleElementPointerDown = (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone' | 'arrow') => {
     if (selectedTool !== 'select') return;
     e.stopPropagation();
-    
+
     if (!courtRef.current) return;
     const { x, y } = getEventPosition(e, courtRef);
-    
+
     setSelectedElement(elementId);
-    setDraggedElement({
-      id: elementId,
-      type: elementType,
-      startPos: { x, y }
-    });
+
+    // Pour les flèches, calculer l'offset entre le point cliqué et les positions start/end
+    if (elementType === 'arrow') {
+      const arrow = arrows.find(a => a.id === elementId);
+      if (arrow) {
+        setDraggedElement({
+          id: elementId,
+          type: elementType,
+          startPos: { x, y },
+          arrowOffset: {
+            startX: arrow.startPosition.x - x,
+            startY: arrow.startPosition.y - y,
+            endX: arrow.endPosition.x - x,
+            endY: arrow.endPosition.y - y
+          },
+          // Si la flèche a un point de contrôle, calculer aussi son offset
+          controlOffset: (arrow.controlX !== undefined && arrow.controlY !== undefined) ? {
+            x: arrow.controlX - x,
+            y: arrow.controlY - y
+          } : undefined
+        });
+      }
+    } else {
+      setDraggedElement({
+        id: elementId,
+        type: elementType,
+        startPos: { x, y }
+      });
+    }
   };
 
   const handleDeleteElement = (elementId: string) => {
@@ -420,6 +570,26 @@ export function ExerciseCreatePage() {
   const updateCriterion = (i: number, v: string) => setExerciseData(prev => ({ ...prev, successCriteria: prev.successCriteria.map((c, idx) => (idx === i ? v : c)) }));
   const removeCriterion = (i: number) => setExerciseData(prev => ({ ...prev, successCriteria: prev.successCriteria.filter((_, idx) => idx !== i) }));
 
+  // Helper function to convert slugs to IDs
+  const getCategoryIds = () => {
+    const categorySlug = exerciseData.categories.length > 0 ? exerciseData.categories[0] : null;
+    const ageSlug = exerciseData.ageCategory;
+    const sports = sportsState.sports.data || [];
+
+    const categoryId = categorySlug
+      ? categoriesState.exerciseCategories.data?.find(cat => cat.slug === categorySlug)?.id
+      : null;
+
+    const ageCategoryId = ageSlug
+      ? categoriesState.ageCategories.data?.find(age => age.slug === ageSlug)?.id
+      : null;
+
+    const currentSport = sports.find(s => s.slug === selectedSport);
+    const sportId = currentSport?.id || null;
+
+    return { categoryId, ageCategoryId, sportId };
+  };
+
   // Preview and Draft handlers
   const handlePreview = () => {
     if (!exerciseData.name.trim()) {
@@ -452,19 +622,22 @@ export function ExerciseCreatePage() {
     }
 
     const fieldData = convertToFieldData(players, arrows, balls, zones);
-    const now = new Date();
-    
+    const { categoryId, ageCategoryId, sportId } = getCategoryIds();
+
     const draftExercise: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'> = {
       name: `[BROUILLON] ${exerciseData.name.trim()}`,
       description: exerciseData.description.trim(),
       duration: exerciseData.duration,
       category: (exerciseData.categories.length > 0 ? exerciseData.categories[0] : 'attaque') as Exercise['category'],
+      categoryId: categoryId || undefined,
       ageCategory: exerciseData.ageCategory as Exercise['ageCategory'],
+      ageCategoryId: ageCategoryId || undefined,
       sport: selectedSport,
+      sportId: sportId || undefined,
       instructions: exerciseData.steps.filter(Boolean),
       fieldData,
-      createdById: sourceExercise?.createdById || auth.user?.id || 'anonymous',
-      clubId: sourceExercise?.clubId || auth.club?.id || null,
+      createdById: sourceExercise?.createdById || user?.id || 'anonymous',
+      clubId: sourceExercise?.clubId || null, // Ne pas assigner automatiquement le club de l'utilisateur
       isPublic: false, // Drafts are always private
       level: exerciseData.intensity,
       intensity: exerciseData.intensity as Exercise['intensity'],
@@ -480,7 +653,7 @@ export function ExerciseCreatePage() {
 
     await exActions.createExercise(draftExercise);
     setSavedAsDraft(true);
-    
+
     // Show success message
     alert('Exercice sauvegardé comme brouillon !');
   };
@@ -492,26 +665,27 @@ export function ExerciseCreatePage() {
 
   const handleSave = async () => {
     if (!canSave || isSaving) return;
-    
-    console.log('🚀 handleSave called - modes:', { isEditMode, isCopyMode, isDraftMode });
 
     setIsSaving(true);
-    
+
     try {
       const fieldData = convertToFieldData(players, arrows, balls, zones);
-      const now = new Date();
-      
+      const { categoryId, ageCategoryId, sportId } = getCategoryIds();
+
       const base: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'> = {
         name: exerciseData.name.trim(),
         description: exerciseData.description.trim(),
         duration: exerciseData.duration,
         category: (exerciseData.categories.length > 0 ? exerciseData.categories[0] : 'attaque') as Exercise['category'],
+        categoryId: categoryId || undefined,
         ageCategory: exerciseData.ageCategory as Exercise['ageCategory'],
-        sport: 'volleyball',
+        ageCategoryId: ageCategoryId || undefined,
+        sport: selectedSport,
+        sportId: sportId || undefined,
         instructions: exerciseData.steps.filter(Boolean),
         fieldData,
-        createdById: sourceExercise?.createdById || auth.user?.id || 'anonymous',
-        clubId: sourceExercise?.clubId || auth.club?.id || null,
+        createdById: sourceExercise?.createdById || user?.id || 'anonymous',
+        clubId: sourceExercise?.clubId || null, // Ne pas assigner automatiquement le club de l'utilisateur
         isPublic: true,
         level: exerciseData.intensity,
         intensity: exerciseData.intensity as Exercise['intensity'],
@@ -533,7 +707,7 @@ export function ExerciseCreatePage() {
 
       // Rediriger directement vers la page exercices après sauvegarde
       navigate('exercises');
-      
+
     } catch (error) {
       console.error('Erreur lors de la publication:', error);
       alert('Erreur lors de la publication de l\'exercice. Veuillez réessayer.');
@@ -562,7 +736,7 @@ export function ExerciseCreatePage() {
         }}></div>
 
         <MobileHeader 
-          title={isCopyMode ? "Copier exercice" : isEditMode ? "Modifier exercice" : "Nouvel exercice"}
+          title={isCopyMode ? t('exercises.copyExerciseTitle') : isEditMode ? t('exercises.editExerciseTitle') : t('exercises.newExerciseTitle')}
           icon={isCopyMode ? "📋" : isEditMode ? "✏️" : "✨"}
           onBack={() => navigate('exercises')}
           actions={[
@@ -602,22 +776,22 @@ export function ExerciseCreatePage() {
           }}>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>📝</div>
-              Informations générales
+              {t('exercises.generalInfo')}
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Nom de l'exercice *</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.exerciseNameRequired')}</label>
               <Input value={exerciseData.name} onChange={e => setExerciseData(p => ({ ...p, name: e.target.value }))} className="bg-white/5 exersio-border text-white" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }} />
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Description</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.description')}</label>
               <Textarea value={exerciseData.description} onChange={e => setExerciseData(p => ({ ...p, description: e.target.value }))} rows={3} className="bg-white/5 exersio-border text-white resize-none" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Durée (min)</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.durationMin')}</label>
                 <input type="number" value={exerciseData.duration} min={1} max={60} onChange={e => setExerciseData(p => ({ ...p, duration: parseInt(e.target.value || '0', 10) }))} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', colorScheme: 'dark' }} />
               </div>
               <div>
@@ -627,12 +801,12 @@ export function ExerciseCreatePage() {
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Catégories</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.categories')}</label>
               <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', padding: '12px', minHeight: '60px', maxHeight: '60px', overflowY: 'auto' }}>
                 {exerciseData.categories.length > 0 ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {exerciseData.categories.map((category, index) => {
-                      const categoryLabel = FIELD_CATEGORIES.find(c => c.value === category)?.label || category;
+                      const categoryLabel = FIELD_CATEGORIES_FROM_BACKEND.find(c => c.value === category)?.label || category;
                       return (
                         <Badge key={`category-${category}-${index}`} variant="secondary" style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981', fontSize: '10px', padding: '2px 6px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <span>{categoryLabel}</span>
@@ -645,10 +819,10 @@ export function ExerciseCreatePage() {
                   <div style={{ color: '#9ca3af', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>Aucune catégorie</div>
                 )}
               </div>
-              {exerciseData.categories.length < FIELD_CATEGORIES.length && (
+              {exerciseData.categories.length < FIELD_CATEGORIES_FROM_BACKEND.length && (
                 <select value="" onChange={e => { const selectedValue = e.target.value; if (selectedValue && !exerciseData.categories.includes(selectedValue)) { setExerciseData(p => ({ ...p, categories: [...p.categories, selectedValue], tags: p.tags.filter(t => t !== selectedValue) })); } e.target.value = ''; }} style={{ width: '100%', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white', fontSize: '12px', outline: 'none', marginTop: '8px' }}>
-                  <option value="">+ Ajouter catégorie...</option>
-                  {FIELD_CATEGORIES.filter(cat => !exerciseData.categories.includes(cat.value)).map(cat => (<option key={`option-${cat.value}`} value={cat.value} style={{ backgroundColor: '#283544', color: 'white' }}>{cat.label}</option>))}
+                  <option value="">+ {t('exercises.addCategory')}</option>
+                  {FIELD_CATEGORIES_FROM_BACKEND.filter(cat => !exerciseData.categories.includes(cat.value)).map(cat => (<option key={`option-${cat.value}`} value={cat.value} style={{ backgroundColor: '#283544', color: 'white' }}>{cat.label}</option>))}
                 </select>
               )}
             </div>
@@ -657,11 +831,11 @@ export function ExerciseCreatePage() {
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Niveau</label>
                 <select value={exerciseData.ageCategory} onChange={e => setExerciseData(p => ({ ...p, ageCategory: e.target.value }))} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}>
-                  {FIELD_AGE_CATEGORIES.map(cat => (<option key={cat.value} value={cat.value} style={{ backgroundColor: '#283544', color: 'white' }}>{cat.label}</option>))}
+                  {FIELD_AGE_CATEGORIES_FROM_BACKEND.map(cat => (<option key={cat.value} value={cat.value} style={{ backgroundColor: '#283544', color: 'white' }}>{cat.label}</option>))}
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Intensité</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.intensity')}</label>
                 <select value={exerciseData.intensity} onChange={e => setExerciseData(p => ({ ...p, intensity: e.target.value }))} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}>
                   {FIELD_INTENSITIES.map(int => (<option key={int.value} value={int.value} style={{ backgroundColor: '#283544', color: 'white' }}>{int.label}</option>))}
                 </select>
@@ -669,26 +843,11 @@ export function ExerciseCreatePage() {
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Matériel</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.material')}</label>
               <Textarea value={exerciseData.material} onChange={e => setExerciseData(p => ({ ...p, material: e.target.value }))} rows={3} className="bg-white/5 exersio-border text-white resize-none" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
 
-            {/* Tags mobile */}
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Tags</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
-                {exerciseData.tags.map((tag, index) => (
-                  <Badge key={`tag-${tag}-${index}`} variant="secondary" style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#3b82f6', fontSize: '10px', padding: '2px 6px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {tag}
-                    <button onClick={() => removeTag(tag)} style={{ color: '#ef4444', fontSize: '10px', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
-                  </Badge>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Input value={tagInput} onChange={e => { setTagInput(e.target.value); setShowTagSuggestions(e.target.value.length > 0); setFilteredTagSuggestions(TAG_SUGGESTIONS.filter(s => s.toLowerCase().includes(e.target.value.toLowerCase()) && !exerciseData.tags.includes(s))); }} onKeyDown={e => e.key === 'Enter' && addTag()} placeholder="Nouveau tag..." style={{ flex: 1, padding: '8px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white', fontSize: '12px', outline: 'none' }} />
-                <Button onClick={addTag} size="sm" className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]" style={{ padding: '8px 12px', borderRadius: '8px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer' }}>+</Button>
-              </div>
-            </div>
+  
           </div>
 
           {/* Étapes mobile */}
@@ -702,7 +861,7 @@ export function ExerciseCreatePage() {
           }}>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>📋</div>
-              Étapes ({exerciseData.steps.length})
+              {t('exercises.stepsWithCount', { count: exerciseData.steps.length })}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -715,7 +874,7 @@ export function ExerciseCreatePage() {
               ))}
 
               <div style={{ display: 'flex', gap: '10px' }}>
-                <Input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()} placeholder="Nouvelle étape..." style={{ flex: 1, padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white', fontSize: '13px', outline: 'none' }} />
+                <Input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()} placeholder={t('exercises.newStep')} style={{ flex: 1, padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white', fontSize: '13px', outline: 'none' }} />
                 <Button onClick={addStep} size="sm" className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]" style={{ padding: '10px 12px', borderRadius: '8px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer' }}>+</Button>
               </div>
             </div>
@@ -732,7 +891,7 @@ export function ExerciseCreatePage() {
           }}>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>✅</div>
-              Critères de réussite ({exerciseData.successCriteria.length})
+              {t('exercises.successCriteriaWithCount', { count: exerciseData.successCriteria.length })}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -751,97 +910,114 @@ export function ExerciseCreatePage() {
             </div>
           </div>
 
-          {/* Terrain mobile - mode paysage ou portrait */}
+          {/* Terrain mobile - mode portrait et paysage */}
           <div style={{
             background: 'rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '16px',
             padding: '20px',
-            position: isLandscape ? 'fixed' : 'relative',
-            top: isLandscape ? '0' : 'auto',
-            left: isLandscape ? '0' : 'auto',
-            right: isLandscape ? '0' : 'auto',
-            bottom: isLandscape ? '0' : 'auto',
-            zIndex: isLandscape ? 1000 : 'auto',
-            height: isLandscape ? '100vh' : 'auto',
-            width: isLandscape ? '100vw' : 'auto',
-            display: isLandscape ? 'flex' : 'block',
-            flexDirection: isLandscape ? 'column' : 'initial'
+            marginBottom: '16px'
           }}>
-            <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: isLandscape ? 'space-between' : 'flex-start' }}>
+            <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent:'space-between'  }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>🏐</div>
                 Schéma tactique
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button 
-                  onClick={() => {}}
-                  style={{ 
-                    padding: '6px 10px', 
-                    background: 'rgba(59, 130, 246, 0.2)', 
-                    border: '1px solid rgba(59, 130, 246, 0.3)', 
-                    borderRadius: '6px', 
-                    color: '#60a5fa', 
-                    fontSize: '11px', 
-                    cursor: 'pointer' 
+                <button
+                  onClick={() => setShowSportModal(true)}
+                  style={{
+                    padding: '6px 10px',
+                    background: 'rgba(59, 130, 246, 0.2)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    borderRadius: '6px',
+                    color: '#60a5fa',
+                    fontSize: '11px',
+                    cursor: 'pointer'
                   }}
                 >
                   🔄 Sport
                 </button>
-                {isLandscape && (
-                  <button onClick={() => { if (window.screen && window.screen.orientation && window.screen.orientation.unlock) { window.screen.orientation.unlock(); } }} style={{ padding: '8px 12px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', color: 'white', fontSize: '12px', cursor: 'pointer' }}>🔄 Portrait</button>
-                )}
               </div>
             </div>
-            
-            {isPortrait ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px', border: '2px dashed rgba(255, 255, 255, 0.2)', borderRadius: '12px', color: '#94a3b8' }}>
-                <div style={{ fontSize: '32px', marginBottom: '12px' }}>📱</div>
-                <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>Éditeur tactique</div>
-                <div style={{ fontSize: '12px' }}>Retournez l'écran en mode paysage pour accéder à l'éditeur de terrain</div>
-                <button onClick={() => { if (window.screen && window.screen.orientation && window.screen.orientation.lock) { window.screen.orientation.lock('landscape').catch(() => {}); } }} style={{ marginTop: '16px', padding: '10px 16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', border: 'none', borderRadius: '8px', color: 'white', fontSize: '12px', cursor: 'pointer' }}>🔄 Mode paysage</button>
+
+            {/* Éditeur disponible en portrait et paysage */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Toolbar
+                sport={selectedSport}
+                selectedTool={selectedTool}
+                onToolChange={setSelectedTool}
+                showGrid={showGrid}
+                onToggleGrid={() => setShowGrid(!showGrid)}
+                selectedElement={selectedElement}
+                onDeleteElement={handleDeleteElement}
+                displayMode={displayMode}
+                onDisplayModeChange={(mode) => {
+                  setDisplayMode(mode);
+                  setPlayers(prev => prev.map((player, index) => ({
+                    ...player,
+                    displayMode: mode,
+                    label: mode === 'number'
+                      ? (index + 1).toString()
+                      : (roleLabels[player.role as keyof typeof roleLabels] || 'A'),
+                    playerNumber: mode === 'number' ? (index + 1) : undefined
+                  })));
+                  if (mode === 'number') {
+                    setPlayerCounter(players.length + 1);
+                  } else {
+                    setPlayerCounter(1);
+                  }
+                }}
+                onClearField={() => {
+                  setPlayers([]); setArrows([]); setBalls([]); setZones([]);
+                  setSelectedElement(null); setIsCreating(false); setCreationStart(null); setCurrentMousePos(null);
+                  setPlayerCounter(1);
+                  setTimeout(saveToHistory, 0);
+                }}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                canUndo={canUndo}
+                canRedo={canRedo}
+              />
+
+              {/* Terrain sportif */}
+              <div style={{ position: 'relative' }}>
+                <SportCourt
+                  sport={selectedSport}
+                  courtRef={courtRef}
+                  selectedTool={selectedTool}
+                  showGrid={showGrid}
+                  players={players}
+                  arrows={arrows}
+                  balls={balls}
+                  zones={zones}
+                  selectedElement={selectedElement}
+                  onElementSelect={setSelectedElement}
+                  onUpdateElement={handleUpdateElement}
+                  displayMode={displayMode}
+                  isCreating={isCreating}
+                  creationStart={creationStart}
+                  currentMousePos={currentMousePos}
+                  onCourtPointerDown={handleCourtPointerDown}
+                  onCourtPointerMove={handleCourtPointerMove}
+                  onCourtPointerUp={handleCourtPointerUp}
+                  onElementPointerDown={handleElementPointerDown}
+                />
               </div>
-            ) : (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                {/* Toolbar mobile simple */}
-                <div style={{ marginBottom: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {['select', 'player-attaque', 'arrow', 'ball', 'zone'].map(tool => (
-                    <button key={tool} onClick={() => setSelectedTool(tool)} style={{ padding: '8px 12px', background: selectedTool === tool ? 'linear-gradient(135deg, #00d4aa, #00b894)' : 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', color: 'white', fontSize: '11px', cursor: 'pointer', minWidth: '60px' }}>
-                      {tool === 'select' ? '🎯' : tool === 'player-attaque' ? '👤' : tool === 'arrow' ? '➡️' : tool === 'ball' ? '🏐' : '🟨'} {tool === 'player-attaque' ? 'Joueur' : tool.charAt(0).toUpperCase() + tool.slice(1)}
-                    </button>
-                  ))}
-                  <button onClick={() => setShowGrid(!showGrid)} style={{ padding: '8px 12px', background: showGrid ? 'linear-gradient(135deg, #00d4aa, #00b894)' : 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', color: 'white', fontSize: '11px', cursor: 'pointer' }}>🔲 Grille</button>
-                  {selectedElement && (
-                    <button onClick={() => handleDeleteElement(selectedElement)} style={{ padding: '8px 12px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', color: '#ef4444', fontSize: '11px', cursor: 'pointer' }}>🗑️ Suppr.</button>
-                  )}
-                </div>
-                
-                {/* Terrain de volleyball en mode paysage */}
-                <div style={{ flex: 1, position: 'relative', minHeight: '200px', maxHeight: 'calc(100vh - 120px)' }}>
-                  <VolleyballCourt
-                    courtRef={courtRef}
-                    selectedTool={selectedTool}
-                    showGrid={showGrid}
-                    players={players}
-                    arrows={arrows}
-                    balls={balls}
-                    zones={zones}
-                    selectedElement={selectedElement}
-                    isCreating={isCreating}
-                    creationStart={creationStart}
-                    currentMousePos={currentMousePos}
-                    onCourtPointerDown={handleCourtPointerDown}
-                    onCourtPointerMove={handleCourtPointerMove}
-                    onCourtPointerUp={handleCourtPointerUp}
-                    onElementPointerDown={handleElementPointerDown}
-                    onElementSelect={setSelectedElement}
-                  />
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
+
+        {/* Sport Selection Modal - Mobile */}
+        <SportSelectionModal
+          isOpen={showSportModal}
+          onSelect={(sport) => {
+            setSelectedSport(sport);
+            setShowSportModal(false);
+          }}
+          onClose={() => setShowSportModal(false)}
+        />
       </div>
     );
   }
@@ -909,36 +1085,34 @@ export function ExerciseCreatePage() {
       </div>
 
       {/* Layout 2 colonnes */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-5 md:gap-6">
         {/* Col gauche : formulaire */}
         <div className="xl:col-span-4">
-          <div style={{
+          <div className="p-4 sm:p-5 md:p-6 mb-4 sm:mb-6 md:mb-8" style={{
             background: 'rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '20px',
-            padding: '25px',
-            marginBottom: '30px'
+            borderRadius: '20px'
           }}>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
               <div className="w-5 h-5 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded text-xs flex items-center justify-center">📝</div>
-              <h3 className="text-lg font-bold">Informations générales</h3>
+              <h3 className="text-base sm:text-lg font-bold">{t('exercises.generalInfo')}</h3>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Nom de l'exercice *</label>
+                <label className="block text-sm font-medium mb-2">{t('exercises.exerciseNameRequired')}</label>
                 <Input value={exerciseData.name} onChange={e => setExerciseData(p => ({ ...p, name: e.target.value }))} className="bg-white/5 exersio-border text-white" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-medium mb-2">{t('exercises.description')}</label>
                 <Textarea value={exerciseData.description} onChange={e => setExerciseData(p => ({ ...p, description: e.target.value }))} rows={3} className="bg-white/5 exersio-border text-white resize-none" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Durée (min)</label>
+                  <label className="block text-sm font-medium mb-2">{t('exercises.durationMin')}</label>
                   <input 
                     type="number" 
                     value={exerciseData.duration} 
@@ -967,16 +1141,16 @@ export function ExerciseCreatePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Catégories</label>
+                  <label className="block text-sm font-medium mb-2">{t('exercises.categories')}</label>
                   
                   {/* Zone d'affichage des catégories sélectionnées - hauteur fixe */}
                   <div className="bg-white/5 border exersio-border rounded-xl p-3 min-h-[80px] max-h-[80px] overflow-y-auto">
                     {exerciseData.categories.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {exerciseData.categories.map((category, index) => {
-                          const categoryLabel = FIELD_CATEGORIES.find(c => c.value === category)?.label || category;
+                          const categoryLabel = FIELD_CATEGORIES_FROM_BACKEND.find(c => c.value === category)?.label || category;
                           return (
                             <Badge 
                               key={`category-${category}-${index}`} 
@@ -1006,19 +1180,16 @@ export function ExerciseCreatePage() {
                   </div>
                   
                   {/* Sélecteur pour ajouter des catégories - toujours en dessous */}
-                  {exerciseData.categories.length < FIELD_CATEGORIES.length && (
+                  {exerciseData.categories.length < FIELD_CATEGORIES_FROM_BACKEND.length && (
                     <select
                       key="category-selector"
                       value=""
                       onChange={e => {
                         const selectedValue = e.target.value;
-                        console.log('Selected value:', selectedValue);
-                        console.log('Current categories:', exerciseData.categories);
-                        console.log('Already includes?', exerciseData.categories.includes(selectedValue));
-                        
+
                         if (selectedValue && !exerciseData.categories.includes(selectedValue)) {
-                          setExerciseData(p => ({ 
-                            ...p, 
+                          setExerciseData(p => ({
+                            ...p,
                             categories: [...p.categories, selectedValue],
                             tags: p.tags.filter(t => t !== selectedValue)
                           }));
@@ -1028,8 +1199,8 @@ export function ExerciseCreatePage() {
                       }}
                       className="w-full bg-white/5 exersio-border text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00d4aa] mt-2"
                     >
-                      <option value="">+ Ajouter une catégorie...</option>
-                      {FIELD_CATEGORIES
+                      <option value="">+ {t('exercises.addCategoryLong')}</option>
+                      {FIELD_CATEGORIES_FROM_BACKEND
                         .filter(cat => !exerciseData.categories.includes(cat.value))
                         .map(cat => (
                           <option key={`option-${cat.value}`} value={cat.value} className="bg-[#283544] text-white">
@@ -1042,12 +1213,12 @@ export function ExerciseCreatePage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Niveau</label>
-                  <select 
-                    value={exerciseData.ageCategory} 
+                  <select
+                    value={exerciseData.ageCategory}
                     onChange={e => setExerciseData(p => ({ ...p, ageCategory: e.target.value }))}
                     className="w-full bg-white/5 exersio-border text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00d4aa]"
                   >
-                    {FIELD_AGE_CATEGORIES.map(cat => (
+                    {FIELD_AGE_CATEGORIES_FROM_BACKEND.map(cat => (
                       <option key={cat.value} value={cat.value} className="bg-[#283544] text-white">
                         {cat.label}
                       </option>
@@ -1057,9 +1228,9 @@ export function ExerciseCreatePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Intensité</label>
-                <select 
-                  value={exerciseData.intensity} 
+                <label className="block text-sm font-medium mb-2">{t('exercises.intensity')}</label>
+                <select
+                  value={exerciseData.intensity}
                   onChange={e => setExerciseData(p => ({ ...p, intensity: e.target.value }))}
                   className="w-full bg-white/5 exersio-border text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00d4aa]"
                 >
@@ -1073,29 +1244,29 @@ export function ExerciseCreatePage() {
 
 
               <div>
-                <label className="block text-sm font-medium mb-2">Matériel</label>
+                <label className="block text-sm font-medium mb-2">{t('exercises.material')}</label>
                 <Textarea value={exerciseData.material} onChange={e => setExerciseData(p => ({ ...p, material: e.target.value }))} rows={4} className="bg-white/5 exersio-border text-white resize-none" />
               </div>
             </div>
 
             {/* Etapes */}
-            <div className="mt-8">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="mt-6 sm:mt-8">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <div className="w-5 h-5 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded text-xs flex items-center justify-center">📋</div>
-                <h3 className="text-lg font-bold">Étapes</h3>
+                <h3 className="text-base sm:text-lg font-bold">{t('exercises.steps')}</h3>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {exerciseData.steps.map((step, i) => (
-                  <div key={i} className="flex gap-3 p-3 bg-white/5 rounded-lg items-center">
+                  <div key={i} className="flex gap-2 sm:gap-3 p-2 sm:p-3 bg-white/5 rounded-lg items-center">
                     <div className="w-6 h-6 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{i + 1}</div>
                     <Input value={step} onChange={e => updateStep(i, e.target.value)} className="flex-1 bg-transparent border-none text-white p-0" />
                     <Button size="sm" variant="ghost" onClick={() => removeStep(i)} className="text-red-400 hover:text-red-300 h-6 w-6 p-0 flex-shrink-0">×</Button>
                   </div>
                 ))}
 
-                <div className="flex gap-3">
-                  <Input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()} placeholder="Nouvelle étape..." className="bg-white/5 exersio-border text-white" />
+                <div className="flex gap-2 sm:gap-3">
+                  <Input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()} placeholder={t('exercises.newStep')} className="bg-white/5 exersio-border text-white" />
                   <Button onClick={addStep} size="sm" className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]">
                     <Plus className="w-4 h-4" />
                   </Button>
@@ -1104,22 +1275,22 @@ export function ExerciseCreatePage() {
             </div>
 
             {/* Critères de réussite */}
-            <div className="mt-8">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="mt-6 sm:mt-8">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <div className="w-5 h-5 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded text-xs flex items-center justify-center">✅</div>
-                <h3 className="text-lg font-bold">Critères de réussite</h3>
+                <h3 className="text-base sm:text-lg font-bold">{t('exercises.successCriteria')}</h3>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {exerciseData.successCriteria.map((criterion, i) => (
-                  <div key={i} className="flex gap-3 p-3 bg-white/5 rounded-lg items-center">
+                  <div key={i} className="flex gap-2 sm:gap-3 p-2 sm:p-3 bg-white/5 rounded-lg items-center">
                     <div className="w-6 h-6 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
                     <Input value={criterion} onChange={e => updateCriterion(i, e.target.value)} className="flex-1 bg-transparent border-none text-white p-0" />
                     <Button size="sm" variant="ghost" onClick={() => removeCriterion(i)} className="text-red-400 hover:text-red-300 h-6 w-6 p-0 flex-shrink-0">×</Button>
                   </div>
                 ))}
 
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <Input value={newCriterion} onChange={e => setNewCriterion(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCriterion()} placeholder="Nouveau critère..." className="bg-white/5 exersio-border text-white" />
                   <Button onClick={addCriterion} size="sm" className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]">
                     <Plus className="w-4 h-4" />
@@ -1141,14 +1312,13 @@ export function ExerciseCreatePage() {
           }}>
             
             {/* Header éditeur avec sport sélectionné */}
-            <div style={{
-              padding: '20px 24px 16px 24px',
+            <div className="p-4 sm:p-5 md:px-6 md:pb-4" style={{
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="flex items-center gap-2 sm:gap-3" style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ 
                   width: '24px', 
                   height: '24px', 
@@ -1182,14 +1352,13 @@ export function ExerciseCreatePage() {
               </div>
               
               <button
-                onClick={() => {}}
+                onClick={() => setShowSportModal(true)}
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm"
                 style={{
-                  padding: '8px 16px',
                   background: 'rgba(59, 130, 246, 0.2)',
                   border: '1px solid rgba(59, 130, 246, 0.3)',
                   borderRadius: '10px',
                   color: '#60a5fa',
-                  fontSize: '13px',
                   fontWeight: '500',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -1211,6 +1380,7 @@ export function ExerciseCreatePage() {
             </div>
 
             <Toolbar
+              sport={selectedSport}
               selectedTool={selectedTool}
               onToolChange={setSelectedTool}
               showGrid={showGrid}
@@ -1252,7 +1422,8 @@ export function ExerciseCreatePage() {
               canRedo={canRedo}
             />
 
-            <VolleyballCourt
+            <SportCourt
+              sport={selectedSport}
               courtRef={courtRef}
               selectedTool={selectedTool}
               showGrid={showGrid}
@@ -1261,6 +1432,9 @@ export function ExerciseCreatePage() {
               balls={balls}
               zones={zones}
               selectedElement={selectedElement}
+              onElementSelect={setSelectedElement}
+              onUpdateElement={handleUpdateElement}
+              displayMode={displayMode}
               isCreating={isCreating}
               creationStart={creationStart}
               currentMousePos={currentMousePos}
@@ -1268,16 +1442,14 @@ export function ExerciseCreatePage() {
               onCourtPointerMove={handleCourtPointerMove}
               onCourtPointerUp={handleCourtPointerUp}
               onElementPointerDown={handleElementPointerDown}
-              onElementSelect={setSelectedElement}
             />
             
             {/* Bouton propriétés sous le terrain */}
-            <div style={{ margin: '20px', marginTop: '0' }}>
+            <div className="mx-4 sm:mx-5 md:mx-5 mt-0">
               <button
                 onClick={() => setShowPropertiesModal(true)}
+                className="w-full p-3 sm:p-4"
                 style={{
-                  width: '100%',
-                  padding: '15px 20px',
                   background: 'rgba(59, 130, 246, 0.1)',
                   border: '1px solid rgba(59, 130, 246, 0.3)',
                   borderRadius: '12px',
@@ -1358,8 +1530,7 @@ export function ExerciseCreatePage() {
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
           }}>
             {/* Modal Header */}
-            <div style={{
-              padding: '20px 25px',
+            <div className="p-4 sm:p-5 md:px-6" style={{
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
               display: 'flex',
               justifyContent: 'space-between',
@@ -1397,15 +1568,13 @@ export function ExerciseCreatePage() {
             </div>
 
             {/* Modal Content - Version simplifiée */}
-            <div style={{
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:px-6" style={{
               flex: 1,
-              overflowY: 'auto',
-              padding: '20px 25px'
+              overflowY: 'auto'
             }}>
-              <div style={{
+              <div className="text-white text-center py-8 sm:py-10 px-4 sm:px-5" style={{
                 color: '#ffffff',
-                textAlign: 'center',
-                padding: '40px 20px'
+                textAlign: 'center'
               }}>
                 <p>Propriétés des éléments</p>
                 <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '10px' }}>
@@ -1432,6 +1601,15 @@ export function ExerciseCreatePage() {
         </div>
       )}
 
+      {/* Sport Selection Modal */}
+      <SportSelectionModal
+        isOpen={showSportModal}
+        onSelect={(sport) => {
+          setSelectedSport(sport);
+          setShowSportModal(false);
+        }}
+        onClose={() => setShowSportModal(false)}
+      />
 
     </div>
   );

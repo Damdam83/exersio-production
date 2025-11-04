@@ -69,7 +69,7 @@ const initialState: ExercisesState = {
     error: null
   },
   filters: {
-    scope: 'personal'
+    scope: 'all'
   },
   pagination: {
     page: 1,
@@ -228,6 +228,7 @@ interface ExercisesContextType {
   state: ExercisesState;
   actions: {
     loadExercises: () => Promise<void>;
+    loadExerciseById: (id: string) => Promise<Exercise | null>;
     createExercise: (exercise: Omit<Exercise, 'id' | 'createdAt'>) => Promise<Exercise>;
     updateExercise: (id: string, updates: Partial<Exercise>) => Promise<void>;
     deleteExercise: (id: string) => Promise<void>;
@@ -257,29 +258,98 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
 
   const loadExercises = useCallback(async () => {
     dispatch({ type: 'LOAD_START' });
-    
+
     try {
+      // Si offline, charger depuis IndexedDB
+      if (!navigator.onLine) {
+        const offlineExercises = await offlineStorage.getAllExercises();
+        const exercises = offlineExercises.map(item => item.data);
+        dispatch({ type: 'LOAD_SUCCESS', payload: exercises });
+        return;
+      }
+
+      // Si online, charger depuis l'API
       const exercises = await exercisesService.getAll(state.filters);
       dispatch({ type: 'LOAD_SUCCESS', payload: exercises });
+
+      // Sauvegarder tous les exercices chargés dans IndexedDB pour le mode offline
+      if (exercises && exercises.length > 0) {
+        await Promise.all(
+          exercises.map(exercise => offlineStorage.saveExercise(exercise, 'synced'))
+        );
+      }
     } catch (error) {
       console.error('Error loading exercises:', error);
-      dispatch({ type: 'LOAD_ERROR', payload: error as ApiError });
+
+      // En cas d'erreur réseau, tenter de charger depuis IndexedDB
+      try {
+        const offlineExercises = await offlineStorage.getAllExercises();
+        const exercises = offlineExercises.map(item => item.data);
+        dispatch({ type: 'LOAD_SUCCESS', payload: exercises });
+      } catch (offlineError) {
+        dispatch({ type: 'LOAD_ERROR', payload: error as ApiError });
+      }
     }
   }, [state.filters]);
 
+  const loadExerciseById = useCallback(async (id: string): Promise<Exercise | null> => {
+    try {
+      // Vérifier d'abord si l'exercice est déjà dans le state
+      const existingExercise = state.exercises.data.find(ex => ex.id === id);
+      if (existingExercise) {
+        return existingExercise;
+      }
+
+      // Si offline, chercher dans IndexedDB
+      if (!navigator.onLine) {
+        const offlineExercise = await offlineStorage.getExercise(id);
+        if (offlineExercise) {
+          // Ajouter l'exercice au state
+          dispatch({ type: 'CREATE_SUCCESS', payload: offlineExercise.data });
+          return offlineExercise.data;
+        }
+        return null;
+      }
+
+      // Si online, charger depuis l'API
+      const exercise = await exercisesService.getById(id);
+
+      // Ajouter l'exercice au state
+      dispatch({ type: 'CREATE_SUCCESS', payload: exercise });
+
+      // Sauvegarder dans IndexedDB
+      await offlineStorage.saveExercise(exercise, 'synced');
+
+      return exercise;
+    } catch (error) {
+      console.error('Error loading exercise by ID:', error);
+
+      // En cas d'erreur, tenter de charger depuis IndexedDB
+      try {
+        const offlineExercise = await offlineStorage.getExercise(id);
+        if (offlineExercise) {
+          dispatch({ type: 'CREATE_SUCCESS', payload: offlineExercise.data });
+          return offlineExercise.data;
+        }
+      } catch (offlineError) {
+        console.error('Failed to load from offline storage:', offlineError);
+      }
+
+      return null;
+    }
+  }, [state.exercises.data]);
+
   const createExercise = async (exerciseData: Omit<Exercise, 'id' | 'createdAt'>): Promise<Exercise> => {
-    console.log('📝 createExercise called with:', exerciseData.name);
-    console.trace('📍 createExercise call stack');
     dispatch({ type: 'CREATE_START' });
     
     try {
       const newExercise = await exercisesService.create(exerciseData);
-      
+
       // Sauvegarder en offline si en ligne (marqué comme 'synced')
       if (navigator.onLine) {
         await offlineStorage.saveExercise(newExercise, 'synced');
       }
-      
+
       dispatch({ type: 'CREATE_SUCCESS', payload: newExercise });
       return newExercise;
     } catch (error) {
@@ -310,7 +380,7 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
     
     try {
       await exercisesService.update(id, updates);
-      
+
       // Mettre à jour le cache local
       const currentExercise = state.exercises.data.find(ex => ex.id === id);
       if (currentExercise) {
@@ -319,7 +389,7 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
           await offlineStorage.saveExercise(updatedExercise, 'synced');
         }
       }
-      
+
       dispatch({ type: 'UPDATE_SUCCESS', payload: { id, updates } });
     } catch (error) {
       console.error('Error updating exercise online:', error);
@@ -470,6 +540,7 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
 
   const actions = useMemo(() => ({
     loadExercises,
+    loadExerciseById,
     createExercise,
     updateExercise,
     deleteExercise,
@@ -485,7 +556,7 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
     setPagination,
     clearStates,
     getFilteredExercises
-  }), [loadExercises, createExercise, updateExercise, deleteExercise, shareWithClub, getPermissions, selectExercise, createLocalCopy, setDraftExercise, updateDraftExercise, saveDraftExercise, clearDraft, setFilters, setPagination, clearStates, getFilteredExercises]);
+  }), [loadExercises, loadExerciseById, createExercise, updateExercise, deleteExercise, shareWithClub, getPermissions, selectExercise, createLocalCopy, setDraftExercise, updateDraftExercise, saveDraftExercise, clearDraft, setFilters, setPagination, clearStates, getFilteredExercises]);
 
   return (
     <ExercisesContext.Provider value={{ state, actions }}>

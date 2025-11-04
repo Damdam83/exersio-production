@@ -1,6 +1,8 @@
 import React from 'react';
-import { Player, Arrow, Ball, Zone } from '../../constants/exerciseEditor';
-import { SportType, SPORTS_CONFIG } from '../../constants/sportsConfig';
+import { Arrow, Ball, Player, Zone } from '../../constants/exerciseEditor';
+import { SPORTS_CONFIG, SportType } from '../../constants/sportsConfig';
+import { ARROW_TYPES, ArrowActionType, getArrowStyle, generateArrowMarkers } from '../../constants/arrowTypes';
+import { CourtBackgroundImage } from './CourtBackgroundImage';
 
 interface SportCourtProps {
   sport: SportType;
@@ -18,8 +20,9 @@ interface SportCourtProps {
   onCourtPointerDown: (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => void;
   onCourtPointerMove: (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => void;
   onCourtPointerUp: () => void;
-  onElementPointerDown: (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone') => void;
+  onElementPointerDown: (e: React.MouseEvent | React.TouchEvent, elementId: string, elementType: 'player' | 'ball' | 'zone' | 'arrow') => void;
   onElementSelect: (elementId: string) => void;
+  onUpdateElement?: (elementId: string, updates: Partial<Arrow>) => void;
   displayMode?: 'role' | 'number';
   style?: React.CSSProperties;
 }
@@ -42,10 +45,87 @@ export function SportCourt({
   onCourtPointerUp,
   onElementPointerDown,
   onElementSelect,
+  onUpdateElement,
   displayMode = 'role',
   style = {}
 }: SportCourtProps) {
+  const [draggingControlPoint, setDraggingControlPoint] = React.useState<string | null>(null);
   const sportConfig = SPORTS_CONFIG[sport];
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 770;
+  const isVerySmall = typeof window !== 'undefined' && window.innerWidth < 400;
+
+  // Multiplicateur pour l'épaisseur des flèches sur mobile
+  const arrowWidthMultiplier = isMobile ? 2.5 : 1;
+
+  // Handler pour gérer le drag du point de contrôle
+  const handleControlPointMove = React.useCallback((e: React.MouseEvent | React.Touch) => {
+    if (!draggingControlPoint || !courtRef.current || !onUpdateElement) return;
+
+    const rect = courtRef.current.getBoundingClientRect();
+    const borderWidth = 3;
+    const innerWidth = rect.width - (borderWidth * 2);
+    const innerHeight = rect.height - (borderWidth * 2);
+    const innerLeft = rect.left + borderWidth;
+    const innerTop = rect.top + borderWidth;
+
+    const x = ((e.clientX - innerLeft) / innerWidth) * 100;
+    const y = ((e.clientY - innerTop) / innerHeight) * 100;
+
+    // Mettre à jour le point de contrôle de la flèche
+    onUpdateElement(draggingControlPoint, {
+      controlX: Math.max(-30, Math.min(130, x)),
+      controlY: Math.max(-30, Math.min(130, y))
+    });
+  }, [draggingControlPoint, courtRef, onUpdateElement]);
+
+  // Listeners globaux pour le drag
+  React.useEffect(() => {
+    if (!draggingControlPoint) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleControlPointMove(e);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        handleControlPointMove(e.touches[0]);
+      }
+    };
+
+    const handleEnd = () => {
+      setDraggingControlPoint(null);
+      // Désélectionner la flèche après le drag
+      onElementSelect('');
+    };
+
+    // Mouse events
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleEnd);
+
+    // Touch events
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleEnd);
+    document.addEventListener('touchcancel', handleEnd);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleEnd);
+      document.removeEventListener('touchcancel', handleEnd);
+    };
+  }, [draggingControlPoint, handleControlPointMove, onElementSelect]);
+
+  // Calculate correct viewBox based on aspect ratio
+  const aspectRatio = sportConfig.fieldDimensions.aspectRatio;
+  const viewBoxWidth = 100 * aspectRatio;
+  const viewBox = `0 0 ${viewBoxWidth} 100`;
+
+  // Scaling adaptatif selon taille écran
+  const playerSize = isVerySmall ? 16 : (isMobile ? 20 : 32);
+  const ballSize = isVerySmall ? 10 : (isMobile ? 12 : 20);
+  const fontSize = isVerySmall ? 8 : (isMobile ? 10 : 12);
+  const borderWidth = isVerySmall ? 1 : (isMobile ? 2 : 3);
 
   const renderSportSpecificElements = () => {
     const elements = [];
@@ -166,14 +246,14 @@ export function SportCourt({
       <svg
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          top: '3px',
+          left: '3px',
+          right: '3px',
+          bottom: '3px',
           pointerEvents: 'none'
         }}
         preserveAspectRatio="none"
-        viewBox="0 0 100 100"
+        viewBox={viewBox}
       >
         {gridLines}
       </svg>
@@ -181,34 +261,35 @@ export function SportCourt({
   };
 
   const renderPreviewArrow = () => {
-    if (!isCreating || selectedTool !== 'arrow' || !creationStart || !currentMousePos) return null;
+    if (!isCreating || !selectedTool.startsWith('arrow-') || !creationStart || !currentMousePos) return null;
+
+    // Get the action type from selectedTool (e.g., 'arrow-pass' -> 'pass')
+    const actionType = selectedTool.replace('arrow-', '') as ArrowActionType;
+    const arrowConfig = ARROW_TYPES[actionType];
 
     return (
       <svg
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          top: '3px',
+          left: '3px',
+          right: '3px',
+          bottom: '3px',
           pointerEvents: 'none'
         }}
         preserveAspectRatio="none"
-        viewBox="0 0 100 100"
+        viewBox={viewBox}
       >
         <defs>
           <marker
             id="preview-arrowhead"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
+            markerWidth="2"
+            markerHeight="2"
+            refX="1.5"
+            refY="1"
             orient="auto"
           >
-            <polygon
-              points="0 0, 10 3.5, 0 7"
-              fill="rgba(59, 130, 246, 0.8)"
-            />
+            <path d="M0,0 L0,2 L1.5,1 z" fill={arrowConfig.color} fillOpacity="0.7" />
           </marker>
         </defs>
         <line
@@ -216,9 +297,10 @@ export function SportCourt({
           y1={`${creationStart.y}%`}
           x2={`${currentMousePos.x}%`}
           y2={`${currentMousePos.y}%`}
-          stroke="rgba(59, 130, 246, 0.8)"
-          strokeWidth="2"
-          strokeDasharray="5,5"
+          stroke={arrowConfig.color}
+          strokeWidth={arrowConfig.width * arrowWidthMultiplier}
+          strokeDasharray={arrowConfig.dashArray === 'none' ? '1,0.5' : arrowConfig.dashArray}
+          strokeOpacity="0.7"
           markerEnd="url(#preview-arrowhead)"
         />
       </svg>
@@ -251,9 +333,9 @@ export function SportCourt({
   };
 
   return (
-    <div style={{ padding: '16px 32px 32px 32px' }}>
+    <div style={{ padding: isMobile ? '0' : '16px 32px 32px 32px' }}>
       {/* Zone d'information fixe */}
-      <div style={{ minHeight: '60px', marginBottom: '16px' }}>
+      <div style={{ minHeight: '60px', marginBottom: isMobile ? '8px' : '16px' }}>
         {isCreating && (
           <div style={{
             padding: '12px 16px',
@@ -305,18 +387,22 @@ export function SportCourt({
 
       {/* Terrain de sport */}
       <div
+        id="actual-court"
         ref={courtRef}
         style={{
           position: 'relative',
           width: '100%',
           aspectRatio: sportConfig.fieldDimensions.aspectRatio,
-          background: sportConfig.fieldColor,
+          backgroundColor: sportConfig.fieldColor, // Fallback si image ne charge pas
           borderRadius: '8px',
           border: '3px solid #ffffff',
           cursor: selectedTool === 'select' ? 'default' : 'crosshair',
           overflow: 'hidden',
           userSelect: 'none',
           touchAction: 'none',
+          // Scaling automatique des éléments enfants sur très petit écran
+          transform: isVerySmall ? 'scale(0.95)' : 'scale(1)',
+          transformOrigin: 'center center',
           ...style
         }}
         onMouseDown={onCourtPointerDown}
@@ -326,90 +412,81 @@ export function SportCourt({
         onMouseUp={onCourtPointerUp}
         onTouchEnd={onCourtPointerUp}
       >
-        {/* Pattern de terrain spécifique */}
-        {sportConfig.fieldPattern === 'grass' && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: `repeating-linear-gradient(
-              90deg,
-              transparent,
-              transparent 20px,
-              rgba(255, 255, 255, 0.05) 20px,
-              rgba(255, 255, 255, 0.05) 22px
-            )`
-          }} />
-        )}
+        {/* Image de fond du terrain (z-index: 0) */}
+        <CourtBackgroundImage sport={sport} loading="eager" />
+
+        {/* Pattern de terrain spécifique - DÉSACTIVÉ (remplacé par images) */}
+        {/* Ancien système CSS patterns - commenté car images le gèrent maintenant */}
 
         {/* Grille */}
         {renderGrid()}
 
-        {/* Lignes du terrain SVG */}
-        <svg
+        {/* Lignes du terrain SVG - DÉSACTIVÉES (incluses dans les images) */}
+        {/* Ancien système de lignes - commenté car images les contiennent déjà */}
+        {/*
+      <svg
           style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: '3px',
+            left: '3px',
+            right: '3px',
+            bottom: '3px',
             pointerEvents: 'none'
           }}
           preserveAspectRatio="none"
-          viewBox="0 0 100 100"
+          viewBox={viewBox}
         >
-          {/* Lignes volleyball */}
+          {*\/ Lignes volleyball \/*}
           {sport === 'volleyball' && (
             <>
-              {/* Ligne centrale */}
+              {*\/ Ligne centrale \/*}
               <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="rgba(255, 255, 255, 0.8)" strokeWidth="0.3" />
-              {/* Lignes de fond */}
+              {*\/ Lignes de fond \/*}
               <line x1="0%" y1="5%" x2="100%" y2="5%" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
               <line x1="0%" y1="95%" x2="100%" y2="95%" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Lignes latérales */}
+              {*\/ Lignes latérales \/*}
               <line x1="5%" y1="0%" x2="5%" y2="100%" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
               <line x1="95%" y1="0%" x2="95%" y2="100%" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Ligne d'attaque */}
+              {*\/ Ligne d'attaque \/*}
               <line x1="5%" y1="25%" x2="95%" y2="25%" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" strokeDasharray="2,2" />
               <line x1="5%" y1="75%" x2="95%" y2="75%" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" strokeDasharray="2,2" />
             </>
           )}
           
-          {/* Lignes basketball */}
+          {*\/ Lignes basketball \/*}
           {sport === 'basketball' && (
             <>
-              {/* Ligne centrale */}
+              {*\/ Ligne centrale \/*}
               <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="rgba(255, 255, 255, 0.8)" strokeWidth="0.3" />
-              {/* Contour du terrain */}
+              {*\/ Contour du terrain \/*}
               <rect x="5%" y="5%" width="90%" height="90%" fill="none" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Cercle central */}
+              {*\/ Cercle central \/*}
               <circle cx="50%" cy="50%" r="8%" fill="none" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Zones restrictives */}
+              {*\/ Zones restrictives \/*}
               <rect x="5%" y="30%" width="15%" height="40%" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" />
               <rect x="80%" y="30%" width="15%" height="40%" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" />
             </>
           )}
           
-          {/* Lignes football */}
+          {*\/ Lignes football \/*}
           {sport === 'football' && (
             <>
-              {/* Ligne centrale */}
+              {*\/ Ligne centrale \/*}
               <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="rgba(255, 255, 255, 0.8)" strokeWidth="0.3" />
-              {/* Contour du terrain */}
+              {*\/ Contour du terrain \/*}
               <rect x="2%" y="5%" width="96%" height="90%" fill="none" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Cercle central */}
+              {*\/ Cercle central \/*}
               <circle cx="50%" cy="50%" r="8%" fill="none" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.2" />
-              {/* Surfaces de réparation */}
+              {*\/ Surfaces de réparation \/*}
               <rect x="2%" y="25%" width="18%" height="50%" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" />
               <rect x="80%" y="25%" width="18%" height="50%" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="0.15" />
             </>
           )}
         </svg>
 
-        {/* Éléments spécifiques du sport */}
+        {*\/ Éléments spécifiques du sport \/*}
         {renderSportSpecificElements()}
+      */}
 
         {/* Zones */}
         {zones.map((zone) => (
@@ -448,7 +525,8 @@ export function SportCourt({
         {/* Joueurs */}
         {players.map((player) => {
           const roleColor = sportConfig.roleColors[player.role] || '#6b7280';
-          const roleLabel = sportConfig.playerRoles[player.role] || player.role.charAt(0).toUpperCase();
+          // Afficher l'abréviation (la clé) au lieu du nom complet (la valeur)
+          const roleLabel = player.role; // Ex: "G" au lieu de "Gardien"
           
           return (
             <div
@@ -457,16 +535,16 @@ export function SportCourt({
                 position: 'absolute',
                 left: `${player.position.x}%`,
                 top: `${player.position.y}%`,
-                width: '32px',
-                height: '32px',
+                width: `${playerSize}px`,
+                height: `${playerSize}px`,
                 background: roleColor,
-                border: `3px solid ${selectedElement === player.id ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'}`,
+                border: `${borderWidth}px solid ${selectedElement === player.id ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'}`,
                 borderRadius: '50%',
                 cursor: selectedTool === 'select' ? 'pointer' : 'crosshair',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '12px',
+                fontSize: `${fontSize}px`,
                 fontWeight: '700',
                 color: '#ffffff',
                 textShadow: '0 1px 2px rgba(0, 0, 0, 0.7)',
@@ -499,8 +577,8 @@ export function SportCourt({
               position: 'absolute',
               left: `${ball.position.x}%`,
               top: `${ball.position.y}%`,
-              width: '20px',
-              height: '20px',
+              width: `${ballSize}px`,
+              height: `${ballSize}px`,
               background: sport === 'volleyball' ? '#ff6b35' : 
                           sport === 'football' ? '#000000' :
                           sport === 'basketball' ? '#ff8c00' :
@@ -529,51 +607,211 @@ export function SportCourt({
         <svg
           style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            pointerEvents: 'none'
+            top: '3px',
+            left: '3px',
+            right: '3px',
+            bottom: '3px',
+            pointerEvents: selectedTool === 'select' ? 'auto' : 'none'
           }}
           preserveAspectRatio="none"
-          viewBox="0 0 100 100"
+          viewBox={viewBox}
         >
           <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon
-                points="0 0, 10 3.5, 0 7"
-                fill="rgba(255, 255, 255, 0.9)"
-              />
-            </marker>
+            {/* Generate markers for each arrow type */}
+            {generateArrowMarkers()}
           </defs>
-          {arrows.map((arrow) => (
-            <line
-              key={arrow.id}
-              x1={`${arrow.startPosition.x}%`}
-              y1={`${arrow.startPosition.y}%`}
-              x2={`${arrow.endPosition.x}%`}
-              y2={`${arrow.endPosition.y}%`}
-              stroke={selectedElement === arrow.id ? '#00d4aa' : 'rgba(255, 255, 255, 0.9)'}
-              strokeWidth={selectedElement === arrow.id ? "3" : "2"}
-              markerEnd="url(#arrowhead)"
+          {arrows.map((arrow) => {
+            // Get arrow type (use actionType if available, fallback to 'pass' for old arrows)
+            const arrowActionType = arrow.actionType || 'pass';
+            const arrowConfig = ARROW_TYPES[arrowActionType];
+            const arrowStyle = getArrowStyle(arrowActionType);
+
+            const startX = arrow.startPosition.x;
+            const startY = arrow.startPosition.y;
+            const endX = arrow.endPosition.x;
+            const endY = arrow.endPosition.y;
+
+            // Vérifier si la flèche a un point de contrôle (courbe personnalisée)
+            const isCurved = arrow.controlX !== undefined && arrow.controlY !== undefined;
+
+            if (isCurved) {
+              // Flèche courbe avec point de contrôle personnalisé
+              // Convertir les pourcentages en coordonnées viewBox
+              const vbStartX = (startX / 100) * viewBoxWidth;
+              const vbStartY = startY;
+              const vbEndX = (endX / 100) * viewBoxWidth;
+              const vbEndY = endY;
+              const vbControlX = (arrow.controlX / 100) * viewBoxWidth;
+              const vbControlY = arrow.controlY;
+
+              const isSelected = selectedElement === arrow.id;
+              const visiblePath = (
+                <path
+                  key={arrow.id}
+                  d={`M ${vbStartX} ${vbStartY} Q ${vbControlX} ${vbControlY} ${vbEndX} ${vbEndY}`}
+                  fill="none"
+                  stroke={arrowStyle.stroke}
+                  strokeWidth={(isSelected && draggingControlPoint ? arrowConfig.width + 0.2 : arrowConfig.width) * arrowWidthMultiplier}
+                  strokeDasharray={arrowStyle.strokeDasharray}
+                  markerEnd={arrowStyle.markerEnd}
+                  style={{
+                    filter: isSelected && draggingControlPoint ? `drop-shadow(0 0 4px ${arrowConfig.color}80)` : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                    cursor: selectedTool === 'select' ? 'pointer' : 'crosshair',
+                    pointerEvents: 'none'
+                  }}
+                />
+              );
+
+              const hitArea = (
+                <path
+                  key={`${arrow.id}-hit`}
+                  d={`M ${vbStartX} ${vbStartY} Q ${vbControlX} ${vbControlY} ${vbEndX} ${vbEndY}`}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={isMobile ? 3 : 2}
+                  style={{
+                    cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
+                  }}
+                  onMouseDown={(e) => {
+                    if (selectedTool === 'select') {
+                      e.stopPropagation();
+                      onElementPointerDown(e, arrow.id, 'arrow');
+                    }
+                  }}
+                  onTouchStart={(e) => {
+                    if (selectedTool === 'select') {
+                      e.stopPropagation();
+                      onElementPointerDown(e, arrow.id, 'arrow');
+                    }
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onElementSelect(arrow.id);
+                  }}
+                />
+              );
+
+              return (
+                <React.Fragment key={arrow.id}>
+                  {visiblePath}
+                  {hitArea}
+                </React.Fragment>
+              );
+            }
+
+            // Flèche droite
+            const isSelected = selectedElement === arrow.id;
+            const visibleLine = (
+              <line
+                key={arrow.id}
+                x1={`${arrow.startPosition.x}%`}
+                y1={`${arrow.startPosition.y}%`}
+                x2={`${arrow.endPosition.x}%`}
+                y2={`${arrow.endPosition.y}%`}
+                stroke={arrowStyle.stroke}
+                strokeWidth={(isSelected && draggingControlPoint ? arrowConfig.width + 0.2 : arrowConfig.width) * arrowWidthMultiplier}
+                strokeDasharray={arrowStyle.strokeDasharray}
+                markerEnd={arrowStyle.markerEnd}
+                style={{
+                  filter: isSelected && draggingControlPoint ? `drop-shadow(0 0 4px ${arrowConfig.color}80)` : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                  cursor: selectedTool === 'select' ? 'pointer' : 'crosshair',
+                  pointerEvents: 'none'
+                }}
+              />
+            );
+
+            const hitLine = (
+              <line
+                key={`${arrow.id}-hit`}
+                x1={`${arrow.startPosition.x}%`}
+                y1={`${arrow.startPosition.y}%`}
+                x2={`${arrow.endPosition.x}%`}
+                y2={`${arrow.endPosition.y}%`}
+                stroke="transparent"
+                strokeWidth={isMobile ? 3 : 2}
+                style={{
+                  cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
+                }}
+                onMouseDown={(e) => {
+                  if (selectedTool === 'select') {
+                    e.stopPropagation();
+                    onElementPointerDown(e, arrow.id, 'arrow');
+                  }
+                }}
+                onTouchStart={(e) => {
+                  if (selectedTool === 'select') {
+                    e.stopPropagation();
+                    onElementPointerDown(e, arrow.id, 'arrow');
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onElementSelect(arrow.id);
+                }}
+              />
+            );
+
+            return (
+              <React.Fragment key={arrow.id}>
+                {visibleLine}
+                {hitLine}
+              </React.Fragment>
+            );
+          })}
+        </svg>
+
+        {/* Point de contrôle pour courber la flèche sélectionnée */}
+        {selectedElement && arrows.find(a => a.id === selectedElement) && selectedTool === 'select' && (() => {
+          const selectedArrow = arrows.find(a => a.id === selectedElement);
+          if (!selectedArrow) return null;
+
+          // Récupérer la couleur de la flèche
+          const arrowActionType = selectedArrow.actionType || 'pass';
+          const arrowConfig = ARROW_TYPES[arrowActionType];
+
+          const startX = selectedArrow.startPosition.x;
+          const startY = selectedArrow.startPosition.y;
+          const endX = selectedArrow.endPosition.x;
+          const endY = selectedArrow.endPosition.y;
+
+          // Point de contrôle au milieu par défaut (ligne droite)
+          const defaultControlX = (startX + endX) / 2;
+          const defaultControlY = (startY + endY) / 2;
+
+          // Utiliser le point de contrôle existant ou celui par défaut
+          const controlX = selectedArrow.controlX ?? defaultControlX;
+          const controlY = selectedArrow.controlY ?? defaultControlY;
+
+          return (
+            <div
               style={{
-                filter: selectedElement === arrow.id ? 'drop-shadow(0 0 6px #00d4aa60)' : 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
-                cursor: selectedTool === 'select' ? 'pointer' : 'crosshair'
+                position: 'absolute',
+                left: `${controlX}%`,
+                top: `${controlY}%`,
+                width: '16px',
+                height: '16px',
+                background: arrowConfig.color,
+                border: '2px solid #ffffff',
+                borderRadius: '50%',
+                cursor: 'move',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 150,
+                boxShadow: `0 2px 8px ${arrowConfig.color}80`,
+                transition: draggingControlPoint === selectedArrow.id ? 'none' : 'all 0.15s ease'
               }}
-              onClick={(e) => {
+              onMouseDown={(e) => {
                 e.stopPropagation();
-                onElementSelect(arrow.id);
+                setDraggingControlPoint(selectedArrow.id);
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                if (e.touches.length > 0 && onUpdateElement) {
+                  setDraggingControlPoint(selectedArrow.id);
+                }
               }}
             />
-          ))}
-        </svg>
+          );
+        })()}
 
         {/* Aperçu de création */}
         {renderPreviewArrow()}

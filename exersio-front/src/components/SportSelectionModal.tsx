@@ -1,5 +1,6 @@
 import React from 'react';
 import { SportType, SPORTS_CONFIG } from '../constants/sportsConfig';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface SportSelectionModalProps {
   isOpen: boolean;
@@ -8,6 +9,9 @@ interface SportSelectionModalProps {
 }
 
 export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectionModalProps) {
+  const isMobile = useIsMobile();
+  const isVerySmall = typeof window !== 'undefined' && window.innerWidth < 480;
+
   if (!isOpen) return null;
 
   const handleSportSelect = (sport: SportType) => {
@@ -16,15 +20,16 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
   };
 
   return (
-    <div 
+    <div
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0, 0, 0, 0.8)',
+        background: 'transparent',
         backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -37,14 +42,17 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
         }
       }}
     >
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.08)',
+      <div
+        style={{
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
-        borderRadius: '24px',
-        maxWidth: '900px',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.18)',
+        borderRadius: isMobile ? '16px' : '24px',
+        maxWidth: isMobile ? '100%' : '900px',
         width: '100%',
-        maxHeight: '90vh',
+        maxHeight: isMobile ? '100vh' : '90vh',
+        height: isMobile ? '100%' : 'auto',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
@@ -52,7 +60,7 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
       }}>
         {/* Header */}
         <div style={{
-          padding: '24px 32px',
+          padding: isMobile ? '16px 20px' : '24px 32px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           justifyContent: 'space-between',
@@ -60,24 +68,26 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
         }}>
           <div>
             <h2 style={{
-              fontSize: '24px',
+              fontSize: isMobile ? '18px' : '24px',
               fontWeight: '700',
               color: '#ffffff',
               margin: 0,
               marginBottom: '4px',
               display: 'flex',
               alignItems: 'center',
-              gap: '12px'
+              gap: isMobile ? '8px' : '12px'
             }}>
               🏟️ Choisir un sport
             </h2>
-            <p style={{
-              fontSize: '14px',
-              color: '#94a3b8',
-              margin: 0
-            }}>
-              Sélectionnez le type de terrain pour votre exercice
-            </p>
+            {!isMobile && (
+              <p style={{
+                fontSize: '14px',
+                color: '#94a3b8',
+                margin: 0
+              }}>
+                Sélectionnez le type de terrain pour votre exercice
+              </p>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -112,16 +122,13 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '32px'
+          padding: isMobile ? '16px' : '32px'
         }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '20px',
-            '@media (max-width: 768px)': {
-              gridTemplateColumns: '1fr',
-              gap: '16px'
-            }
+            gridTemplateColumns: isVerySmall ? '1fr' : 'repeat(auto-fill, minmax(220px, 220px))',
+            gap: isMobile ? '12px' : '20px',
+            justifyContent: 'center'
           }}>
             {Object.values(SPORTS_CONFIG).map((sport) => (
               <div
@@ -129,130 +136,96 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
                 onClick={() => handleSportSelect(sport.id)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
-                  border: '2px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '16px',
-                  padding: '24px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '18px',
+                  padding: isMobile ? '16px' : '24px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   textAlign: 'center',
-                  minHeight: '280px',
+                  width: isVerySmall ? '100%' : '220px',
+                  minHeight: isVerySmall ? 'auto' : '280px',
+                  maxWidth: isVerySmall ? '100%' : '220px',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.borderColor = '#00d4aa';
-                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 212, 170, 0.3)';
-                  e.currentTarget.style.background = 'rgba(0, 212, 170, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                 }}
               >
-                {/* Terrain miniature */}
+                {/* Terrain miniature avec vraie image */}
                 <div style={{
                   width: '100%',
-                  height: '120px',
-                  background: sport.fieldColor,
-                  borderRadius: '12px',
-                  marginBottom: '20px',
+                  height: isMobile ? '100px' : '120px',
+                  background: sport.fieldColor, // Fallback color
+                  borderRadius: isMobile ? '8px' : '12px',
+                  marginBottom: isMobile ? '12px' : '20px',
                   position: 'relative',
                   border: '2px solid rgba(255, 255, 255, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   overflow: 'hidden'
                 }}>
-                  {/* Pattern de terrain spécifique */}
-                  {sport.fieldPattern === 'grass' && (
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: `repeating-linear-gradient(
-                        90deg,
-                        transparent,
-                        transparent 8px,
-                        rgba(255, 255, 255, 0.1) 8px,
-                        rgba(255, 255, 255, 0.1) 10px
-                      )`
-                    }} />
-                  )}
-                  
-                  {/* Éléments spécifiques du terrain */}
-                  {sport.specificElements?.net && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '45%',
-                      left: '0',
-                      right: '0',
-                      height: '2px',
-                      background: 'rgba(255, 255, 255, 0.6)',
-                      borderRadius: '1px'
-                    }} />
-                  )}
-                  
-                  {sport.specificElements?.goals && (
-                    <>
-                      <div style={{
-                        position: 'absolute',
-                        left: '4px',
-                        top: '30%',
-                        bottom: '30%',
-                        width: '8px',
-                        background: 'rgba(255, 255, 255, 0.8)',
-                        borderRadius: '2px'
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        right: '4px',
-                        top: '30%',
-                        bottom: '30%',
-                        width: '8px',
-                        background: 'rgba(255, 255, 255, 0.8)',
-                        borderRadius: '2px'
-                      }} />
-                    </>
-                  )}
-
-                  {sport.specificElements?.baskets && (
-                    <>
-                      <div style={{
-                        position: 'absolute',
-                        left: '8px',
-                        top: '20px',
-                        width: '16px',
-                        height: '16px',
-                        border: '2px solid rgba(255, 255, 255, 0.8)',
-                        borderRadius: '50%'
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        right: '8px',
-                        bottom: '20px',
-                        width: '16px',
-                        height: '16px',
-                        border: '2px solid rgba(255, 255, 255, 0.8)',
-                        borderRadius: '50%'
-                      }} />
-                    </>
-                  )}
-
-                  {/* Emoji du sport */}
+                  {/* Image de fond du terrain */}
                   <div style={{
-                    fontSize: '32px',
-                    opacity: 0.8,
-                    textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)'
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: '100%',
+                    height: '100%'
                   }}>
-                    {sport.emoji}
+                    <picture>
+                      <source
+                        srcSet={`/assets/courts/${sport.id}/${sport.id}-court-dark.webp`}
+                        type="image/webp"
+                      />
+                      <img
+                        src={`/assets/courts/${sport.id}/${sport.id}-court-dark.png`}
+                        alt={`${sport.name} court`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          objectPosition: 'center'
+                        }}
+                        onError={(e) => {
+                          // Fallback: masquer l'image et montrer le fond de couleur
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </picture>
+                  </div>
+
+                  {/* Overlay sombre pour meilleure lisibilité de l'emoji */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {/* Emoji du sport */}
+                    <div style={{
+                      fontSize: isMobile ? '24px' : '32px',
+                      textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)'
+                    }}>
+                      {sport.emoji}
+                    </div>
                   </div>
                 </div>
 
@@ -260,21 +233,23 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
                     <h3 style={{
-                      fontSize: '18px',
+                      fontSize: isVerySmall ? '16px' : '18px',
                       fontWeight: '700',
                       color: '#ffffff',
-                      margin: '0 0 8px 0'
+                      margin: '0 0 6px 0'
                     }}>
                       {sport.name}
                     </h3>
-                    <p style={{
-                      fontSize: '13px',
-                      color: '#94a3b8',
-                      margin: '0 0 16px 0',
-                      lineHeight: '1.4'
-                    }}>
-                      {sport.description}
-                    </p>
+                    {!isVerySmall && (
+                      <p style={{
+                        fontSize: '13px',
+                        color: '#94a3b8',
+                        margin: '0 0 16px 0',
+                        lineHeight: '1.4'
+                      }}>
+                        {sport.description}
+                      </p>
+                    )}
                   </div>
 
                   {/* Statistiques */}
@@ -282,11 +257,12 @@ export function SportSelectionModal({ isOpen, onSelect, onClose }: SportSelectio
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '12px 16px',
+                    padding: isMobile ? '8px 12px' : '12px 16px',
                     background: 'rgba(255, 255, 255, 0.05)',
                     borderRadius: '8px',
-                    fontSize: '12px',
-                    color: '#94a3b8'
+                    fontSize: isMobile ? '11px' : '12px',
+                    color: '#94a3b8',
+                    marginTop: isMobile ? '8px' : '0'
                   }}>
                     <span>👥 {sport.minPlayers}-{sport.maxPlayers}</span>
                     <span>🎯 {Object.keys(sport.playerRoles).length} rôles</span>

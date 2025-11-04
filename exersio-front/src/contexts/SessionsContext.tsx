@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo, Rea
 import type { Session } from '../types';
 import type { AsyncState, MutationState, ApiError } from '../types/api';
 import { sessionsService } from '../services/sessionsService';
+import { offlineStorage } from '../services/offlineStorage';
 
 interface SessionsState {
   sessions: AsyncState<Session[]>;
@@ -285,13 +286,37 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
 
   const loadSessions = useCallback(async () => {
     dispatch({ type: 'LOAD_START' });
-    
+
     try {
+      // Si offline, charger depuis IndexedDB
+      if (!navigator.onLine) {
+        const offlineSessions = await offlineStorage.getAllSessions();
+        const sessions = offlineSessions.map(item => item.data);
+        dispatch({ type: 'LOAD_SUCCESS', payload: sessions });
+        return;
+      }
+
+      // Si online, charger depuis l'API
       const sessions = await sessionsService.getAll(state.filters);
       dispatch({ type: 'LOAD_SUCCESS', payload: sessions });
+
+      // Sauvegarder toutes les sessions chargées dans IndexedDB pour le mode offline
+      if (sessions && sessions.length > 0) {
+        await Promise.all(
+          sessions.map(session => offlineStorage.saveSession(session, 'synced'))
+        );
+      }
     } catch (error) {
       console.error('Error loading sessions:', error);
-      dispatch({ type: 'LOAD_ERROR', payload: error as ApiError });
+
+      // En cas d'erreur réseau, tenter de charger depuis IndexedDB
+      try {
+        const offlineSessions = await offlineStorage.getAllSessions();
+        const sessions = offlineSessions.map(item => item.data);
+        dispatch({ type: 'LOAD_SUCCESS', payload: sessions });
+      } catch (offlineError) {
+        dispatch({ type: 'LOAD_ERROR', payload: error as ApiError });
+      }
     }
   }, [state.filters]);
 
@@ -333,8 +358,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       if (updates.status !== undefined) updateData.status = updates.status;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
 
-      console.log('Updating session with data:', updateData);
-      
       await sessionsService.update(id, updateData);
       dispatch({ type: 'UPDATE_SUCCESS', payload: { id, updates } });
     } catch (error) {

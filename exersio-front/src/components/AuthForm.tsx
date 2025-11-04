@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { ExersioLogo } from './ExersioLogo';
+import { Eye, EyeOff } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { api } from '../services/api';
+import { getSports } from '../services/sportsApi';
+import type { Sport } from '../types';
 import type { ApiError } from '../types/api';
+import { ExersioLogo } from './ExersioLogo';
+import { LegalFooter } from './LegalFooter';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
 
 interface AuthFormProps {
   onLogin: (credentials: { email: string; password: string }) => Promise<void>;
-  onRegister?: (data: { name: string; email: string; password: string }) => Promise<void>;
+  onRegister?: (data: { name: string; email: string; password: string; preferredSportId?: string }) => Promise<void>;
   isLoading?: boolean;
   error?: ApiError | string | null;
 }
@@ -16,6 +23,8 @@ interface AuthFormProps {
 type AuthMode = 'login' | 'register' | 'forgot-password' | 'confirm-email' | 'reset-password';
 
 export function AuthForm({ onLogin, onRegister, isLoading = false, error }: AuthFormProps) {
+  const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,6 +33,12 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
   const [localError, setLocalError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [preferredSportId, setPreferredSportId] = useState<string>('');
+  const [sports, setSports] = useState<Sport[]>([]);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -41,6 +56,19 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
       }
     }
   }, [urlToken, urlAction]);
+
+  // Load sports when switching to register mode
+  useEffect(() => {
+    if (mode === 'register' && sports.length === 0) {
+      console.log('Loading sports for registration...');
+      getSports()
+        .then(data => {
+          console.log('Sports loaded:', data);
+          setSports(data);
+        })
+        .catch(err => console.error('Failed to load sports:', err));
+    }
+  }, [mode]);
 
   // Nettoyer les erreurs et messages quand l'utilisateur tape
   React.useEffect(() => {
@@ -114,8 +142,25 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
         return;
       }
 
-      if (password.length < 6) {
-        setLocalError('Le mot de passe doit contenir au moins 6 caractères');
+      // Validation de la force du mot de passe
+      if (password.length < 8) {
+        setLocalError('Le mot de passe doit contenir au moins 8 caractères');
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins une lettre majuscule');
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins une lettre minuscule');
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins un chiffre');
+        return;
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*)');
         return;
       }
 
@@ -155,8 +200,31 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
         setLocalError('Les mots de passe ne correspondent pas');
         return;
       }
-      if (password.length < 6) {
-        setLocalError('Le mot de passe doit contenir au moins 6 caractères');
+
+      // Validation de la force du mot de passe
+      if (password.length < 8) {
+        setLocalError('Le mot de passe doit contenir au moins 8 caractères');
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins une lettre majuscule');
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins une lettre minuscule');
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins un chiffre');
+        return;
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        setLocalError('Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*)');
+        return;
+      }
+
+      if (!acceptTerms || !acceptPrivacy) {
+        setLocalError('Vous devez accepter les CGU et la Politique de Confidentialité pour créer un compte');
         return;
       }
       if (!onRegister) {
@@ -165,12 +233,19 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
       }
 
       try {
-        const result = await onRegister({ name, email, password });
+        const result = await onRegister({
+          name,
+          email,
+          password,
+          preferredSportId: preferredSportId || undefined
+        });
         // Si l'inscription réussit, afficher un message de succès
         setSuccessMessage('Compte créé avec succès ! Vérifiez votre email pour confirmer votre compte.');
       } catch (err: any) {
         console.error('Erreur d\'inscription:', err);
-        // L'erreur sera affichée via le prop error
+        // Afficher l'erreur à l'utilisateur
+        const errorMessage = err.message || 'Une erreur est survenue lors de l\'inscription';
+        setLocalError(errorMessage);
       }
     } else {
       // Mode connexion (login)
@@ -188,11 +263,6 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
   };
 
   const displayError = (typeof error === 'string' ? error : error?.message) || localError;
-  
-  // Debug pour voir les erreurs
-  console.log('Auth error:', error);
-  console.log('Local error:', localError);
-  console.log('Display error:', displayError);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1e2731] via-[#2a3441] to-[#1e2731] flex items-center justify-center p-4 relative">
@@ -283,22 +353,56 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Champ nom (uniquement en mode inscription) */}
               {mode === 'register' && (
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium text-white">
-                    Nom complet
-                  </label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Votre nom complet"
-                    disabled={isLoading}
-                    className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa]"
-                    autoComplete="name"
-                    required={mode === 'register'}
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <label htmlFor="name" className="text-sm font-medium text-white">
+                      Nom complet
+                    </label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Votre nom complet"
+                      disabled={isLoading}
+                      className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa]"
+                      autoComplete="name"
+                      required={mode === 'register'}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="preferredSport" className="text-sm font-medium text-white">
+                      Sport préféré (optionnel)
+                    </label>
+                    <select
+                      id="preferredSport"
+                      value={preferredSportId}
+                      onChange={(e) => setPreferredSportId(e.target.value)}
+                      disabled={isLoading || !sports || sports.length === 0}
+                      className="w-full px-3 py-2 bg-[#283544] border border-[#3d4a5c] rounded-md text-white focus:border-[#00d4aa] focus:ring-1 focus:ring-[#00d4aa] focus:outline-none"
+                      style={{
+                        WebkitAppearance: 'menulist',
+                        MozAppearance: 'menulist',
+                        appearance: 'menulist'
+                      }}
+                    >
+                      <option value="">-- Sélectionner un sport --</option>
+                      {sports && Array.isArray(sports) && sports.length > 0 ? (
+                        sports.map(sport => (
+                          <option key={sport.id} value={sport.id}>
+                            {sport.icon ? `${sport.icon} ` : ''}{sport.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>Chargement des sports...</option>
+                      )}
+                    </select>
+                    {(!sports || sports.length === 0) && mode === 'register' && (
+                      <p className="text-xs text-gray-400">Chargement des sports...</p>
+                    )}
+                  </div>
+                </>
               )}
             
             {/* Champ email */}
@@ -325,17 +429,35 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
                 <label htmlFor="password" className="text-sm font-medium text-white">
                   {mode === 'reset-password' ? 'Nouveau mot de passe' : 'Mot de passe'}
                 </label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  disabled={isLoading}
-                  className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa]"
-                  autoComplete={mode === 'reset-password' ? 'new-password' : 'current-password'}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa] pr-10"
+                    autoComplete={mode === 'reset-password' ? 'new-password' : 'current-password'}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+                {/* Indicateur de force de mot de passe - uniquement en mode inscription et reset */}
+                {(mode === 'register' || mode === 'reset-password') && (
+                  <PasswordStrengthIndicator password={password} />
+                )}
               </div>
             )}
 
@@ -345,17 +467,82 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
                 <label htmlFor="confirmPassword" className="text-sm font-medium text-white">
                   Confirmer le mot de passe
                 </label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  disabled={isLoading}
-                  className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa]"
-                  autoComplete="new-password"
-                  required={mode === 'register' || mode === 'reset-password'}
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    className="bg-[#283544] border-[#3d4a5c] text-white placeholder:text-gray-400 focus:border-[#00d4aa] focus:ring-[#00d4aa] pr-10"
+                    autoComplete="new-password"
+                    required={mode === 'register' || mode === 'reset-password'}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* RGPD Checkboxes - uniquement en mode register */}
+            {mode === 'register' && (
+              <div className="space-y-3 pt-2">
+                {/* CGU */}
+                <label className="flex items-start space-x-3 cursor-pointer group">
+                  <div className="relative flex items-center justify-center w-5 h-5 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={acceptTerms}
+                      onChange={(e) => setAcceptTerms(e.target.checked)}
+                      className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-700 text-[#00d4aa] focus:ring-2 focus:ring-[#00d4aa] focus:ring-offset-0 cursor-pointer"
+                      required
+                    />
+                  </div>
+                  <span className="text-sm text-gray-300 leading-snug flex-1">
+                    J'accepte les{' '}
+                    <button
+                      type="button"
+                      onClick={() => window.open('/terms', '_blank')}
+                      className="text-[#00d4aa] hover:text-[#00b894] underline font-medium"
+                    >
+                      Conditions Générales d'Utilisation
+                    </button>
+                  </span>
+                </label>
+
+                {/* Politique de confidentialité */}
+                <label className="flex items-start space-x-3 cursor-pointer group">
+                  <div className="relative flex items-center justify-center w-5 h-5 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={acceptPrivacy}
+                      onChange={(e) => setAcceptPrivacy(e.target.checked)}
+                      className="w-5 h-5 rounded border-2 border-slate-600 bg-slate-700 text-[#00d4aa] focus:ring-2 focus:ring-[#00d4aa] focus:ring-offset-0 cursor-pointer"
+                      required
+                    />
+                  </div>
+                  <span className="text-sm text-gray-300 leading-snug flex-1">
+                    J'accepte la{' '}
+                    <button
+                      type="button"
+                      onClick={() => window.open('/privacy', '_blank')}
+                      className="text-[#00d4aa] hover:text-[#00b894] underline font-medium"
+                    >
+                      Politique de Confidentialité
+                    </button>
+                  </span>
+                </label>
               </div>
             )}
 
@@ -466,22 +653,8 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
               </button>
             )}
           </div>
-
-          {/* Information de développement - Seulement en mode login/register */}
-          {(mode === 'login' || mode === 'register') && (
-            <div className="mt-6 p-4 bg-[#00d4aa]/10 border border-[#00d4aa]/20 rounded-lg">
-              <p className="text-xs text-[#00d4aa] text-center">
-                <strong>Mode développement :</strong> Utilisez n'importe quel email et mot de passe pour vous connecter
-              </p>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
-              © 2024 Exersio - Plateforme d'entraînement sportif
-            </p>
-          </div>
+          {/* Footer avec liens légaux */}
+          <LegalFooter className="mt-6" />
         </CardContent>
       </Card>
     </div>

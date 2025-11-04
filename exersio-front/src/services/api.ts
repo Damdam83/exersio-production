@@ -3,10 +3,11 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:30
 
 // Types de réponse de l'API (basés sur WrapResponseInterceptor du backend)
 export interface ApiResponse<T = any> {
+  success: boolean;
   data: T;
   message?: string;
-  statusCode: number;
-  timestamp: string;
+  statusCode?: number;
+  timestamp?: string;
 }
 
 // Types d'erreur de l'API
@@ -75,41 +76,42 @@ export const apiRequest = async <T = any>(
   }, 30000);
 
   try {
-    console.log(`🚀 Making API request to: ${url}`);
-    console.log(`📤 Request config:`, config);
-    console.log(`🌐 API_BASE_URL:`, API_BASE_URL);
-    
     const response = await fetch(url, config);
     clearTimeout(timeoutId);
-    
-    console.log(`📥 Response status: ${response.status}`);
-    console.log(`📥 Response headers:`, Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
       try {
-        const responseText = await response.text();
+        // Cloner la réponse pour pouvoir lire le body même si l'intercepteur l'a déjà lu
+        const responseClone = response.clone();
+        const responseText = await responseClone.text();
         console.error(`❌ API Error response text:`, responseText);
-        
+
         // Essayer de parser en JSON
         try {
-          const errorData: ApiError = JSON.parse(responseText);
-          errorMessage = errorData.message || errorMessage;
+          const errorData: any = JSON.parse(responseText);
+          // Gérer différents formats d'erreur du backend
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.details) {
+            errorMessage = errorData.details;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
         } catch (parseError) {
           // Si ce n'est pas du JSON, utiliser le texte brut
-          errorMessage = responseText.includes('<!DOCTYPE') 
-            ? `Received HTML instead of JSON (${response.status})` 
+          errorMessage = responseText.includes('<!DOCTYPE')
+            ? `Received HTML instead of JSON (${response.status})`
             : responseText.substring(0, 200);
         }
       } catch (textError) {
         console.error(`❌ Failed to read error response:`, textError);
       }
-      
+
       throw new Error(errorMessage);
     }
 
     const result: ApiResponse<T> = await response.json();
-    console.log(`✅ API Success response:`, result);
     return result.data;
   } catch (error) {
     clearTimeout(timeoutId);
@@ -130,6 +132,30 @@ export const api = {
       }, {} as Record<string, string>)
     )}` : '';
     return apiRequest<T>(`${endpoint}${searchParams}`, { method: 'GET' });
+  },
+
+  // Version qui retourne la réponse complète (avec success, data, total, etc.)
+  getRaw: async <T = any>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> => {
+    const searchParams = params ? `?${new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined && value !== null) {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    )}` : '';
+
+    const url = `${API_BASE_URL}${endpoint}${searchParams}`;
+    const config: RequestInit = {
+      headers: getAuthHeaders(),
+      method: 'GET',
+    };
+
+    const response = await fetch(url, config);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return await response.json();
   },
 
   post: <T = any>(endpoint: string, data?: any): Promise<T> => {

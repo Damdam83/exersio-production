@@ -2,8 +2,13 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 16/09/2025
-**Session actuelle :** APP MOBILE ANDROID + CONFIGURATION PRODUCTION
+**Dernière mise à jour :** 04/11/2025
+**Session actuelle :** SPLASH SCREEN + VERSION CHECK COMPLET
+**Documents de référence** :
+- [ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md) - Synthèse complète projet
+- [SPLASH-SCREEN-VERSION-CHECK.md](exersio-front/SPLASH-SCREEN-VERSION-CHECK.md) - Documentation splash screen (04/11/2025)
+- [AUDIT-NOTIFICATIONS.md](AUDIT-NOTIFICATIONS.md) - Audit système notifications (24/10/2025)
+- [NOTIFICATIONS-SYSTEME-COMPLET.md](NOTIFICATIONS-SYSTEME-COMPLET.md) - Documentation technique complète (25/10/2025)
 
 ---
 
@@ -105,6 +110,115 @@
 - Configuration développement (console) vs production (fichiers)
 **Intégration modules :** AuthService, MailService, PrismaService avec logs spécialisés
 
+### 10. Système catégories multi-sport avec relations DB (15/10/2025)
+**Problème :** ageCategoryId manquant dans le payload de création d'exercice, filtres par âge non fonctionnels
+**Solution Backend :**
+- Créé module Sports complet (controller, service, dto) pour gestion sports
+- Script seed-sports.ts pour peupler table Sport avec 5 sports (volleyball, football, tennis, handball, basketball)
+- Mise à jour schema.prisma : modèle Sport avec relations exerciseCategories/ageCategories via sportId
+- auth.service : inclusion de preferredSport dans réponse utilisateur
+- Endpoints categories retournent maintenant les relations sport
+
+**Solution Frontend :**
+- Créé SportsContext et sportsApi pour gestion état sports
+- Fonction getCategoryIds() : conversion slugs → IDs (categoryId, ageCategoryId, sportId)
+- ExerciseCreatePage : utilisation catégories backend filtrées par sport sélectionné
+- useEffect pour réinitialiser catégories lors changement de sport
+- handleSave/handleSaveDraft incluent maintenant categoryId, ageCategoryId et sportId
+- AuthForm : inclusion preferredSport dans payload d'inscription
+- ExercisesPage : filtres utilisent catégories backend
+
+**Fixes :**
+- Warning React "Expected static flag was missing" dans SportSelectionModal (hooks avant return conditionnel)
+- Suppression doublon état selectedSport
+- Catégories et âges chargent maintenant depuis backend avec filtrage par sport
+
+**Résultat :** ✅ Filtres par âge fonctionnels avec relations DB correctes, payload complet avec tous les IDs
+
+### 11. Correctifs bugs critiques + Mode offline complet (24/10/2025)
+**Session de correction multiple des bugs critiques identifiés**
+
+#### 11.1. Fix localStorage pollué par données seed
+**Problème :** localStorage contenait ex1/ex2 (exercices de démo) même pour utilisateurs connectés
+**Solution :** Supprimé appel `initializeDefaultData()` dans App.tsx ligne 52
+**Résultat :** ✅ localStorage propre, plus de pollution avec données de démo
+
+#### 11.2. Fix double "(Copie)" dans noms d'exercices
+**Problème :** Copie d'exercice affichait "(Copie)(Copie)" dans le nom
+**Cause :** ExercisesContext.createLocalCopy() ET ExerciseCreatePage ajoutaient le suffixe
+**Solution :** ExerciseCreatePage vérifie maintenant si "(Copie)" ou "(copie)" existe déjà avant ajout
+**Fichier modifié :** `ExerciseCreatePage.tsx` ligne 131-136
+**Résultat :** ✅ Une seule occurrence de "(Copie)" lors de la copie
+
+#### 11.3. Fix erreur HTTP 500 "Partager avec le club"
+**Problème :** Bouton "Partager avec le club" retournait HTTP 500
+**Cause :** Backend utilisait `throw new Error()` au lieu d'exceptions NestJS
+**Solution :** Réécriture shareWithClub() avec BadRequestException et NotFoundException
+**Fichier modifié :** `exercises.service.ts` (backend)
+**Validations ajoutées :** Exercice existe, créateur valide, pas déjà partagé, utilisateur dans un club
+**Résultat :** ✅ Partage d'exercice fonctionnel avec gestion d'erreurs appropriée
+
+#### 11.4. Fix boucle infinie /auth/refresh au démarrage (401)
+**Problème :** Appels infinis à /auth/refresh avec 401 avant même la connexion
+**Causes multiples :**
+- ensureValidToken() créait des appels circulaires via l'interceptor
+- logout() déclenchait des appels API répétés
+- useVersionCheck se déclenchait plusieurs fois
+- AuthContext vérifiait expiration avant tentative de refresh
+
+**Solutions appliquées :**
+- **authService.ts :** Ajout flags `isRefreshing` et `isLoggingOut` pour éviter les boucles
+- **authService.ts :** Logout conditionnel (n'appelle l'API que si token valide et non expiré)
+- **useVersionCheck.ts :** useEffect avec dépendances vides `[]` (mount-only)
+- **AuthContext.tsx :** Validation format JWT avant getProfile(), suppression check isTokenExpired prématuré
+- **apiInterceptor.ts :** Vérification `!newToken` avant retry, meilleure gestion erreurs 401
+
+**Fichiers modifiés :** authService.ts, useVersionCheck.ts, AuthContext.tsx, apiInterceptor.ts
+**Résultat :** ✅ Plus de boucles infinies, authentification stable au démarrage
+
+#### 11.5. Fix boucle infinie /exercises lors F5 sur page détail
+**Problème :** Actualiser page exercices/{id} causait appels API infinis
+**Cause :** useEffect avec dépendance `exerciseActions` qui changeait de référence à chaque render
+**Solution :**
+- Ajout état `hasAttemptedLoad` pour tracker les tentatives de chargement
+- useEffect ne dépend que de `[exerciseId]`
+- Reset de hasAttemptedLoad quand exerciseId change
+
+**Fichier modifié :** `MainLayout.tsx` (ExerciseDetailPageWrapper)
+**Résultat :** ✅ Une seule requête API lors du F5, pas de boucle infinie
+
+#### 11.6. Implémentation mode offline complet avec IndexedDB
+**Problème :** IndexedDB vide, exercices/sessions pas sauvegardés pour usage offline
+**Cause :** loadExercises() et loadSessions() ne sauvegardaient pas dans IndexedDB
+
+**Solutions implémentées :**
+- **ExercisesContext.loadExercises() :**
+  - Si **online** : charge API → sauvegarde IndexedDB (status 'synced')
+  - Si **offline** : charge depuis IndexedDB directement
+  - Si **erreur réseau** : fallback vers IndexedDB
+
+- **SessionsContext.loadSessions() :**
+  - Même logique que exercices
+  - Ajout import offlineStorage
+
+**Fichiers modifiés :**
+- `ExercisesContext.tsx` lignes 258-292
+- `SessionsContext.tsx` lignes 287-321
+
+**Résultat :** ✅ Cache IndexedDB automatique, mode offline fonctionnel, données persistées
+
+#### 11.7. Fix incohérence scope par défaut
+**Problème :**
+- Navigation /exercices : `scope=all` (exercices visibles)
+- F5 sur /exercices : `scope=personal` (aucun exercice)
+
+**Cause :** ExercisesContext initialState avec `scope: 'personal'`, ExercisesPage avec `currentScope: 'all'`
+**Solution :** Changé initialState de ExercisesContext à `scope: 'all'`
+**Fichier modifié :** `ExercisesContext.tsx` ligne 72
+**Résultat :** ✅ Cohérence parfaite, mêmes résultats avec navigation ou F5
+
+**Vérification complète :** Aucune autre incohérence détectée dans SessionsContext, SessionsPage, HistoryPage
+
 ---
 
 ## ⚙️ Configuration VS Code
@@ -146,7 +260,9 @@ C:\PROJETS\Exersio\front/
 │   │   │   ├── mail/         # ✅ Service NodeMailer + templates HTML
 │   │   │   ├── exercises/
 │   │   │   ├── sessions/
-│   │   │   ├── favorites/    # ✅ Nouveau module
+│   │   │   ├── favorites/    # ✅ Module favorites
+│   │   │   ├── sports/       # ✅ Module sports (15/10/2025)
+│   │   │   ├── categories/   # ✅ Module categories avec relations Sport
 │   │   │   └── ...
 │   │   └── prisma/           # ✅ Service avec logging événements
 │   └── prisma/
@@ -166,7 +282,9 @@ C:\PROJETS\Exersio\front/
 │   │   │   ├── SyncIndicator.tsx     # ✅ Indicateurs synchronisation
 │   │   │   └── ...
 │   │   ├── contexts/
-│   │   │   └── ExercisesContext.tsx  # ✅ Intégré mode offline
+│   │   │   ├── ExercisesContext.tsx  # ✅ Intégré mode offline
+│   │   │   ├── SportsContext.tsx     # ✅ Gestion état sports (15/10/2025)
+│   │   │   └── CategoriesContext.tsx # ✅ Gestion catégories avec filtrage sport
 │   │   ├── hooks/
 │   │   │   ├── useIsMobile.ts        # ✅ Détection mobile
 │   │   │   ├── useOrientation.ts     # ✅ Portrait/paysage
@@ -175,9 +293,11 @@ C:\PROJETS\Exersio\front/
 │   │   ├── services/
 │   │   │   ├── api.ts                # ✅ Configuré pour mobile
 │   │   │   ├── offlineStorage.ts     # ✅ Service IndexedDB
-│   │   │   └── syncService.ts        # ✅ Synchronisation avancée
+│   │   │   ├── syncService.ts        # ✅ Synchronisation avancée
+│   │   │   ├── sportsApi.ts          # ✅ Service API sports (15/10/2025)
+│   │   │   └── categoriesService.ts  # ✅ Service API catégories avec relations
 │   │   └── types/
-│   │       └── index.ts              # ✅ Types mis à jour (successCriteria)
+│   │       └── index.ts              # ✅ Types (Sport, ExerciseCategory, AgeCategory, etc.)
 └── .vscode/               # ✅ Configuration VS Code
 ```
 
@@ -197,19 +317,31 @@ C:\PROJETS\Exersio\front/
 ### ✅ Fonctionnalités complètes implémentées
 - **Authentification complète** : JWT + confirmation email + reset password ✅ PRODUCTION
 - **Interface responsive** : Desktop + mobile optimisée avec APK Android
+- **Internationalisation (i18n)** : Support FR/EN complet sur toutes les pages principales (31/10/2025)
 - **Mode offline complet** : IndexedDB + synchronisation bidirectionnelle
 - **Système multi-sport** : 5 sports avec éditeurs terrain spécialisés
 - **Logging professionnel** : Winston avec rotation + logs spécialisés
 - **Tests structurés** : Jest backend + Vitest frontend avec >80% couverture
 - **Codebase optimisé** : Nettoyage complet (-35% bundle, code mort supprimé)
 
-### 🚨 PROBLÈME MAJEUR RESTANT
-- [ ] **🎯 Éditeur de terrain cassé** - Suite aux modifications multi-sport, l'éditeur de terrain n'est plus fonctionnel :
-  - Les outils de sélection ne fonctionnent plus correctement
-  - L'interaction joueur/flèche/ballon/zone est défaillante
-  - Besoin de restaurer complètement l'ancien FieldEditor fonctionnel
-  - **Impact** : Impossible de créer des exercices avec schémas tactiques
-  - **Priorité** : CRITIQUE - bloque la fonctionnalité principale
+### ✅ Éditeur de terrain multi-sport restauré (16/09/2025)
+**Problèmes résolus :**
+- ✅ **Bouton changement de sport** : ExerciseCreatePage utilisait VolleyballCourt au lieu de SportCourt
+- ✅ **Images de fond** : Integration SportCourt avec images /assets/courts/ (WebP + PNG fallback)
+- ✅ **Centrage images** : object-fit: cover + objectPosition: 'center center' pour remplissage correct
+- ✅ **Modal responsive** : Utilisation useIsMobile() avec layout adaptatif
+- ✅ **Breakpoint responsive** : Changé de xl: (1280px) à lg: (1024px) pour meilleur UX
+- ✅ **Images réelles terrains** : SportSelectionModal affiche vraies images de terrains au lieu de CSS
+
+**Fichiers modifiés :**
+- `ExerciseCreatePage.tsx` : Integration SportCourt, gestion selectedSport, breakpoint lg:
+- `CourtBackgroundImage.tsx` : Fix centrage images (cover + center)
+- `SportSelectionModal.tsx` : Vraies images terrains, responsive mobile
+
+**Issues différées (non-bloquantes) :**
+- Mode portrait mobile non fonctionnel (paysage requis pour édition)
+- Modal parfois non-responsive sur mobile tactile
+- Bouton bascule paysage non fonctionnel
 
 ### 🚨 ACTION REQUISE RENDER - Variables d'Environnement
 **Il faut ajouter dans Render Dashboard :**
@@ -320,6 +452,758 @@ docker compose down        # Arrêter la DB
 - ✅ **Corrections déploiement** : Dependencies NestJS/TypeScript, Docker Debian
 - 🏆 **APPLICATION 100% FONCTIONNELLE EN PRODUCTION**
 
+### Session du 13/10/2025 - Système de flèches multi-types amélioré
+- ✅ **Système complet de flèches** : 5 types de flèches avec styles distincts (pass, shot, movement, dribble, defense)
+- ✅ **Flèches courbes** : Implémentation Bézier quadratiques automatiques pour movement et dribble
+- ✅ **Fix majeur positionnement** : Correction viewBox dynamique basé sur aspectRatio du sport
+- ✅ **Tailles optimisées** : Markers 3-5px, strokeWidth 0.4-0.6px après plusieurs itérations utilisateur
+- ✅ **Border-aware coordinates** : Prise en compte bordure 3px dans calculs de position
+- ✅ **Toolbar amélioré** : 5 boutons flèches avec icônes et couleurs distinctes
+- ✅ **Nettoyage code** : Tous les console.log supprimés du frontend (50+ occurrences)
+- 🎯 **Problèmes résolus** :
+  - Offset 50px vertical résolu via viewBox aspectRatio (était viewBox="0 0 100 100", maintenant "0 0 167 100" pour volleyball)
+  - Tailles flèches optimisées via 5 itérations avec feedback utilisateur
+  - Curves automatiques avec contrôle perpendiculaire à 15% de la longueur
+- 📁 **Fichiers critiques** :
+  - `src/constants/arrowTypes.tsx` : Configuration 5 types + génération markers SVG (renommé .ts → .tsx)
+  - `src/components/ExerciseEditor/SportCourt.tsx` : viewBox dynamique + curves Bézier
+  - `src/utils/exerciseEditorHelpers.ts` : getEventPosition border-aware
+  - `src/components/ExerciseEditor/Toolbar.tsx` : 5 boutons flèches au lieu d'1
+- **Branche** : feat/react-flow-arrows
+- **Commit** : "feat: implement multi-type arrows with curved trajectories" (ad703bf)
+
+### Session du 14/10/2025 (matin) - Adaptation composants affichage multi-sport
+- ✅ **SportCourtViewer créé** : Composant read-only universel pour affichage terrains 5 sports
+- ✅ **ExercisesPage adapté** : Cards exercices avec SportCourtViewer + flexbox centering
+- ✅ **ExerciseDetailView adapté** : Affichage terrain avec sport détecté automatiquement
+- ✅ **SessionDetailView adapté** : Integration SportCourtViewer dans sessions
+- ✅ **Fix données flèches** : initializeArrows charge controlX/controlY/actionType/isCurved
+- ✅ **Fix aspect ratio** : CSS aspectRatio property pour proportions correctes
+- ✅ **Fix cutoff cards** : Flexbox avec padding pour éviter coupure bas terrain
+- 📁 **Fichiers modifiés** :
+  - `src/components/ExerciseEditor/SportCourtViewer.tsx` (nouveau)
+  - `src/utils/exerciseEditorHelpers.ts` (fix initializeArrows)
+  - `src/components/ExercisesPage.tsx`, `ExerciseDetailView.tsx`, `SessionDetailView.tsx`
+- **Branche** : feat/arrow-control-points
+- **Commit** : "feat: adapt display components to use multi-sport terrain viewer" (869dfb4)
+
+### Session du 14/10/2025 (après-midi) - Corrections responsive et positionnement
+- ✅ **Fix desktop ExerciseDetailView** : Supprimé height fixe pour aspect ratio naturel
+- ✅ **Fix mobile écrasement horizontal** : SportCourtViewer avec tailles responsive
+- ✅ **ResizeObserver implémenté** : Détection dynamique largeur conteneur
+- ✅ **Tailles adaptatives** : Joueurs/balles basés sur 4% largeur conteneur (min 16px)
+- ✅ **Fix coordonnées flèches** : Conversion viewBox cohérente droites + courbes
+- ✅ **Positionnement précis** : Éléments positionnés exactement comme en création
+- 🎯 **Problèmes résolus** :
+  - Desktop : éléments décalés → viewBox conversion uniforme
+  - Mobile : terrain écrasé → aspect ratio + tailles responsive
+  - Flèches droites : pourcentages CSS → coordonnées viewBox absolues
+- 📁 **Fichiers modifiés** :
+  - `src/components/ExerciseDetailView.tsx` (remove fixed height)
+  - `src/components/ExerciseEditor/SportCourtViewer.tsx` (responsive + fix arrows)
+- **Branche** : feat/arrow-control-points
+- **Commit** : "fix: improve SportCourtViewer responsive sizing and arrow positioning" (c7cc7c9)
+
+### Session du 14/10/2025 (soir) - Migration système catégories multi-sport 🏆
+**Objectif:** Refonte complète du système de catégories avec sports en base de données
+
+#### Phase 1: ExercisesPage - Améliorations UX/UI ✅
+- ✅ **Cards exercices optimisées** : Terrain 190px, padding réduit, responsive 330px fixe
+- ✅ **Bouton Reset mobile** : Ajouté dans MobileFilters avec props onResetFilters
+- ✅ **Système filtres refactorisé** : Catégories et âges séparés avec états indépendants
+- ✅ **Filtres depuis backend** : Migration vers CategoriesContext au lieu de génération dynamique
+- ✅ **MobileFilters amélioré** : Bouton réinitialiser conditionnel (rouge) dans panneau filtres
+
+#### Phase 2: Migration vers IDs de catégories ✅
+- ✅ **Backend DTO** : Ajout categoryId/ageCategoryId optionnels (deprecated anciens champs)
+- ✅ **Frontend payload** : Helper getCategoryIds() pour convertir slugs → IDs
+- ✅ **ExerciseCreatePage** : Envoi categoryId + ageCategoryId dans create/update
+- ✅ **Rétrocompatibilité** : Conservation anciens champs category/ageCategory (strings)
+
+#### Phase 3: Architecture multi-sport complète 🚀
+**Schéma Prisma refactoré:**
+- ✅ **Nouvelle table Sport** : id, name, slug, icon, order + relations
+- ✅ **ExerciseCategory** : Ajout sportId + relation Sport (@@unique [slug, sportId])
+- ✅ **AgeCategory** : Ajout sportId + relation Sport (@@unique [slug, sportId])
+- ✅ **Exercise** : Ajout sportId + sportRef (optionnel, garde sport String)
+- ✅ **Session** : Ajout sportId + sportRef (optionnel, garde sport String)
+
+**Migration base de données:**
+- ✅ **Script seed créé** : `prisma/seed-sports.ts` peuple DB depuis JSON
+- ✅ **Migration appliquée** : `npx prisma db push --force-reset`
+- ✅ **Seed exécuté** : 5 sports + 28 catégories exercices + 37 catégories âge
+  - Volley-ball: 6 catégories exercices + 9 catégories âge
+  - Football: 5 catégories exercices + 7 catégories âge
+  - Basketball: 6 catégories exercices + 6 catégories âge
+  - Handball: 5 catégories exercices + 7 catégories âge
+  - Tennis: 6 catégories exercices + 8 catégories âge
+
+**Données structurées:**
+- ✅ **JSON source** : exersio_categories_age_sport.json avec toutes les catégories
+- ✅ **Catégories exercices** : Définies par sport (attaque, défense, service, etc.)
+- ✅ **Parsing âge intelligent** : Extraction minAge/maxAge depuis formats variés
+- ✅ **Relations strictes** : Chaque catégorie liée à 1 sport via sportId
+
+**Package.json:**
+- ✅ **Commande seed ajoutée** : `npm run seed:sports` pour peupler DB
+
+📁 **Fichiers créés/modifiés:**
+- `prisma/schema.prisma` : Tables Sport, ExerciseCategory, AgeCategory refactorées
+- `prisma/seed-sports.ts` : Script seed complet avec parsing JSON
+- `package.json` : Ajout commande seed:sports
+- `src/modules/exercises/dto/exercise.dto.ts` : categoryId/ageCategoryId
+- `src/components/ExercisesPage.tsx` : Filtres depuis CategoriesContext
+- `src/components/ExerciseCreatePage.tsx` : Helper getCategoryIds + envoi IDs
+- `src/components/MobileFilters.tsx` : Props reset + bouton conditionnel
+
+**Branche:** feat/arrow-control-points
+**Temps réalisé:** ~2h30
+**Status:** ✅ Backend terminé, ✅ Frontend filtres terminés
+
+### Session du 24/10/2025 - Correctifs bugs critiques + Mode offline complet
+**Session intensive de débogage avec 7 correctifs majeurs appliqués**
+
+**Bugs corrigés :**
+1. ✅ **localStorage pollué** : Supprimé initializeDefaultData() - App.tsx
+2. ✅ **Double "(Copie)"** : Vérification conditionnelle - ExerciseCreatePage.tsx
+3. ✅ **HTTP 500 partage** : Exceptions NestJS appropriées - exercises.service.ts
+4. ✅ **Boucle /auth/refresh** : Flags anti-loop multiples - authService.ts, AuthContext.tsx, apiInterceptor.ts, useVersionCheck.ts
+5. ✅ **Boucle F5 exercices** : Flag hasAttemptedLoad - MainLayout.tsx
+6. ✅ **IndexedDB vide** : Auto-save lors loadExercises/loadSessions - ExercisesContext.tsx, SessionsContext.tsx
+7. ✅ **Scope incohérent** : initialState scope:'all' - ExercisesContext.tsx
+
+**Fonctionnalités ajoutées :**
+- ✅ **Mode offline complet** : Chargement depuis IndexedDB si offline, fallback automatique en cas d'erreur réseau
+- ✅ **Cache automatique** : Tous exercices/sessions chargés sauvegardés dans IndexedDB avec status 'synced'
+- ✅ **Gestion multi-état** : Online (API→IndexedDB), Offline (IndexedDB→State), Erreur (Fallback IndexedDB)
+
+**Impact utilisateur :**
+- Navigation fluide sans boucles infinies
+- Données accessibles hors connexion
+- Pas de pollution localStorage
+- Cohérence totale des filtres
+- Partage d'exercice fonctionnel
+- Copies d'exercices avec noms corrects
+
+**Temps réalisé :** ~3h
+**Status :** ✅ Tous les bugs critiques corrigés et testés
+
+### Session du 24/10/2025 (après-midi) - Refonte Système Notifications Complet
+**Audit complet réalisé, plan d'action Option B (tout corriger) - 7-9h estimé**
+
+#### 📊 Audit Système Notifications
+**Document créé** : `AUDIT-NOTIFICATIONS.md` avec analyse complète
+
+**Problèmes identifiés** :
+1. ❌ Navigation desktop commentée → Pas d'icône notifications
+2. ❌ Modal fond blanc → Pas cohérent avec le thème
+3. ❌ Erreur 500 `/notifications/settings` → Migration Prisma manquante
+4. ❌ Crash boutons test → Capacitor APIs en mode web
+5. ❌ Badge figé à "9" → Pas d'événements de mise à jour
+6. ❌ 9 notifications sur compte neuf → Source inconnue
+
+**Fonctionnalités existantes** :
+- ✅ Backend API complet (CRUD notifications)
+- ✅ Rappels séances automatiques (cron job)
+- ✅ Notification exercice ajouté au club
+- ✅ Système préférences utilisateur
+- ✅ Mobile NotificationBadge fonctionnel
+
+**Types notifications supportés (Prisma)** :
+- `session_reminder` - Rappel séance ✅ Implémenté
+- `exercise_added_to_club` - Nouvel exercice ✅ Implémenté
+- `system_notification` - Notification admin ⚠️ Endpoint existe, pas d'interface
+
+**Fonctionnalités à ajouter** :
+- ❌ `member_joined_club` - Nouveau membre (à créer)
+- ❌ Interface admin pour notifications globales
+
+#### 🎯 Plan de Correction - Option B (Complet)
+
+**Phase 1 - Bugs Critiques (2-3h)** :
+1. ⏳ Fix navigation desktop + icône Bell (30min)
+2. ⏳ Fix background modal gris/slate (15min)
+3. ⏳ Fix erreur 500 settings + migration Prisma (45min)
+4. ⏳ Supprimer boutons test non implémentés (30min)
+5. ⏳ Fix badge avec EventEmitter (1h)
+6. ⏳ Investiguer 9 notifications automatiques (30min)
+
+**Phase 2 - Nouvelles Fonctionnalités (3-4h)** :
+1. ⏳ Notification "Nouveau membre" (1.5h)
+2. ⏳ Interface admin notifications globales (2h)
+3. ⏳ Guard admin sur endpoint (30min)
+
+**Phase 3 - Améliorations UX (2h)** :
+1. ⏳ Polling léger 30-60s avec visibility API (30min)
+2. ⏳ Indicateurs visuels (animation badge) (30min)
+3. ⏳ Filtres notifications (type, date) (1h)
+
+**Status actuel** : ⏳ EN COURS - Phase 1 à commencer
+**Fichiers clés** :
+- Frontend : `NotificationCenter.tsx`, `NotificationBadge`, `NotificationSettingsPage.tsx`, `Navigation.tsx`
+- Backend : `notifications.service.ts`, `notifications.controller.ts`, `notification-scheduler.service.ts`
+
+### Session du 25/10/2025 - Système Notifications Finalisé ✅
+**Session de finalisation système notifications : pagination + nettoyage + documentation**
+
+#### Corrections appliquées :
+1. ✅ **Pagination côté serveur vraie**
+   - Backend : Endpoints `getRecentNotifications(limit, offset)` retournent `{ data, total }`
+   - Frontend : Créé `api.getRaw()` pour récupérer réponse complète sans extraction automatique
+   - AdminNotificationsPage : Pagination réelle avec appels API à chaque changement de page
+   - Affichage correct : "Affichage 1 à 10 sur 52 notifications"
+
+2. ✅ **Statut 201 traité comme succès**
+   - Envoi de notification retourne 201 (Created) au lieu de 200
+   - Frontend : Modifié condition `response?.success || response?.success === undefined`
+   - Rechargement automatique stats + notifications après envoi réussi
+
+3. ✅ **Nettoyage code obsolète**
+   - Supprimé fonctions `testNotification()` et `testSessionReminders()` (non fonctionnelles sur web)
+   - Gardé section "Test Notifications (DEV)" avec appels API directs (fonctionnelle)
+
+#### Documentation créée :
+- ✅ **NOTIFICATIONS-SYSTEME-COMPLET.md** : Documentation technique exhaustive
+  - Architecture backend/frontend complète
+  - Tables Prisma (Notification, UserNotificationSettings, UserPushToken)
+  - API Endpoints (user + admin)
+  - Services (NotificationsService + NotificationSchedulerService)
+  - Frontend (notificationService.ts + EventEmitter + Composants UI)
+  - Types de notifications (rappel séance, exercice club, admin, futur membre)
+  - Permissions mobile (locales ✅ / push ⚠️ désactivées temporairement)
+  - Tests et débogage
+  - TODO futur (push notifications, polling, filtres)
+
+**Fichiers modifiés** :
+- Backend : `notifications.service.ts`, `notifications.controller.ts`
+- Frontend : `api.ts` (nouvelle méthode getRaw), `AdminNotificationsPage.tsx`, `NotificationSettingsPage.tsx`
+
+**Temps réalisé** : ~2h
+**Status final** : ✅ Système notifications pleinement opérationnel
+
+### Session du 26-27/10/2025 - RGPD Complet + UX Polish ✅
+**Session complète de conformité RGPD et améliorations UX**
+
+#### 1. Système RGPD complet (26/10)
+**Nouvelles pages créées :**
+- ✅ **LegalFooter.tsx** : Footer avec liens CGU + Politique de confidentialité
+- ✅ **TermsOfServicePage.tsx** : Conditions générales d'utilisation
+- ✅ **PrivacyPolicyPage.tsx** : Politique de confidentialité RGPD complète
+
+**Fonctionnalité suppression compte :**
+- ✅ **ProfilePage** : Section "Zone de danger" avec bouton suppression + modal confirmation
+- ✅ **Backend endpoint** : DELETE /api/user/account avec cascade deletion
+- ✅ **usersService.deleteUserAccount()** : Service frontend pour suppression
+
+**Conformité RGPD :**
+- ✅ Checkbox consentement CGU dans AuthForm (inscription)
+- ✅ Validation consentement obligatoire avant création compte
+- ✅ Footer légal affiché sur toutes les pages publiques (AuthForm)
+- ✅ Droit à l'oubli : suppression complète données utilisateur
+
+#### 2. Sécurité mot de passe améliorée (27/10)
+**Composant PasswordStrengthIndicator :**
+- ✅ Barre visuelle de force (0-4, couleurs progressives)
+- ✅ 5 critères validés : min 8 chars, majuscule, minuscule, chiffre, caractère spécial
+- ✅ Feedback temps réel avec icônes Check/X
+
+**AuthForm amélioré :**
+- ✅ Toggle show/hide password (Eye/EyeOff icons) sur tous champs password
+- ✅ Validation frontend stricte avec messages d'erreur explicites
+- ✅ PasswordStrengthIndicator affiché en modes register et reset-password
+
+**Backend audit :**
+- ✅ Confirmé bcrypt avec 10 salt rounds (sécurité excellente)
+
+#### 3. Correctifs affichage erreurs HTTP (27/10)
+**Problème :** Erreurs HTTP (409, 401) affichaient "HTTP 409" au lieu du message backend
+
+**Solutions appliquées :**
+- ✅ **api.ts** : Ajout `response.clone()` pour lecture body multiple fois
+- ✅ **apiInterceptor.ts** : Gestion erreurs serveur (500+) uniquement, laisse 400-499 intacts
+- ✅ **handleUnauthorizedError()** : Retourne originalResponse pour endpoints auth (au lieu de new Response)
+- ✅ Propagation correcte messages backend : "Email already in use", "Invalid credentials"
+
+**Résultat :** ✅ Messages d'erreur clairs et explicites pour l'utilisateur
+
+#### 4. Toast notifications configurés (27/10)
+**sonner.tsx modifié :**
+- ✅ Timeout 3000ms (3 secondes)
+- ✅ Close button manuel
+- ✅ Rich colors automatiques par type (success, error, info)
+- ✅ Position top-center optimisée mobile
+- ✅ Theme dark avec style personnalisé
+
+📁 **Fichiers créés :**
+- `exersio-front/src/components/LegalFooter.tsx`
+- `exersio-front/src/components/TermsOfServicePage.tsx`
+- `exersio-front/src/components/PrivacyPolicyPage.tsx`
+- `exersio-front/src/components/PasswordStrengthIndicator.tsx`
+
+📁 **Fichiers modifiés :**
+- `exersio-front/src/components/AuthForm.tsx` : Checkbox CGU, toggle password, validation stricte
+- `exersio-front/src/components/ProfilePage.tsx` : Section suppression compte
+- `exersio-front/src/components/ui/sonner.tsx` : Configuration timeout
+- `exersio-front/src/services/api.ts` : Clone response pour multi-read
+- `exersio-front/src/services/apiInterceptor.ts` : Fix gestion erreurs HTTP
+- `exersio-front/src/services/usersService.ts` : deleteUserAccount()
+- `exersio-back/src/modules/users/users.controller.ts` : DELETE /account endpoint
+- `exersio-back/src/modules/users/users.service.ts` : deleteUserAccount() avec cascade
+
+**Branche :** feat/next-features
+**Temps réalisé :** ~5h
+**Status :** ✅ RGPD complet + sécurité mot de passe + UX polish terminés
+
+### Session du 27/10/2025 (après-midi) - Mobile UX Phases 2-3 Complétées ✅
+**Optimisation complète interface mobile pour HomePage, Sessions, History**
+
+#### Phase 2 - Pages Principales (1.5h)
+**AuthForm mobile :**
+- ✅ Mode développement déjà masqué sur mobile (vérification ligne 656)
+- Condition `&& !isMobile` déjà implémentée
+
+**HomePage mobile :**
+- ✅ Padding conteneur réduit : `px-4 sm:px-5 py-4 sm:py-6`
+- ✅ Stats rapides optimisées : `gap-2 sm:gap-3`, `p-3 sm:p-4`, `text-lg sm:text-xl`
+- ✅ Actions rapides : Boutons `p-4 sm:p-5`, textes `text-xs sm:text-sm`
+- ✅ Séances à venir : Cards `p-4 sm:p-5`, textes adaptés avec breakpoints
+- ✅ Progression : Cercle `w-14 h-14 sm:w-16 sm:h-16`, gaps `gap-3 sm:gap-5`
+- ✅ Tous espacements : `mb-4 sm:mb-6`, `space-y-3 sm:space-y-4`
+
+#### Phase 3 - Pages Fonctionnelles (6h)
+**SessionsPage mobile :**
+- ✅ Conteneur : `p-3 sm:p-4 space-y-3 sm:space-y-4`
+- ✅ Empty state : `p-6 sm:p-8`, bouton `px-4 sm:px-6 py-2 sm:py-3`
+- ✅ Cards sessions : `p-3 sm:p-4`, titres `text-base sm:text-lg`
+- ✅ Métadonnées : `text-xs sm:text-sm`, gaps `gap-2 sm:gap-3`
+- ✅ Badges statut : `py-0.5 sm:py-1`, `text-[10px] sm:text-xs`
+- ✅ Programme : Tags `px-1.5 sm:px-2 py-0.5 sm:py-1`
+- ✅ Boutons action : `p-1.5 sm:p-2`
+
+**ExercisesPage mobile :**
+- ✅ Déjà bien optimisé (vérification)
+- Mode mobile complet avec MobileHeader, MobileFilters, ResultsCounter
+
+**HistoryPage mobile :**
+- ✅ Stats header : `p-3 sm:p-4`, textes `text-xl sm:text-2xl`
+- ✅ Conteneur : `p-3 sm:p-4 space-y-3 sm:space-y-4`
+- ✅ Cards histoire : Pattern identique à SessionsPage
+- ✅ Badges temps écoulé : `text-[10px] sm:text-xs`
+- ✅ Tags statut/durée : Optimisés avec breakpoints
+- ✅ Programme réalisé : Tags `px-1.5 sm:px-2 py-0.5 sm:py-1`
+
+**Pattern responsive uniformisé :**
+```css
+/* Padding */
+p-3 sm:p-4        /* Conteneurs */
+p-4 sm:p-5        /* Cards */
+
+/* Text sizes */
+text-xs sm:text-sm       /* Texte normal */
+text-[10px] sm:text-xs   /* Très petit */
+text-base sm:text-lg     /* Titres */
+
+/* Spacing */
+gap-1.5 sm:gap-2         /* Serré */
+gap-2 sm:gap-3           /* Normal */
+mb-2 sm:mb-3             /* Marges */
+
+/* Badges/Buttons */
+px-1.5 sm:px-2 py-0.5 sm:py-1
+```
+
+📁 **Fichiers modifiés :**
+- `exersio-front/src/components/HomePage.tsx` : 12 optimisations responsive
+- `exersio-front/src/components/SessionsPage.tsx` : 9 optimisations cards mobile
+- `exersio-front/src/components/HistoryPage.tsx` : 8 optimisations stats + cards
+- `ETAT-AVANCEMENT-PROJET.md` : Status Phases 2-3 terminées
+
+**Branche :** feat/next-features
+**Temps réalisé :** ~2h
+**Status :** ✅ Phases 2-3 Mobile UX terminées
+
+### Session du 30/10/2025 - Mobile UX Phase 4 Complétée ✅
+**Phase finale d'optimisation mobile : Pages Detail et Create**
+
+#### Phase 4 - Pages Detail & Create (7h)
+**ExerciseDetailView mobile :**
+- ✅ Header card: `mb-4 sm:mb-6 md:mb-8`, `pb-4 sm:pb-6`
+- ✅ Main grid: `gap-4 sm:gap-6 md:gap-8`
+- ✅ Content areas: `space-y-4 sm:space-y-6 md:space-y-8`
+- ✅ Stats grid: `gap-2 sm:gap-3 md:gap-4` avec `p-3 sm:p-4`
+- ✅ Text sizes: `text-lg sm:text-xl`, `text-[10px] sm:text-xs`
+- ✅ Instructions: `gap-2 sm:gap-3`, `space-y-3 sm:space-y-4`
+- ✅ Sidebar: `space-y-4 sm:space-y-6`
+
+**ExerciseCreatePage mobile :**
+- ✅ Sidebar form: `p-4 sm:p-5 md:p-6`, `mb-4 sm:mb-6 md:mb-8`
+- ✅ Section headers: `gap-2 sm:gap-3`, `mb-3 sm:mb-4`, `text-base sm:text-lg`
+- ✅ Content spacing: `space-y-3 sm:space-y-4`
+- ✅ Grid gaps: `gap-2 sm:gap-3`
+- ✅ Steps/Criteria sections: `mt-6 sm:mt-8`
+- ✅ Item cards: `gap-2 sm:gap-3`, `p-2 sm:p-3`
+- ✅ Editor header: `p-4 sm:p-5 md:px-6 md:pb-4`
+- ✅ Sport button: `px-3 sm:px-4 py-2`, `text-xs sm:text-sm`
+- ✅ Properties button: `p-3 sm:p-4`
+- ✅ Modal: `p-4 sm:p-5 md:px-6`
+
+**SessionDetailView mobile :**
+- ✅ Header info: `p-3 sm:p-4`, `mb-2 sm:mb-3`
+- ✅ Stats grid: `gap-3 sm:gap-4`
+- ✅ Stats values: `text-base sm:text-lg`, `text-[10px] sm:text-xs`
+- ✅ Exercise list: `p-3 sm:p-4`, `space-y-3 sm:space-y-4`
+- ✅ Empty state: `p-6 sm:p-8`
+- ✅ Exercise cards: `p-3 sm:p-4`, `mb-2 sm:mb-3`
+- ✅ Tags: `gap-1.5 sm:gap-2`
+- ✅ Notes section: `p-3 sm:p-4`
+- ✅ Textarea: `h-20 sm:h-24`, `p-2 sm:p-3`
+- ✅ Buttons: `py-2 sm:py-3`, `text-sm sm:text-base`
+
+**SessionCreatePage mobile :**
+- ✅ Container: `p-2 sm:p-3 pt-20`
+- ✅ Form sections: `p-4 sm:p-5`, `mb-3 sm:mb-4`
+- ✅ Labels: `text-xs sm:text-sm`, `mb-1.5 sm:mb-2`
+- ✅ Grid layouts: `gap-2 sm:gap-3`
+- ✅ Section headers: `gap-2 sm:gap-3`, `text-sm sm:text-base`
+
+**Pattern responsive uniformisé :**
+```css
+/* Padding */
+p-3 sm:p-4 md:p-5    /* Conteneurs */
+p-2 sm:p-3           /* Cards internes */
+
+/* Text sizes */
+text-xs sm:text-sm          /* Labels */
+text-[10px] sm:text-xs      /* Très petit */
+text-base sm:text-lg        /* Titres */
+text-sm sm:text-base        /* Texte normal */
+
+/* Spacing */
+gap-2 sm:gap-3              /* Gaps */
+mb-2 sm:mb-3 md:mb-4        /* Marges */
+space-y-2 sm:space-y-3      /* Vertical spacing */
+mt-6 sm:mt-8                /* Sections */
+```
+
+📁 **Fichiers modifiés :**
+- `src/components/ExerciseDetailView.tsx` : 10 optimisations spacing
+- `src/components/ExerciseCreatePage.tsx` : 15+ optimisations (sidebar, éditeur, modal)
+- `src/components/SessionDetailView.tsx` : 15+ optimisations (header, stats, notes)
+- `src/components/SessionCreatePage.tsx` : 12+ optimisations (formulaire, sections)
+
+**Commits créés :**
+- `aeafd66` - feat(mobile): optimize ExerciseDetailView spacing for mobile
+- `20cd9a6` - feat(mobile): optimize ExerciseCreatePage spacing for mobile
+- `f540e17` - feat(mobile): optimize SessionDetailView spacing for mobile
+- `30f4f86` - feat(mobile): optimize SessionCreatePage spacing for mobile
+
+**Branche :** feat/next-features
+**Temps réalisé :** ~2.5h
+**Status :** ✅ Phases 2-3-4 Mobile UX TERMINÉES - Pattern responsive unifié sur TOUTES les pages
+
+### Session du 31/10/2025 - Internationalisation (i18n) Complète FR/EN ✅
+**Traduction complète de toutes les pages principales en Français/Anglais**
+
+#### Objectif : Couverture i18n 100% sur les 8 pages principales
+
+**Infrastructure i18n existante :**
+- ✅ react-i18next configuré avec language detector
+- ✅ Fichiers de traduction fr.json et en.json (469 lignes chacun)
+- ✅ ProfilePage avec sélecteur de langue fonctionnel
+- ✅ Utils i18nFormatters.ts pour dates/temps
+
+#### Pages traduites (8/8 = 100%)
+
+**1. SessionsPage** - Liste des séances
+- ✅ Import useTranslation hook
+- ✅ Titre, boutons, filtres traduits
+- ✅ Empty states et tooltips
+- ✅ Statuts séances (completed, cancelled, scheduled)
+- ✅ Formatage dates avec formatSessionDate()
+- Commit : `c6280ad` feat(i18n): complete SessionsPage translations
+
+**2. ExercisesPage** - Catalogue d'exercices
+- ✅ Filtres sport/catégorie/âge/scope traduits
+- ✅ Empty states conditionnels (filtered vs empty)
+- ✅ Tooltips favoris (add/remove)
+- ✅ Actions exercices (edit, copy, share, delete)
+- ✅ Compteurs exercices avec interpolation
+- Commit : `9d23b80` feat(i18n): complete ExercisesPage translations
+
+**3. HistoryPage** - Historique des séances
+- ✅ Statistiques header avec interpolation (completedSessions, cancelledSessions)
+- ✅ Filtres tri (date, nom, durée) et périodes (all, week, month, year)
+- ✅ Empty states avec conditions
+- ✅ Formatage temps écoulé (time ago)
+- ✅ Badges statut et durée
+- Commit : `ec9ae43` feat(i18n): complete HistoryPage translations
+
+**4. SessionDetailView** - Vue détaillée séance
+- ✅ Titre et actions (edit, delete, finish)
+- ✅ Programme avec count interpolation : `programWithCount`
+- ✅ Empty states programme
+- ✅ Notes de séance
+- ✅ Statistiques rapides (duration, players, status)
+- Commit : `609e6c4` feat(i18n): complete SessionDetailView translations
+
+**5. ExerciseDetailView** - Vue détaillée exercice
+- ✅ Quick stats (duration, playerCount, ageRange)
+- ✅ Sections (detailedInstructions, exerciseCategory, description)
+- ✅ Field stats avec interpolation multiple : `players, arrows, balls, zones`
+- ✅ Steps et successCriteria avec counts
+- ✅ Actions header (edit, copy, share, delete)
+- Commit : `5aa1d17` feat(i18n): complete ExerciseDetailView translations
+
+**6. SessionCreatePage** - Création/édition séance
+- ✅ Titre dynamique (newTitle vs modifyTitle)
+- ✅ Labels formulaire (sessionName, description, ageCategory, dateTime, objectives)
+- ✅ Placeholders (descriptionPlaceholder, searchExercises, objectivesPlaceholder)
+- ✅ Popup sélection exercices (addExercises, exercisesSelected)
+- ✅ Bouton submit conditionnel (createSession vs modifySession)
+- ✅ 25+ clés de traduction ajoutées
+- Commit : `a272436` feat(i18n): complete SessionCreatePage translations
+
+**7. ExerciseCreatePage** - Création/édition exercice
+- ✅ Titre dynamique 3 modes (newExerciseTitle, editExerciseTitle, copyExerciseTitle)
+- ✅ Labels formulaire (exerciseName, duration, categories, intensity, material)
+- ✅ Sections dynamiques avec counts : `stepsWithCount`, `successCriteriaWithCount`
+- ✅ Field stats interpolation : `fieldStats`
+- ✅ Placeholders (newStep, newCriterion, addCategory)
+- ✅ Sport selection modal avec terrains
+- ✅ 30+ clés de traduction ajoutées
+- Commit : `8b5d496` feat(i18n): complete ExerciseCreatePage translations
+
+**8. NotificationCenter** - Centre notifications
+- ✅ Titre et filtres (unread/all)
+- ✅ Actions (markAllRead, settings)
+- ✅ Empty states multiples (noNotifications, allRead, noNotificationsYet)
+- ✅ Formatage temps avec formatRelativeTime() (réutilisation i18nFormatters)
+- ✅ Suppression fonction locale formatTime() en faveur de l'utilitaire existant
+- Commit : `8c560b8` feat(i18n): translate NotificationCenter component
+
+#### Fonctionnalités i18n implémentées
+
+**Traductions simples :**
+```typescript
+{t('sessions.title')}
+{t('exercises.newExercise')}
+```
+
+**Interpolation avec variables :**
+```typescript
+{t('sessions.programWithCount', { count: exercises.length })}
+{t('exercises.fieldStats', { players, arrows, balls, zones })}
+{t('history.completedCount', { count: completedSessions.length })}
+```
+
+**Traductions conditionnelles :**
+```typescript
+{isEditMode ? t('sessions.modifyTitle') : t('sessions.newTitle')}
+{hasActiveFilters ? t('exercises.noExercisesFound') : t('exercises.noExercisesAvailable')}
+{period === 'all' ? t('history.periods.all') : t('history.periods.week')}
+```
+
+**Formatage dates/temps :**
+```typescript
+import { formatRelativeTime } from '../utils/i18nFormatters';
+{formatRelativeTime(notification.createdAt)}
+// Utilise les clés history.timeAgo.* (justNow, minutesAgo, hoursAgo, etc.)
+```
+
+#### Organisation des traductions
+
+**Structure des fichiers JSON (469 lignes chacun) :**
+- **sessions** : 50+ clés (filtres, statuts, formulaires, actions)
+- **exercises** : 70+ clés (catégories, filtres, création, édition, field stats)
+- **history** : 45+ clés (statistiques, tri, périodes, temps écoulé)
+- **notifications** : 15+ clés (centre notifications, paramètres, timeAgo)
+- **common** : Clés partagées (save, cancel, delete, loading, confirm)
+
+**Clés avec interpolation (exemples) :**
+```json
+"programWithCount": "Programme ({{count}} exercices)",
+"fieldStats": "Joueurs: {{players}} | Flèches: {{arrows}} | Ballons: {{balls}} | Zones: {{zones}}",
+"exercisesSelected": "{{count}} exercice(s) sélectionné(s)",
+"completedCount": "{{count}} complété(s)"
+```
+
+#### Statistiques techniques
+
+- **Fichiers de traduction** : 469 lignes chacun (fr.json + en.json)
+- **Clés ajoutées cette session** : ~220 nouvelles clés
+- **Commits effectués** : 8 commits détaillés avec messages explicites
+- **Build final** : ✅ 333.73 kB (gzip: 91.71 kB)
+- **Augmentation bundle** : +2.83 kB (~0.85% du total)
+- **Erreurs** : 0 ❌
+- **Pages 100% traduites** : 8/8 (SessionsPage, ExercisesPage, HistoryPage, SessionDetailView, ExerciseDetailView, SessionCreatePage, ExerciseCreatePage, NotificationCenter)
+
+📁 **Fichiers modifiés :**
+- `src/i18n/locales/fr.json` : +220 clés (sessions, exercises, history, notifications)
+- `src/i18n/locales/en.json` : +220 clés (traductions anglaises parallèles)
+- `src/components/SessionsPage.tsx` : 15+ strings remplacés
+- `src/components/ExercisesPage.tsx` : 20+ strings remplacés
+- `src/components/HistoryPage.tsx` : 40+ strings remplacés
+- `src/components/SessionDetailView.tsx` : 12+ strings remplacés
+- `src/components/ExerciseDetailView.tsx` : 15+ strings remplacés
+- `src/components/SessionCreatePage.tsx` : 25+ strings remplacés
+- `src/components/ExerciseCreatePage.tsx` : 30+ strings remplacés
+- `src/components/NotificationCenter.tsx` : 10+ strings remplacés + refactor formatTime
+
+**Commits créés :**
+1. `c6280ad` - feat(i18n): complete SessionsPage translations
+2. `9d23b80` - feat(i18n): complete ExercisesPage translations
+3. `ec9ae43` - feat(i18n): complete HistoryPage translations
+4. `609e6c4` - feat(i18n): complete SessionDetailView translations
+5. `5aa1d17` - feat(i18n): complete ExerciseDetailView translations
+6. `a272436` - feat(i18n): complete SessionCreatePage translations
+7. `8b5d496` - feat(i18n): complete ExerciseCreatePage translations
+8. `8c560b8` - feat(i18n): translate NotificationCenter component
+
+**Branche :** feat/next-features
+**Temps réalisé :** ~3h
+**Status :** ✅ Application Exersio 100% bilingue (FR/EN) sur toutes les pages principales
+
+### Session du 04/11/2025 - Splash Screen + Version Check System ✅
+**Implémentation complète du splash screen avec vérification de version automatique**
+
+#### Fonctionnalités ajoutées
+**1. Composant SplashScreen React (`src/components/SplashScreen.tsx`)**
+- ✅ Animation élégante avec logo Exersio (icône Dumbbell)
+- ✅ Gradient de fond slate-900 → slate-800
+- ✅ Animation ping sur le cercle du logo
+- ✅ Barre de progression indéterminée (`loading-bar` animation)
+- ✅ Fade out automatique après durée minimale (1500ms)
+- ✅ Props: `isVisible`, `onComplete`, `minDuration`
+
+**2. Animation Tailwind personnalisée (`tailwind.config.js`)**
+- ✅ Keyframes `loading-bar` : translateX(-100% → 0% → 100%)
+- ✅ Animation 1.5s ease-in-out infinite
+
+**3. Intégration App.tsx**
+- ✅ Import et utilisation du composant SplashScreen
+- ✅ Affichage pendant l'initialisation auth ou version check
+- ✅ Remplacement du simple texte "Chargement…"
+
+**4. Backend API Version (déjà existant)**
+- ✅ Endpoint `/api/app/version` - Informations de version
+- ✅ Endpoint `/api/app/maintenance` - Statut maintenance
+- ✅ Documentation Swagger complète
+- ✅ Mise à jour des release notes avec nouvelles fonctionnalités
+
+**5. Système Version Check (déjà existant)**
+- ✅ Hook `useVersionCheck` pour vérification automatique au démarrage
+- ✅ Service `versionService` avec comparaison semver
+- ✅ Modals `UpdateModal` et `MaintenanceModal`
+- ✅ Gestion mises à jour obligatoires vs optionnelles
+- ✅ Rappel automatique après 24h pour updates optionnelles
+
+#### Fichiers créés/modifiés
+**Frontend:**
+- `src/components/SplashScreen.tsx` (nouveau) : Composant avec animation
+- `tailwind.config.js` : Animation loading-bar ajoutée
+- `src/App.tsx` : Import SplashScreen, suppression imports inutilisés
+- `SPLASH-SCREEN-VERSION-CHECK.md` (nouveau) : Documentation complète 600+ lignes
+
+**Backend:**
+- `src/modules/app/app-version.controller.ts` : Mise à jour release notes version 1.0.0
+
+#### Documentation créée
+- ✅ **SPLASH-SCREEN-VERSION-CHECK.md** : Guide complet (600+ lignes)
+  - Vue d'ensemble du système
+  - Documentation des composants (SplashScreen, useVersionCheck, UpdateModal)
+  - API backend détaillée
+  - Flux d'exécution et scénarios
+  - Configuration Capacitor
+  - Guide développeur pour mise à jour de version
+  - Tests et checklist
+  - TODO futur
+
+#### Flux d'exécution
+1. App démarre → SplashScreen affiché (isVisible=true)
+2. useVersionCheck appelle `/api/app/version` et `/api/app/maintenance` (mobile uniquement)
+3. Comparaison version locale (1.0.0) avec serveur
+4. hasChecked=true, isChecking=false → Splash disparaît après 1.5s
+5. Si mise à jour disponible → UpdateModal s'affiche
+6. Si maintenance → MaintenanceModal bloque l'accès
+
+#### État actuel
+**Version actuelle:** 1.0.0
+- `latestVersion = currentVersion = 1.0.0`
+- Aucune mise à jour disponible
+- `updateRequired = false`, `updateOptional = false`
+- Splash screen fonctionne parfaitement
+
+#### Tests effectués
+- ✅ Serveur dev lancé sur http://localhost:5174
+- ✅ SplashScreen s'affiche avec animation loading-bar
+- ✅ Fade out fluide après 1.5s
+- ✅ Import nettoyé (supprimé initializeDefaultData, bundleAnalyzer, exActions inutilisés)
+
+#### TODO Futur
+**Mobile:**
+- [ ] Installer `npm install @capacitor/splash-screen`
+- [ ] Générer assets splash screen natifs avec `@capacitor/assets`
+- [ ] Tester transition splash natif → splash React
+- [ ] Vérifier appels API version sur mobile réel
+
+**Assets:**
+- [ ] Créer logo vectoriel Exersio professionnel
+- [ ] Générer splash screens optimisés (portrait + landscape)
+- [ ] Variations dark/light mode
+- [ ] Animations Lottie avancées
+
+**Backend:**
+- [ ] Stocker versions dans base de données
+- [ ] Interface admin pour gérer versions/maintenance
+- [ ] Notifications push avant maintenance programmée
+
+**Fichiers concernés:**
+- Frontend: `SplashScreen.tsx`, `App.tsx`, `tailwind.config.js`, `useVersionCheck.ts`, `versionService.ts`
+- Backend: `app-version.controller.ts`
+- Documentation: `SPLASH-SCREEN-VERSION-CHECK.md`
+
+**Branche:** feat/next-features
+**Temps réalisé:** ~2h
+**Status:** ✅ Splash screen React fonctionnel, ⏳ Plugin Capacitor à installer pour mobile natif
+
+---
+
+### Session du 15/10/2025 - Corrections Filtres Multi-Sport + ExerciseDetailView ✅
+**Phase Frontend multi-sport complétée:**
+- ✅ **Fix filtres ExercisesPage** : Réinitialisation catégories/âges au changement de sport
+- ✅ **Fix clés React dupliquées** : Utilisation IDs uniques dans MobileFilters
+- ✅ **Fix bouton "Tous les sports"** : hasInitialized pour éviter re-sélection automatique
+- ✅ **Tests unitaires backend** : Fix mock preferredSportId dans auth.service.spec.ts
+
+**Phase 2 : ExerciseDetailView - 7 améliorations complétées:**
+1. ✅ Header Actions Responsive (background + icon-only mobile avec `md:mr-2` et `hidden md:inline`)
+2. ✅ Layout Responsive (changé `xl:grid-cols-3` → `md:grid-cols-3` pour breakpoint 768px)
+3. ✅ Bande noire terrain supprimée (retiré `bg-[#1e293b]` et pattern background)
+4. ✅ Catégorie / Tranche d'âge séparées (3 sections : Catégorie exercice, Tranche d'âge, Tags)
+5. ✅ Consignes inline épurées (ligne de séparation retirée, `space-y-4` au lieu de `space-y-6`)
+6. ✅ Tranche d'âge au lieu de Niveau (statistiques rapides affichent `exercise.ageCategory`)
+7. ✅ Fix rechargement page (useEffect charge exercice depuis API si absent du contexte)
+
+📁 **Fichiers modifiés:**
+- `src/components/ExercisesPage.tsx` : useEffect reset filtres, hasInitialized, mobileFilters avec IDs
+- `src/components/MobileFilters.tsx` : Interface FilterOption avec id optionnel, key={option.id || option.value}
+- `src/components/ExerciseDetailView.tsx` : 7 améliorations UI/UX complètes
+- `src/components/MainLayout.tsx` : ExerciseDetailPageWrapper avec useEffect loadExercises, useState isLoading
+- `src/modules/auth/auth.service.spec.ts` : mockUser avec preferredSportId: null
+
+**Branche:** feat/arrow-control-points
+**Status:** ✅ Phase 1 & 2 terminées, ⏳ Phase 3 à faire (fonctionnalités)
+
+#### 🚨 TODO DÉPLOIEMENT PRODUCTION
+**Actions critiques avant déploiement:**
+1. **Migration Prisma** : `npx prisma db push` (destructif, backup DB d'abord!)
+2. **Seed sports** : `npm run seed:sports` pour peupler tables
+3. **Vérifier données existantes** : Les exercices/sessions doivent être migrés manuellement
+4. **Update frontend** : Déployer nouveau code avec sportId support
+5. **Test complet** : Vérifier création exercice avec nouveaux IDs
+
+**⚠️ ATTENTION:** Migration destructive si données existantes dans ExerciseCategory/AgeCategory!
+
 ---
 
 ## 📱 Déploiement mobile (Capacitor)
@@ -391,12 +1275,13 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 ### 🔧 Améliorations futures
 - [ ] **🔄 Vérification version mobile** - Check mise à jour au démarrage app
 
-### 📊 Priorité Moyenne  
+### 📊 Priorité Moyenne
+- [x] **🌍 i18n FR/EN** - Internationalisation Français/Anglais ✅ (31/10/2025)
 - [ ] **📈 Analytics** - Tracking usage et métriques utilisateurs
 - [ ] **🎨 Thèmes** - Mode sombre/clair + personnalisation
 - [ ] **🔔 Notifications push** - Rappels séances et nouveautés
 - [ ] **📱 iOS App** - Version iOS avec Capacitor
-- [ ] **🌍 i18n** - Internationalisation (EN, ES, etc.)
+- [ ] **🌐 i18n langues supplémentaires** - ES, DE, IT, etc.
 
 ### 🚀 Priorité Faible
 - [ ] **🔍 Recherche avancée** - Filtres complexes exercices/séances  
@@ -414,14 +1299,41 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 
 ---
 
+## 📋 Documentation Projet
+
+### 📊 Fichier de Référence Principal
+**[ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md)** - Document unique consolidé (23/10/2025)
+
+**Contenu** :
+- ✅ Accomplissements majeurs (sessions 12-15/10)
+- 🚨 6 bugs critiques identifiés (11/10) avec solutions détaillées
+- 📱 Plan mobile complet (Phases 1-4 : 18.5h)
+- 🔐 RGPD & Sécurité (10-14h)
+- 🚀 Améliorations avancées (i18n, version mobile, tests)
+- 📊 Récapitulatif temps : 60-73h total
+- 🎯 4 options d'action recommandées
+
+**Remplace** : Tous les anciens backlogs et plans (consolidés puis supprimés)
+
+---
+
 ## 🎯 Recommandations pour prochaine session
 
-1. **🚨 PRIORITÉ 1** : Ajouter `CORS_ORIGIN` dans Render (app mobile bloquée sinon)
-2. **🎯 Réparer éditeur de terrain** - Fonctionnalité critique cassée
-3. **🔄 Système version mobile** - Check version obligatoire/optionnelle au démarrage
-4. **🧪 Exécution tests complets** - Lancer suite de tests créée (backend Jest + frontend Vitest)
-5. **📈 Analytics utilisateur** - Métriques usage et comportements
-6. **🎨 Mode sombre** - Implémentation thème sombre/clair
+### ⭐ OPTION 1 : Bugs Critiques (5-8h) - RECOMMANDÉ
+1. **Notifications non lues** : Badge + API markAsRead (2-3h)
+2. **Visuels terrain** : Tests SportCourtViewer (1-2h)
+3. **Fix copie/partage** : ExerciseDetailView (45min)
+4. **Phase 1 Mobile** : Toasts + polling + déconnexion (2h)
+
+### Option 2 : RGPD + Sécurité (10-14h)
+1. **Sécurité mot de passe** : Audit bcrypt + indicateur (3-4h)
+2. **CGU/Politique** : Pages + checkbox RGPD (4-6h)
+3. **Suppression compte** : Paramètres + endpoint (3-4h)
+
+### Option 3 : UX Mobile Complète (18.5h)
+Phases 1-4 du plan mobile + problèmes UX spécifiques
+
+**Voir détails complets dans [ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md)**
 
 ## 🗂️ Fichiers critiques récents
 
@@ -446,13 +1358,30 @@ Si vous avez Java 17, il faut upgrader vers Java 21 pour générer l'APK.
 - `plan-de-test-complet.md` - Infrastructure et stratégie de tests 3 phases
 - `AUDIT_FRONTEND_COMPLET.md` + `audit-backend-complet.md` - Analyses de nettoyage
 
-### Session du 16/09/2025 - App Mobile Android + Configuration Production
+### Session 16/09/2025 (matin) - App Mobile Android + Configuration Production
 - ✅ **Branche development créée** : Workflow sécurisé sans déploiements automatiques
 - ✅ **Configuration Capacitor production** : Scheme `capacitor://localhost` (standard)
 - ✅ **APK Android fonctionnelle** : Build avec API production Render
 - ✅ **Documentation environnements** : README-ENVIRONMENTS.md complet
 - 🚨 **Variable Render manquante** : `CORS_ORIGIN=https://exersio-frontend.vercel.app,capacitor://localhost`
 - 📱 **APK prête** : `android/app/build/outputs/apk/debug/app-debug.apk` (10MB)
+
+### Session 16/09/2025 (soir) - Correction Éditeur Multi-Sport
+- ✅ **Problème majeur résolu** : Éditeur de terrain multi-sport complètement fonctionnel
+- ✅ **5 corrections critiques** : Sport selection, images terrain, centrage, modal, responsive
+- ✅ **Branche feat/improve-field-editor** : 13 fichiers modifiés, 171 insertions, 191 deletions
+- ✅ **Commit créé** : "feat: implement multi-sport field editor with real court images"
+- ✅ **Desktop fonctionnel** : Tous les sports avec vrais terrains et édition complète
+- ⚠️ **Mobile partiel** : Édition en paysage fonctionnelle, portrait différé
+- 🎯 **Décisions techniques** :
+  - Breakpoint lg: (1024px) au lieu de xl: (1280px) pour meilleure UX
+  - object-fit: cover pour images terrains (remplissage sans distorsion)
+  - WebP avec PNG fallback pour compatibilité maximale
+  - Conditional styling avec useIsMobile() pour responsive
+- 📁 **Fichiers modifiés** :
+  - `src/components/ExerciseCreatePage.tsx` : Integration SportCourt + selectedSport state + breakpoint lg:
+  - `src/components/ExerciseEditor/CourtBackgroundImage.tsx` : Fix centrage (object-fit: cover)
+  - `src/components/ExerciseEditor/SportSelectionModal.tsx` : Vraies images + responsive mobile
 
 ---
 
