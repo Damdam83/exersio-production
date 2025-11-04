@@ -1,5 +1,6 @@
 import { ChevronRight, Eye, Home, Plus, Save, Upload } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Exercise } from '../types';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -36,6 +37,7 @@ import { useOrientation } from '../hooks/useOrientation';
 import { MobileHeader } from './MobileHeader';
 
 export function ExerciseCreatePage() {
+  const { t } = useTranslation();
   // contexts
   const { currentPage, params, navigate } = useNavigation();
   const { user, club } = useAuth();
@@ -734,7 +736,7 @@ export function ExerciseCreatePage() {
         }}></div>
 
         <MobileHeader 
-          title={isCopyMode ? "Copier exercice" : isEditMode ? "Modifier exercice" : "Nouvel exercice"}
+          title={isCopyMode ? t('exercises.copyExerciseTitle') : isEditMode ? t('exercises.editExerciseTitle') : t('exercises.newExerciseTitle')}
           icon={isCopyMode ? "📋" : isEditMode ? "✏️" : "✨"}
           onBack={() => navigate('exercises')}
           actions={[
@@ -774,22 +776,22 @@ export function ExerciseCreatePage() {
           }}>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>📝</div>
-              Informations générales
+              {t('exercises.generalInfo')}
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Nom de l'exercice *</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.exerciseNameRequired')}</label>
               <Input value={exerciseData.name} onChange={e => setExerciseData(p => ({ ...p, name: e.target.value }))} className="bg-white/5 exersio-border text-white" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }} />
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Description</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.description')}</label>
               <Textarea value={exerciseData.description} onChange={e => setExerciseData(p => ({ ...p, description: e.target.value }))} rows={3} className="bg-white/5 exersio-border text-white resize-none" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Durée (min)</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.durationMin')}</label>
                 <input type="number" value={exerciseData.duration} min={1} max={60} onChange={e => setExerciseData(p => ({ ...p, duration: parseInt(e.target.value || '0', 10) }))} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', colorScheme: 'dark' }} />
               </div>
               <div>
@@ -799,7 +801,7 @@ export function ExerciseCreatePage() {
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Catégories</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.categories')}</label>
               <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', padding: '12px', minHeight: '60px', maxHeight: '60px', overflowY: 'auto' }}>
                 {exerciseData.categories.length > 0 ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -819,7 +821,7 @@ export function ExerciseCreatePage() {
               </div>
               {exerciseData.categories.length < FIELD_CATEGORIES_FROM_BACKEND.length && (
                 <select value="" onChange={e => { const selectedValue = e.target.value; if (selectedValue && !exerciseData.categories.includes(selectedValue)) { setExerciseData(p => ({ ...p, categories: [...p.categories, selectedValue], tags: p.tags.filter(t => t !== selectedValue) })); } e.target.value = ''; }} style={{ width: '100%', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white', fontSize: '12px', outline: 'none', marginTop: '8px' }}>
-                  <option value="">+ Ajouter catégorie...</option>
+                  <option value="">+ {t('exercises.addCategory')}</option>
                   {FIELD_CATEGORIES_FROM_BACKEND.filter(cat => !exerciseData.categories.includes(cat.value)).map(cat => (<option key={`option-${cat.value}`} value={cat.value} style={{ backgroundColor: '#283544', color: 'white' }}>{cat.label}</option>))}
                 </select>
               )}
@@ -833,7 +835,7 @@ export function ExerciseCreatePage() {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Intensité</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.intensity')}</label>
                 <select value={exerciseData.intensity} onChange={e => setExerciseData(p => ({ ...p, intensity: e.target.value }))} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}>
                   {FIELD_INTENSITIES.map(int => (<option key={int.value} value={int.value} style={{ backgroundColor: '#283544', color: 'white' }}>{int.label}</option>))}
                 </select>
@@ -841,7 +843,7 @@ export function ExerciseCreatePage() {
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>Matériel</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px' }}>{t('exercises.material')}</label>
               <Textarea value={exerciseData.material} onChange={e => setExerciseData(p => ({ ...p, material: e.target.value }))} rows={3} className="bg-white/5 exersio-border text-white resize-none" style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
 
@@ -859,7 +861,7 @@ export function ExerciseCreatePage() {
           }}>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>📋</div>
-              Étapes ({exerciseData.steps.length})
+              {t('exercises.stepsWithCount', { count: exerciseData.steps.length })}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -872,7 +874,7 @@ export function ExerciseCreatePage() {
               ))}
 
               <div style={{ display: 'flex', gap: '10px' }}>
-                <Input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()} placeholder="Nouvelle étape..." style={{ flex: 1, padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white', fontSize: '13px', outline: 'none' }} />
+                <Input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()} placeholder={t('exercises.newStep')} style={{ flex: 1, padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white', fontSize: '13px', outline: 'none' }} />
                 <Button onClick={addStep} size="sm" className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]" style={{ padding: '10px 12px', borderRadius: '8px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer' }}>+</Button>
               </div>
             </div>
@@ -889,7 +891,7 @@ export function ExerciseCreatePage() {
           }}>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '16px', height: '16px', background: 'linear-gradient(135deg, #00d4aa, #00b894)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>✅</div>
-              Critères de réussite ({exerciseData.successCriteria.length})
+              {t('exercises.successCriteriaWithCount', { count: exerciseData.successCriteria.length })}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1083,36 +1085,34 @@ export function ExerciseCreatePage() {
       </div>
 
       {/* Layout 2 colonnes */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-5 md:gap-6">
         {/* Col gauche : formulaire */}
         <div className="xl:col-span-4">
-          <div style={{
+          <div className="p-4 sm:p-5 md:p-6 mb-4 sm:mb-6 md:mb-8" style={{
             background: 'rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '20px',
-            padding: '25px',
-            marginBottom: '30px'
+            borderRadius: '20px'
           }}>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
               <div className="w-5 h-5 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded text-xs flex items-center justify-center">📝</div>
-              <h3 className="text-lg font-bold">Informations générales</h3>
+              <h3 className="text-base sm:text-lg font-bold">{t('exercises.generalInfo')}</h3>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Nom de l'exercice *</label>
+                <label className="block text-sm font-medium mb-2">{t('exercises.exerciseNameRequired')}</label>
                 <Input value={exerciseData.name} onChange={e => setExerciseData(p => ({ ...p, name: e.target.value }))} className="bg-white/5 exersio-border text-white" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-medium mb-2">{t('exercises.description')}</label>
                 <Textarea value={exerciseData.description} onChange={e => setExerciseData(p => ({ ...p, description: e.target.value }))} rows={3} className="bg-white/5 exersio-border text-white resize-none" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Durée (min)</label>
+                  <label className="block text-sm font-medium mb-2">{t('exercises.durationMin')}</label>
                   <input 
                     type="number" 
                     value={exerciseData.duration} 
@@ -1141,9 +1141,9 @@ export function ExerciseCreatePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Catégories</label>
+                  <label className="block text-sm font-medium mb-2">{t('exercises.categories')}</label>
                   
                   {/* Zone d'affichage des catégories sélectionnées - hauteur fixe */}
                   <div className="bg-white/5 border exersio-border rounded-xl p-3 min-h-[80px] max-h-[80px] overflow-y-auto">
@@ -1199,7 +1199,7 @@ export function ExerciseCreatePage() {
                       }}
                       className="w-full bg-white/5 exersio-border text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00d4aa] mt-2"
                     >
-                      <option value="">+ Ajouter une catégorie...</option>
+                      <option value="">+ {t('exercises.addCategoryLong')}</option>
                       {FIELD_CATEGORIES_FROM_BACKEND
                         .filter(cat => !exerciseData.categories.includes(cat.value))
                         .map(cat => (
@@ -1228,7 +1228,7 @@ export function ExerciseCreatePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Intensité</label>
+                <label className="block text-sm font-medium mb-2">{t('exercises.intensity')}</label>
                 <select
                   value={exerciseData.intensity}
                   onChange={e => setExerciseData(p => ({ ...p, intensity: e.target.value }))}
@@ -1244,29 +1244,29 @@ export function ExerciseCreatePage() {
 
 
               <div>
-                <label className="block text-sm font-medium mb-2">Matériel</label>
+                <label className="block text-sm font-medium mb-2">{t('exercises.material')}</label>
                 <Textarea value={exerciseData.material} onChange={e => setExerciseData(p => ({ ...p, material: e.target.value }))} rows={4} className="bg-white/5 exersio-border text-white resize-none" />
               </div>
             </div>
 
             {/* Etapes */}
-            <div className="mt-8">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="mt-6 sm:mt-8">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <div className="w-5 h-5 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded text-xs flex items-center justify-center">📋</div>
-                <h3 className="text-lg font-bold">Étapes</h3>
+                <h3 className="text-base sm:text-lg font-bold">{t('exercises.steps')}</h3>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {exerciseData.steps.map((step, i) => (
-                  <div key={i} className="flex gap-3 p-3 bg-white/5 rounded-lg items-center">
+                  <div key={i} className="flex gap-2 sm:gap-3 p-2 sm:p-3 bg-white/5 rounded-lg items-center">
                     <div className="w-6 h-6 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{i + 1}</div>
                     <Input value={step} onChange={e => updateStep(i, e.target.value)} className="flex-1 bg-transparent border-none text-white p-0" />
                     <Button size="sm" variant="ghost" onClick={() => removeStep(i)} className="text-red-400 hover:text-red-300 h-6 w-6 p-0 flex-shrink-0">×</Button>
                   </div>
                 ))}
 
-                <div className="flex gap-3">
-                  <Input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()} placeholder="Nouvelle étape..." className="bg-white/5 exersio-border text-white" />
+                <div className="flex gap-2 sm:gap-3">
+                  <Input value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()} placeholder={t('exercises.newStep')} className="bg-white/5 exersio-border text-white" />
                   <Button onClick={addStep} size="sm" className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]">
                     <Plus className="w-4 h-4" />
                   </Button>
@@ -1275,22 +1275,22 @@ export function ExerciseCreatePage() {
             </div>
 
             {/* Critères de réussite */}
-            <div className="mt-8">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="mt-6 sm:mt-8">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <div className="w-5 h-5 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded text-xs flex items-center justify-center">✅</div>
-                <h3 className="text-lg font-bold">Critères de réussite</h3>
+                <h3 className="text-base sm:text-lg font-bold">{t('exercises.successCriteria')}</h3>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {exerciseData.successCriteria.map((criterion, i) => (
-                  <div key={i} className="flex gap-3 p-3 bg-white/5 rounded-lg items-center">
+                  <div key={i} className="flex gap-2 sm:gap-3 p-2 sm:p-3 bg-white/5 rounded-lg items-center">
                     <div className="w-6 h-6 bg-gradient-to-r from-[#00d4aa] to-[#00b894] rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
                     <Input value={criterion} onChange={e => updateCriterion(i, e.target.value)} className="flex-1 bg-transparent border-none text-white p-0" />
                     <Button size="sm" variant="ghost" onClick={() => removeCriterion(i)} className="text-red-400 hover:text-red-300 h-6 w-6 p-0 flex-shrink-0">×</Button>
                   </div>
                 ))}
 
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <Input value={newCriterion} onChange={e => setNewCriterion(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCriterion()} placeholder="Nouveau critère..." className="bg-white/5 exersio-border text-white" />
                   <Button onClick={addCriterion} size="sm" className="bg-gradient-to-r from-[#00d4aa] to-[#00b894]">
                     <Plus className="w-4 h-4" />
@@ -1312,14 +1312,13 @@ export function ExerciseCreatePage() {
           }}>
             
             {/* Header éditeur avec sport sélectionné */}
-            <div style={{
-              padding: '20px 24px 16px 24px',
+            <div className="p-4 sm:p-5 md:px-6 md:pb-4" style={{
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="flex items-center gap-2 sm:gap-3" style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ 
                   width: '24px', 
                   height: '24px', 
@@ -1354,13 +1353,12 @@ export function ExerciseCreatePage() {
               
               <button
                 onClick={() => setShowSportModal(true)}
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm"
                 style={{
-                  padding: '8px 16px',
                   background: 'rgba(59, 130, 246, 0.2)',
                   border: '1px solid rgba(59, 130, 246, 0.3)',
                   borderRadius: '10px',
                   color: '#60a5fa',
-                  fontSize: '13px',
                   fontWeight: '500',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -1447,12 +1445,11 @@ export function ExerciseCreatePage() {
             />
             
             {/* Bouton propriétés sous le terrain */}
-            <div style={{ margin: '20px', marginTop: '0' }}>
+            <div className="mx-4 sm:mx-5 md:mx-5 mt-0">
               <button
                 onClick={() => setShowPropertiesModal(true)}
+                className="w-full p-3 sm:p-4"
                 style={{
-                  width: '100%',
-                  padding: '15px 20px',
                   background: 'rgba(59, 130, 246, 0.1)',
                   border: '1px solid rgba(59, 130, 246, 0.3)',
                   borderRadius: '12px',
@@ -1533,8 +1530,7 @@ export function ExerciseCreatePage() {
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
           }}>
             {/* Modal Header */}
-            <div style={{
-              padding: '20px 25px',
+            <div className="p-4 sm:p-5 md:px-6" style={{
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
               display: 'flex',
               justifyContent: 'space-between',
@@ -1572,15 +1568,13 @@ export function ExerciseCreatePage() {
             </div>
 
             {/* Modal Content - Version simplifiée */}
-            <div style={{
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:px-6" style={{
               flex: 1,
-              overflowY: 'auto',
-              padding: '20px 25px'
+              overflowY: 'auto'
             }}>
-              <div style={{
+              <div className="text-white text-center py-8 sm:py-10 px-4 sm:px-5" style={{
                 color: '#ffffff',
-                textAlign: 'center',
-                padding: '40px 20px'
+                textAlign: 'center'
               }}>
                 <p>Propriétés des éléments</p>
                 <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '10px' }}>

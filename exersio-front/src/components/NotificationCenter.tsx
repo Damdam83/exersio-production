@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, BellOff, Check, CheckCheck, X, Settings, Clock, Users } from 'lucide-react';
 import { notificationService, Notification } from '../services/notificationService';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useNavigation } from '../contexts/NavigationContext';
+import { formatRelativeTime } from '../utils/i18nFormatters';
 
 interface NotificationCenterProps {
   isOpen: boolean;
@@ -10,6 +12,7 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -77,18 +80,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
     }
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffHours < 1) return 'Il y a quelques minutes';
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffDays < 7) return `Il y a ${diffDays}j`;
-    return date.toLocaleDateString();
-  };
 
   if (!isOpen) return null;
 
@@ -112,7 +103,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <div className="flex items-center space-x-2">
             <Bell className="w-5 h-5 text-white" />
-            <h2 className="text-lg font-semibold text-white">Notifications</h2>
+            <h2 className="text-lg font-semibold text-white">{t('notifications.title')}</h2>
             {unreadCount > 0 && (
               <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
                 {unreadCount}
@@ -142,7 +133,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
               `}
             >
               {showUnreadOnly ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
-              <span className="ml-1">{showUnreadOnly ? 'Non lues' : 'Toutes'}</span>
+              <span className="ml-1">{showUnreadOnly ? t('notifications.unread') : t('notifications.all')}</span>
             </button>
           </div>
 
@@ -152,7 +143,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
               className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors"
             >
               <CheckCheck className="w-4 h-4" />
-              <span>Tout lire</span>
+              <span>{t('notifications.markAllRead')}</span>
             </button>
           )}
         </div>
@@ -169,9 +160,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
           ) : notifications.length === 0 ? (
             <div className="text-center p-8 text-gray-400">
               <Bell className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-              <p className="text-lg font-medium mb-2 text-gray-300">Aucune notification</p>
+              <p className="text-lg font-medium mb-2 text-gray-300">{t('notifications.noNotifications')}</p>
               <p className="text-sm">
-                {showUnreadOnly ? 'Toutes les notifications sont lues' : 'Vous n\'avez pas encore de notifications'}
+                {showUnreadOnly ? t('notifications.allRead') : t('notifications.noNotificationsYet')}
               </p>
             </div>
           ) : (
@@ -214,7 +205,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
                       </p>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">
-                          {formatTime(notification.createdAt)}
+                          {formatRelativeTime(notification.createdAt)}
                         </span>
                         {!notification.isRead && (
                           <div className="w-2 h-2 bg-blue-400 rounded-full" />
@@ -238,7 +229,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, 
             }}
           >
             <Settings className="w-4 h-4" />
-            <span>Paramètres des notifications</span>
+            <span>{t('notifications.settings')}</span>
           </button>
         </div>
       </div>

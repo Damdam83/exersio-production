@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Eye, EyeOff } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useIsMobile } from '../hooks/useIsMobile';
+import { api } from '../services/api';
+import { getSports } from '../services/sportsApi';
+import type { Sport } from '../types';
+import type { ApiError } from '../types/api';
 import { ExersioLogo } from './ExersioLogo';
 import { LegalFooter } from './LegalFooter';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
-import { Eye, EyeOff } from 'lucide-react';
-import { api } from '../services/api';
-import type { ApiError } from '../types/api';
-import { useIsMobile } from '../hooks/useIsMobile';
-import { getSports } from '../services/sportsApi';
-import type { Sport } from '../types';
+import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
 
 interface AuthFormProps {
   onLogin: (credentials: { email: string; password: string }) => Promise<void>;
@@ -22,6 +23,7 @@ interface AuthFormProps {
 type AuthMode = 'login' | 'register' | 'forgot-password' | 'confirm-email' | 'reset-password';
 
 export function AuthForm({ onLogin, onRegister, isLoading = false, error }: AuthFormProps) {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
@@ -651,16 +653,6 @@ export function AuthForm({ onLogin, onRegister, isLoading = false, error }: Auth
               </button>
             )}
           </div>
-
-          {/* Information de développement - Seulement en mode login/register et masqué sur mobile */}
-          {(mode === 'login' || mode === 'register') && !isMobile && (
-            <div className="mt-6 p-4 bg-[#00d4aa]/10 border border-[#00d4aa]/20 rounded-lg">
-              <p className="text-xs text-[#00d4aa] text-center">
-                <strong>Mode développement :</strong> Utilisez n'importe quel email et mot de passe pour vous connecter
-              </p>
-            </div>
-          )}
-
           {/* Footer avec liens légaux */}
           <LegalFooter className="mt-6" />
         </CardContent>

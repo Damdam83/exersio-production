@@ -1,34 +1,51 @@
 # 📊 État d'Avancement Projet Exersio
 
-**Dernière mise à jour** : 25/10/2025
-**Branche actuelle** : `feat/arrow-control-points`
+**Dernière mise à jour** : 04/11/2025
+**Branche actuelle** : `feat/next-features`
 **Document de référence unique** : Synthèse de tous les backlogs et plans
-**Session récente** : Système notifications finalisé (25/10/2025)
+**Session récente** : Splash Screen + Version Check System TERMINÉ (04/11/2025)
 
 ---
 
 ## 📈 État Actuel - Récapitulatif Rapide
 
-### ✅ Complété Récemment (25/10/2025)
-- **Système notifications** : Pagination serveur, EventEmitter, interface admin, documentation complète
-- **Nettoyage code** : Fonctions test obsolètes supprimées
+### ✅ Complété Récemment (04/11/2025)
+- **Splash Screen complet** : Image Exersio officielle + animation loading-bar cyan ✅
+- **Plugin Capacitor** : @capacitor/splash-screen@7.0.3 installé et configuré ✅
+- **Assets générés** : 74 assets Android + 7 icons PWA (2.58 MB total) ✅
+- **Version Check System** : Hook, service, modals (obligatoire/optionnel/maintenance) ✅
+- **Documentation exhaustive** : SPLASH-SCREEN-VERSION-CHECK.md (600+ lignes) ✅
 
-### 🚨 Bugs Critiques Restants (5 sur 6)
-1. ❌ **Visuels terrain cards/detail** - À tester (SportCourtViewer créé 14/10)
-2. ❌ **Éditeur terrain mobile paysage** - Non résolu (3-4h)
-3. ❌ **Sécurité mot de passe** - Audit bcrypt + indicateur force (3-4h)
-4. ❌ **CGU/Politique RGPD** - Pages manquantes (4-6h) - **OBLIGATOIRE LÉGAL**
-5. ❌ **Suppression compte** - Droit à l'oubli RGPD (3-4h) - **OBLIGATOIRE LÉGAL**
+### ✅ Complété Précédemment (27-31/10/2025)
+- **Mobile UX Phases 2-4** : Toutes les pages optimisées avec pattern responsive unifié
+- **Internationalisation i18n** : Support FR/EN complet sur 8 pages principales (31/10)
+- **RGPD complet** : CGU, Politique confidentialité, Suppression compte (26-27/10)
+- **Système notifications** : Pagination serveur, EventEmitter, interface admin (25/10)
 
-### 📱 Mobile UX (Phases 1-4)
-- ❌ Phase 1 : Toasts, polling, déconnexion (2h) - **CRITIQUE**
-- ❌ Phase 2 : AuthForm, HomePage (1.5h)
-- ❌ Phase 3 : Sessions, Exercices, History (6h)
-- ❌ Phase 4 : Detail, Create pages (7h)
+### ✅ Complété Précédemment (26-27/10/2025)
+- **RGPD complet** : CGU, Politique confidentialité, Suppression compte, Checkbox consentement
+- **Sécurité mot de passe** : Audit bcrypt (10 rounds ✅), PasswordStrengthIndicator, toggle show/hide
+- **Correctifs HTTP** : Erreurs 409/401 affichent messages backend clairs
+- **Toast notifications** : Timeout 3s, close button, rich colors, position optimale
+- **Système notifications** : Pagination serveur, EventEmitter, interface admin, documentation complète (25/10)
 
-### 🎯 Recommandation Prochaine Session
-**Option 1 (RECOMMANDÉ)** : RGPD + Sécurité (10-14h) - Conformité légale obligatoire avant production publique
-**Option 2** : Phase 1 Mobile + Tests terrain (3h) - Quick wins pour UX
+### 🚨 Bugs Critiques (Option A - TOUS COMPLÉTÉS ✅)
+1. ✅ **Visuels terrain cards/detail** - SportCourtViewer validé
+2. ✅ **Éditeur terrain mobile paysage** - Déjà résolu en session précédente
+3. ✅ **Sécurité mot de passe** - Audit bcrypt + indicateur force (FAIT 27/10)
+4. ✅ **CGU/Politique RGPD** - Pages créées avec LegalFooter (FAIT 26/10)
+5. ✅ **Suppression compte** - Droit à l'oubli RGPD (FAIT 26/10)
+6. ✅ **Fix copie/partage** - Double "(copie)" + erreur 500 (FAIT 24/10)
+
+### 📱 Mobile UX (Phases 1-4) - ✅ TERMINÉ
+- ✅ **Phase 1** : Toasts (✅), polling (non requis), déconnexion (✅ existe)
+- ✅ **Phase 2** : AuthForm (vérifié), HomePage - TERMINÉ (27/10)
+- ✅ **Phase 3** : SessionsPage, ExercisesPage (vérifié), HistoryPage - TERMINÉ (27/10)
+- ✅ **Phase 4** : ExerciseDetailView, ExerciseCreatePage, SessionDetailView, SessionCreatePage - TERMINÉ (30/10)
+
+### 🎯 Tâche Actuelle
+**AUCUNE** - Internationalisation FR/EN complète ✅ (31/10/2025)
+**Prochaine option** : version mobile check, tests, langues supplémentaires (ES, DE, IT), ou autres améliorations
 
 ---
 
@@ -45,6 +62,7 @@
 
 #### 🎨 Fonctionnalités Complètes
 - **Authentification** : JWT + confirmation email + reset password
+- **Internationalisation (i18n)** : Support FR/EN complet sur 8 pages principales (31/10/2025)
 - **Notifications** : Système complet (rappels séances, exercices club, admin) + EventEmitter temps réel
 - **Mode offline** : IndexedDB + synchronisation bidirectionnelle
 - **Multi-sport** : 5 sports (volleyball, football, tennis, handball, basketball)
@@ -487,18 +505,27 @@ async shareWithClub(exerciseId: string, userId: string) {
 
 ---
 
-### Internationalisation i18n (12-15h)
-**Problème** : Application en français hardcodé
+### ✅ Internationalisation i18n (TERMINÉ - 31/10/2025)
+**Statut** : ✅ Application 100% bilingue FR/EN sur toutes les pages principales
 
-**Solution** :
-- Intégrer `react-i18next` ou `react-intl`
-- Fichiers traduction FR/EN
-- Wrapper tous les textes
+**Implémentation réalisée** :
+- ✅ react-i18next intégré et configuré
+- ✅ 469 lignes de traductions FR/EN (~220 clés ajoutées)
+- ✅ 8 pages principales traduites : SessionsPage, ExercisesPage, HistoryPage, SessionDetailView, ExerciseDetailView, SessionCreatePage, ExerciseCreatePage, NotificationCenter
+- ✅ Support interpolation : `t('key', { count, players, etc. })`
+- ✅ Traductions conditionnelles : `{isEditMode ? t('edit') : t('create')}`
+- ✅ Formatage dates/temps avec i18nFormatters.ts
+- ✅ Sélecteur de langue dans ProfilePage
 
-**Fichiers** :
-- TOUS les composants (refactoring massif)
-- Nouveau dossier : `src/locales/`
-- Config : `src/i18n.ts`
+**Fichiers créés/modifiés** :
+- `src/i18n/` : Configuration react-i18next
+- `src/i18n/locales/fr.json` : 469 lignes (sessions, exercises, history, notifications, common)
+- `src/i18n/locales/en.json` : 469 lignes (traductions parallèles)
+- `src/utils/i18nFormatters.ts` : Utilitaires formatage dates/temps
+- 8 composants principaux avec useTranslation() hook
+
+**Commits** : 8 commits détaillés (c6280ad → 8c560b8)
+**Bundle impact** : +2.83 kB (~0.85%)
 
 ---
 
@@ -545,13 +572,13 @@ npm run test:run
 
 ---
 
-### 🟢 AMÉLIORATIONS (25-28h)
-| Tâche | Durée |
-|-------|-------|
-| Phase 4 Mobile (Detail, Create) | 7h |
-| Système version mobile | 4h |
-| Internationalisation i18n | 12-15h |
-| Tests complets | 2h |
+### 🟢 AMÉLIORATIONS (22-25h restants)
+| Tâche | Durée | Status |
+|-------|-------|--------|
+| Phase 4 Mobile (Detail, Create) | 7h | ✅ TERMINÉ |
+| Système version mobile | 4h | ⏳ À FAIRE |
+| Internationalisation i18n | 12-15h → 3h réalisé | ✅ TERMINÉ (31/10) |
+| Tests complets | 2h | ⏳ À FAIRE |
 
 ---
 
