@@ -44,7 +44,7 @@ logs/
 # Backend specific (NestJS + Prisma)
 # Prisma
 prisma/dev.db*
-prisma/migrations/*/migration.sql
+# Les migrations doivent être versionnées pour la production
 
 # Uploads
 uploads/
