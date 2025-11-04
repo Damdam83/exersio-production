@@ -115,3 +115,4 @@ export const SplashScreenManager: React.FC<{ children: React.ReactNode }> = ({ c
     </>
   );
 };
+
