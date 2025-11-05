@@ -42,7 +42,7 @@ async function main() {
   console.log('🌱 Starting seed...');
 
   // Lire le fichier JSON
-  const jsonPath = path.join(__dirname, '../../exersio_categories_age_sport.json');
+  const jsonPath = path.join(__dirname, '../exersio_categories_age_sport.json');
   const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 
   // Mapping des noms de sports vers leurs icônes et slugs
