@@ -2,6 +2,12 @@
   "name": "exersio-backend-nest",
   "version": "0.2.0",
   "private": true,
+  "files": [
+    "dist/**",
+    "prisma/**",
+    "package.json",
+    "node_modules/.prisma/**"
+  ],
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "prisma generate && nest build",
