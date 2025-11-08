@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY prisma/schema.prisma ./prisma/
+COPY prisma ./prisma
 
 # Install dependencies
 RUN npm ci --only=production && npm cache clean --force
@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y \
 
 # Copy package files
 COPY package*.json ./
-COPY prisma/schema.prisma ./prisma/
+COPY prisma ./prisma
 
 # Install production dependencies only
 RUN npm ci --only=production && npm cache clean --force
@@ -65,4 +65,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 EXPOSE 3000
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
