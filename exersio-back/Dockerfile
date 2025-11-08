@@ -34,17 +34,17 @@ RUN apt-get update && apt-get install -y \
 
 # Copy package files
 COPY package*.json ./
-COPY prisma ./prisma
 
 # Install production dependencies only
 RUN npm ci --only=production && npm cache clean --force
 
-# Generate Prisma Client
-RUN npx prisma generate
-
-# Copy built application from builder stage
+# Copy built application and prisma from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma ./prisma
+
+# Generate Prisma Client
+RUN npx prisma generate
 
 # Create logs directory
 RUN mkdir -p logs
