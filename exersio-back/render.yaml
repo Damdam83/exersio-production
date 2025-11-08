@@ -5,7 +5,7 @@ services:
     region: frankfurt
     plan: free
     buildCommand: npm install && npx prisma generate
-    startCommand: npx prisma db push --accept-data-loss && npx ts-node prisma/seed-prod.ts && node dist/src/main.js
+    startCommand: npx prisma db push && npx ts-node prisma/seed-sports.ts && node dist/src/main.js
     envVars:
       - key: NODE_ENV
         value: production
