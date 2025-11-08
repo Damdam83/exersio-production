@@ -5,7 +5,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "prisma generate && nest build",
-    "start": "prisma db push && ts-node prisma/seed-sports.ts && node dist/src/main.js",
+    "start": "prisma migrate deploy && node dist/src/main.js",
     "start:dev": "nest start --watch",
     "start:prod": "prisma migrate deploy && node dist/src/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
