@@ -48,7 +48,6 @@ Thumbs.db
 **/.DS_Store
 
 # Database
-# **/prisma/migrations/*/migration.sql  # COMMENTED - Need migration files for production
 **/prisma/dev.db*
 
 # Docker
