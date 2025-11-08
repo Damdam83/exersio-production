@@ -116,6 +116,8 @@ export function HomePage() {
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <button
               onClick={() => setCurrentPage('session-create')}
+              onTouchStart={() => {}} // Fix for Android touch events
+              style={{ WebkitTapHighlightColor: 'transparent' }}
               className="bg-primary-btn p-4 sm:p-5"
             >
               <div className="text-xl sm:text-2xl mb-1">➕</div>
@@ -123,6 +125,8 @@ export function HomePage() {
             </button>
             <button
               onClick={() => setCurrentPage('exercise-create')}
+              onTouchStart={() => {}} // Fix for Android touch events
+              style={{ WebkitTapHighlightColor: 'transparent' }}
               className="bg-white/8 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 text-white text-xs sm:text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:border-blue-500/30 hover:bg-white/12 flex flex-col items-center gap-2 text-center"
             >
               <div className="text-xl sm:text-2xl mb-1">🎯</div>
@@ -143,6 +147,8 @@ export function HomePage() {
               <p className="text-sm text-gray-400 mb-3 sm:mb-4">{t('home.noSessionsMessage')}</p>
               <button
                 onClick={() => setCurrentPage('session-create')}
+                onTouchStart={() => {}} // Fix for Android touch events
+                style={{ WebkitTapHighlightColor: 'transparent' }}
                 className="bg-primary-btn text-white text-xs sm:text-sm px-4 py-2"
               >
                 ➕ {t('home.createSession')}
@@ -257,6 +263,8 @@ export function HomePage() {
               {/* Bouton offline */}
               <button
                 onClick={() => setShowOfflinePanel(true)}
+                onTouchStart={() => {}} // Fix for Android touch events
+                style={{ WebkitTapHighlightColor: 'transparent' }}
                 className={`${
                   offlineState.isOnline
                     ? 'bg-gradient-to-r from-[#00d4aa] to-[#00b894]'

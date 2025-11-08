@@ -1,8 +1,12 @@
--- CreateEnum NotificationType
-CREATE TYPE "NotificationType" AS ENUM ('session_reminder', 'exercise_added_to_club', 'member_joined_club', 'system_notification');
+-- CreateEnum NotificationType (idempotent)
+DO $$ BEGIN
+    CREATE TYPE "NotificationType" AS ENUM ('session_reminder', 'exercise_added_to_club', 'member_joined_club', 'system_notification');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateTable Sport
-CREATE TABLE "Sport" (
+-- CreateTable Sport (idempotent)
+CREATE TABLE IF NOT EXISTS "Sport" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -14,8 +18,8 @@ CREATE TABLE "Sport" (
     CONSTRAINT "Sport_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable ExerciseCategory
-CREATE TABLE "ExerciseCategory" (
+-- CreateTable ExerciseCategory (idempotent)
+CREATE TABLE IF NOT EXISTS "ExerciseCategory" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -29,8 +33,8 @@ CREATE TABLE "ExerciseCategory" (
     CONSTRAINT "ExerciseCategory_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable AgeCategory
-CREATE TABLE "AgeCategory" (
+-- CreateTable AgeCategory (idempotent)
+CREATE TABLE IF NOT EXISTS "AgeCategory" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -44,8 +48,8 @@ CREATE TABLE "AgeCategory" (
     CONSTRAINT "AgeCategory_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable UserExerciseFavorite
-CREATE TABLE "UserExerciseFavorite" (
+-- CreateTable UserExerciseFavorite (idempotent)
+CREATE TABLE IF NOT EXISTS "UserExerciseFavorite" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "exerciseId" TEXT NOT NULL,
@@ -54,8 +58,8 @@ CREATE TABLE "UserExerciseFavorite" (
     CONSTRAINT "UserExerciseFavorite_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable UserNotificationSettings
-CREATE TABLE "UserNotificationSettings" (
+-- CreateTable UserNotificationSettings (idempotent)
+CREATE TABLE IF NOT EXISTS "UserNotificationSettings" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "sessionReminders" BOOLEAN NOT NULL DEFAULT true,
@@ -68,8 +72,8 @@ CREATE TABLE "UserNotificationSettings" (
     CONSTRAINT "UserNotificationSettings_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable Notification
-CREATE TABLE "Notification" (
+-- CreateTable Notification (idempotent)
+CREATE TABLE IF NOT EXISTS "Notification" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "type" "NotificationType" NOT NULL,
@@ -84,8 +88,8 @@ CREATE TABLE "Notification" (
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable UserPushToken
-CREATE TABLE "UserPushToken" (
+-- CreateTable UserPushToken (idempotent)
+CREATE TABLE IF NOT EXISTS "UserPushToken" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "token" TEXT NOT NULL,
@@ -97,7 +101,7 @@ CREATE TABLE "UserPushToken" (
     CONSTRAINT "UserPushToken_pkey" PRIMARY KEY ("id")
 );
 
--- AlterTable User - Add missing fields
+-- AlterTable User - Add missing fields (idempotent)
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "preferredSportId" TEXT;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerificationToken" TEXT;
@@ -105,157 +109,205 @@ ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerificationExpires" TIMESTAMP
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordResetToken" TEXT;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordResetExpires" TIMESTAMP(3);
 
--- AlterTable Exercise - Add missing fields
+-- AlterTable Exercise - Add missing fields (idempotent)
 ALTER TABLE "Exercise" ADD COLUMN IF NOT EXISTS "categoryId" TEXT;
 ALTER TABLE "Exercise" ADD COLUMN IF NOT EXISTS "ageCategoryId" TEXT;
 ALTER TABLE "Exercise" ADD COLUMN IF NOT EXISTS "sportId" TEXT;
 ALTER TABLE "Exercise" ADD COLUMN IF NOT EXISTS "successCriteria" JSONB;
 
--- AlterTable Session - Add missing fields
+-- AlterTable Session - Add missing fields (idempotent)
 ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "sportId" TEXT;
 ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "level" TEXT;
 
--- CreateIndex
-CREATE UNIQUE INDEX "Sport_name_key" ON "Sport"("name");
-CREATE UNIQUE INDEX "Sport_slug_key" ON "Sport"("slug");
-CREATE UNIQUE INDEX "ExerciseCategory_slug_sportId_key" ON "ExerciseCategory"("slug", "sportId");
-CREATE UNIQUE INDEX "AgeCategory_slug_sportId_key" ON "AgeCategory"("slug", "sportId");
-CREATE UNIQUE INDEX "UserExerciseFavorite_userId_exerciseId_key" ON "UserExerciseFavorite"("userId", "exerciseId");
-CREATE INDEX "UserExerciseFavorite_userId_idx" ON "UserExerciseFavorite"("userId");
-CREATE INDEX "UserExerciseFavorite_exerciseId_idx" ON "UserExerciseFavorite"("exerciseId");
-CREATE UNIQUE INDEX "UserNotificationSettings_userId_key" ON "UserNotificationSettings"("userId");
-CREATE INDEX "Notification_userId_isRead_idx" ON "Notification"("userId", "isRead");
-CREATE INDEX "Notification_type_isSent_idx" ON "Notification"("type", "isSent");
-CREATE INDEX "Notification_createdAt_idx" ON "Notification"("createdAt");
-CREATE UNIQUE INDEX "UserPushToken_token_key" ON "UserPushToken"("token");
-CREATE UNIQUE INDEX "UserPushToken_userId_platform_key" ON "UserPushToken"("userId", "platform");
-CREATE INDEX "UserPushToken_token_isActive_idx" ON "UserPushToken"("token", "isActive");
+-- CreateIndex (idempotent)
+DO $$ BEGIN
+    CREATE UNIQUE INDEX IF NOT EXISTS "Sport_name_key" ON "Sport"("name");
+    CREATE UNIQUE INDEX IF NOT EXISTS "Sport_slug_key" ON "Sport"("slug");
+    CREATE UNIQUE INDEX IF NOT EXISTS "ExerciseCategory_slug_sportId_key" ON "ExerciseCategory"("slug", "sportId");
+    CREATE UNIQUE INDEX IF NOT EXISTS "AgeCategory_slug_sportId_key" ON "AgeCategory"("slug", "sportId");
+    CREATE UNIQUE INDEX IF NOT EXISTS "UserExerciseFavorite_userId_exerciseId_key" ON "UserExerciseFavorite"("userId", "exerciseId");
+    CREATE INDEX IF NOT EXISTS "UserExerciseFavorite_userId_idx" ON "UserExerciseFavorite"("userId");
+    CREATE INDEX IF NOT EXISTS "UserExerciseFavorite_exerciseId_idx" ON "UserExerciseFavorite"("exerciseId");
+    CREATE UNIQUE INDEX IF NOT EXISTS "UserNotificationSettings_userId_key" ON "UserNotificationSettings"("userId");
+    CREATE INDEX IF NOT EXISTS "Notification_userId_isRead_idx" ON "Notification"("userId", "isRead");
+    CREATE INDEX IF NOT EXISTS "Notification_type_isSent_idx" ON "Notification"("type", "isSent");
+    CREATE INDEX IF NOT EXISTS "Notification_createdAt_idx" ON "Notification"("createdAt");
+    CREATE UNIQUE INDEX IF NOT EXISTS "UserPushToken_token_key" ON "UserPushToken"("token");
+    CREATE UNIQUE INDEX IF NOT EXISTS "UserPushToken_userId_platform_key" ON "UserPushToken"("userId", "platform");
+    CREATE INDEX IF NOT EXISTS "UserPushToken_token_isActive_idx" ON "UserPushToken"("token", "isActive");
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
--- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_preferredSportId_fkey" FOREIGN KEY ("preferredSportId") REFERENCES "Sport"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "ExerciseCategory" ADD CONSTRAINT "ExerciseCategory_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-ALTER TABLE "AgeCategory" ADD CONSTRAINT "AgeCategory_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-ALTER TABLE "Exercise" ADD CONSTRAINT "Exercise_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "ExerciseCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "Exercise" ADD CONSTRAINT "Exercise_ageCategoryId_fkey" FOREIGN KEY ("ageCategoryId") REFERENCES "AgeCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "Exercise" ADD CONSTRAINT "Exercise_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "Session" ADD CONSTRAINT "Session_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "UserExerciseFavorite" ADD CONSTRAINT "UserExerciseFavorite_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "UserExerciseFavorite" ADD CONSTRAINT "UserExerciseFavorite_exerciseId_fkey" FOREIGN KEY ("exerciseId") REFERENCES "Exercise"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "UserNotificationSettings" ADD CONSTRAINT "UserNotificationSettings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "UserPushToken" ADD CONSTRAINT "UserPushToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (idempotent)
+DO $$ BEGIN
+    ALTER TABLE "User" ADD CONSTRAINT "User_preferredSportId_fkey" FOREIGN KEY ("preferredSportId") REFERENCES "Sport"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Sports
-INSERT INTO "Sport" (id, name, slug, icon, "order", "createdAt", "updatedAt") VALUES
-  ('sport-volleyball', 'Volley-ball', 'volleyball', '🏐', 1, NOW(), NOW()),
-  ('sport-football', 'Football', 'football', '⚽', 2, NOW(), NOW()),
-  ('sport-basketball', 'Basketball', 'basketball', '🏀', 3, NOW(), NOW()),
-  ('sport-handball', 'Handball', 'handball', '🤾', 4, NOW(), NOW()),
-  ('sport-tennis', 'Tennis', 'tennis', '🎾', 5, NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "ExerciseCategory" ADD CONSTRAINT "ExerciseCategory_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Exercise Categories - Volleyball
-INSERT INTO "ExerciseCategory" (id, name, slug, icon, color, "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('cat-vb-attack', 'Attaque', 'attaque', '⚔️', '#ef4444', 1, 'sport-volleyball', NOW(), NOW()),
-  ('cat-vb-defense', 'Défense', 'defense', '🛡️', '#3b82f6', 2, 'sport-volleyball', NOW(), NOW()),
-  ('cat-vb-serve', 'Service', 'service', '🎯', '#10b981', 3, 'sport-volleyball', NOW(), NOW()),
-  ('cat-vb-pass', 'Passe', 'passe', '📥', '#f59e0b', 4, 'sport-volleyball', NOW(), NOW()),
-  ('cat-vb-block', 'Contre', 'contre', '🚫', '#8b5cf6', 5, 'sport-volleyball', NOW(), NOW()),
-  ('cat-vb-warmup', 'Échauffement', 'echauffement', '🔥', '#ec4899', 6, 'sport-volleyball', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "AgeCategory" ADD CONSTRAINT "AgeCategory_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Exercise Categories - Football
-INSERT INTO "ExerciseCategory" (id, name, slug, icon, color, "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('cat-fb-dribble', 'Dribble', 'dribble', '⚽', '#10b981', 1, 'sport-football', NOW(), NOW()),
-  ('cat-fb-pass', 'Passe', 'passe', '🤝', '#3b82f6', 2, 'sport-football', NOW(), NOW()),
-  ('cat-fb-shoot', 'Tir', 'tir', '🎯', '#ef4444', 3, 'sport-football', NOW(), NOW()),
-  ('cat-fb-defense', 'Défense', 'defense', '🛡️', '#8b5cf6', 4, 'sport-football', NOW(), NOW()),
-  ('cat-fb-warmup', 'Échauffement', 'echauffement', '🔥', '#ec4899', 5, 'sport-football', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "Exercise" ADD CONSTRAINT "Exercise_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "ExerciseCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Exercise Categories - Basketball
-INSERT INTO "ExerciseCategory" (id, name, slug, icon, color, "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('cat-bb-dribble', 'Dribble', 'dribble', '🏀', '#10b981', 1, 'sport-basketball', NOW(), NOW()),
-  ('cat-bb-shoot', 'Tir', 'tir', '🎯', '#ef4444', 2, 'sport-basketball', NOW(), NOW()),
-  ('cat-bb-pass', 'Passe', 'passe', '🤝', '#f59e0b', 3, 'sport-basketball', NOW(), NOW()),
-  ('cat-bb-defense', 'Défense', 'defense', '🛡️', '#3b82f6', 4, 'sport-basketball', NOW(), NOW()),
-  ('cat-bb-rebound', 'Rebond', 'rebond', '↕️', '#8b5cf6', 5, 'sport-basketball', NOW(), NOW()),
-  ('cat-bb-warmup', 'Échauffement', 'echauffement', '🔥', '#ec4899', 6, 'sport-basketball', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "Exercise" ADD CONSTRAINT "Exercise_ageCategoryId_fkey" FOREIGN KEY ("ageCategoryId") REFERENCES "AgeCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Exercise Categories - Handball
-INSERT INTO "ExerciseCategory" (id, name, slug, icon, color, "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('cat-hb-shoot', 'Tir', 'tir', '🎯', '#10b981', 1, 'sport-handball', NOW(), NOW()),
-  ('cat-hb-pass', 'Passe', 'passe', '🤝', '#f59e0b', 2, 'sport-handball', NOW(), NOW()),
-  ('cat-hb-defense', 'Défense', 'defense', '🛡️', '#3b82f6', 3, 'sport-handball', NOW(), NOW()),
-  ('cat-hb-attack', 'Attaque', 'attaque', '⚔️', '#ef4444', 4, 'sport-handball', NOW(), NOW()),
-  ('cat-hb-warmup', 'Échauffement', 'echauffement', '🔥', '#ec4899', 5, 'sport-handball', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "Exercise" ADD CONSTRAINT "Exercise_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Exercise Categories - Tennis
-INSERT INTO "ExerciseCategory" (id, name, slug, icon, color, "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('cat-tn-serve', 'Service', 'service', '🎯', '#10b981', 1, 'sport-tennis', NOW(), NOW()),
-  ('cat-tn-forehand', 'Coup droit', 'coup-droit', '➡️', '#ef4444', 2, 'sport-tennis', NOW(), NOW()),
-  ('cat-tn-backhand', 'Revers', 'revers', '⬅️', '#3b82f6', 3, 'sport-tennis', NOW(), NOW()),
-  ('cat-tn-volley', 'Volée', 'volee', '🏐', '#f59e0b', 4, 'sport-tennis', NOW(), NOW()),
-  ('cat-tn-smash', 'Smash', 'smash', '💥', '#8b5cf6', 5, 'sport-tennis', NOW(), NOW()),
-  ('cat-tn-warmup', 'Échauffement', 'echauffement', '🔥', '#ec4899', 6, 'sport-tennis', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "Session" ADD CONSTRAINT "Session_sportId_fkey" FOREIGN KEY ("sportId") REFERENCES "Sport"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Age Categories - Volleyball
-INSERT INTO "AgeCategory" (id, name, slug, "minAge", "maxAge", "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('age-vb-m7', 'M7 Baby', 'm7', NULL, 7, 1, 'sport-volleyball', NOW(), NOW()),
-  ('age-vb-m9', 'M9 Pupilles', 'm9', 8, 9, 2, 'sport-volleyball', NOW(), NOW()),
-  ('age-vb-m11', 'M11 Poussins', 'm11', 10, 11, 3, 'sport-volleyball', NOW(), NOW()),
-  ('age-vb-m13', 'M13 Benjamins', 'm13', 12, 13, 4, 'sport-volleyball', NOW(), NOW()),
-  ('age-vb-m15', 'M15 Minimes', 'm15', 14, 15, 5, 'sport-volleyball', NOW(), NOW()),
-  ('age-vb-m18', 'M18 Cadets', 'm18', 16, 18, 6, 'sport-volleyball', NOW(), NOW()),
-  ('age-vb-m21', 'M21 Juniors', 'm21', 19, 21, 7, 'sport-volleyball', NOW(), NOW()),
-  ('age-vb-senior', 'Seniors', 'senior', 22, NULL, 8, 'sport-volleyball', NOW(), NOW()),
-  ('age-vb-master', 'Masters', 'master', 35, NULL, 9, 'sport-volleyball', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "UserExerciseFavorite" ADD CONSTRAINT "UserExerciseFavorite_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Age Categories - Football
-INSERT INTO "AgeCategory" (id, name, slug, "minAge", "maxAge", "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('age-fb-u7', 'U7 Débutants', 'u7', NULL, 7, 1, 'sport-football', NOW(), NOW()),
-  ('age-fb-u9', 'U9 Poussins', 'u9', 8, 9, 2, 'sport-football', NOW(), NOW()),
-  ('age-fb-u11', 'U11 Benjamins', 'u11', 10, 11, 3, 'sport-football', NOW(), NOW()),
-  ('age-fb-u13', 'U13 Minimes', 'u13', 12, 13, 4, 'sport-football', NOW(), NOW()),
-  ('age-fb-u15', 'U15 Cadets', 'u15', 14, 15, 5, 'sport-football', NOW(), NOW()),
-  ('age-fb-u17', 'U17 Juniors', 'u17', 16, 17, 6, 'sport-football', NOW(), NOW()),
-  ('age-fb-senior', 'Seniors', 'senior', 18, NULL, 7, 'sport-football', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "UserExerciseFavorite" ADD CONSTRAINT "UserExerciseFavorite_exerciseId_fkey" FOREIGN KEY ("exerciseId") REFERENCES "Exercise"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Age Categories - Basketball
-INSERT INTO "AgeCategory" (id, name, slug, "minAge", "maxAge", "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('age-bb-u7', 'U7 Mini-poussins', 'u7', NULL, 7, 1, 'sport-basketball', NOW(), NOW()),
-  ('age-bb-u9', 'U9 Poussins', 'u9', 8, 9, 2, 'sport-basketball', NOW(), NOW()),
-  ('age-bb-u11', 'U11 Benjamins', 'u11', 10, 11, 3, 'sport-basketball', NOW(), NOW()),
-  ('age-bb-u13', 'U13 Minimes', 'u13', 12, 13, 4, 'sport-basketball', NOW(), NOW()),
-  ('age-bb-u15', 'U15 Cadets', 'u15', 14, 15, 5, 'sport-basketball', NOW(), NOW()),
-  ('age-bb-u17', 'U17 Juniors', 'u17', 16, 17, 6, 'sport-basketball', NOW(), NOW()),
-  ('age-bb-senior', 'Seniors', 'senior', 18, NULL, 7, 'sport-basketball', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "UserNotificationSettings" ADD CONSTRAINT "UserNotificationSettings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Age Categories - Handball
-INSERT INTO "AgeCategory" (id, name, slug, "minAge", "maxAge", "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('age-hb-u9', 'U9 Poussins', 'u9', NULL, 9, 1, 'sport-handball', NOW(), NOW()),
-  ('age-hb-u11', 'U11 Benjamins', 'u11', 10, 11, 2, 'sport-handball', NOW(), NOW()),
-  ('age-hb-u13', 'U13 Minimes', 'u13', 12, 13, 3, 'sport-handball', NOW(), NOW()),
-  ('age-hb-u15', 'U15 Cadets', 'u15', 14, 15, 4, 'sport-handball', NOW(), NOW()),
-  ('age-hb-u17', 'U17 Juniors', 'u17', 16, 17, 5, 'sport-handball', NOW(), NOW()),
-  ('age-hb-u19', 'U19 Espoirs', 'u19', 18, 19, 6, 'sport-handball', NOW(), NOW()),
-  ('age-hb-senior', 'Seniors', 'senior', 20, NULL, 7, 'sport-handball', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Insert Age Categories - Tennis
-INSERT INTO "AgeCategory" (id, name, slug, "minAge", "maxAge", "order", "sportId", "createdAt", "updatedAt") VALUES
-  ('age-tn-u8', 'U8 Mini-tennis', 'u8', NULL, 8, 1, 'sport-tennis', NOW(), NOW()),
-  ('age-tn-u10', 'U10 Poussins', 'u10', 9, 10, 2, 'sport-tennis', NOW(), NOW()),
-  ('age-tn-u12', 'U12 Benjamins', 'u12', 11, 12, 3, 'sport-tennis', NOW(), NOW()),
-  ('age-tn-u14', 'U14 Minimes', 'u14', 13, 14, 4, 'sport-tennis', NOW(), NOW()),
-  ('age-tn-u16', 'U16 Cadets', 'u16', 15, 16, 5, 'sport-tennis', NOW(), NOW()),
-  ('age-tn-u18', 'U18 Juniors', 'u18', 17, 18, 6, 'sport-tennis', NOW(), NOW()),
-  ('age-tn-u21', 'U21 Espoirs', 'u21', 19, 21, 7, 'sport-tennis', NOW(), NOW()),
-  ('age-tn-senior', 'Seniors', 'senior', 22, NULL, 8, 'sport-tennis', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+DO $$ BEGIN
+    ALTER TABLE "UserPushToken" ADD CONSTRAINT "UserPushToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Insert seed data for Sports (idempotent with ON CONFLICT DO NOTHING)
+INSERT INTO "Sport" ("id", "name", "slug", "icon", "order", "createdAt", "updatedAt") VALUES
+    ('sport_volleyball', 'Volleyball', 'volleyball', '🏐', 1, NOW(), NOW()),
+    ('sport_football', 'Football', 'football', '⚽', 2, NOW(), NOW()),
+    ('sport_basketball', 'Basketball', 'basketball', '🏀', 3, NOW(), NOW()),
+    ('sport_handball', 'Handball', 'handball', '🤾', 4, NOW(), NOW()),
+    ('sport_tennis', 'Tennis', 'tennis', '🎾', 5, NOW(), NOW())
+ON CONFLICT (slug) DO NOTHING;
+
+-- Insert seed data for Exercise Categories (idempotent with ON CONFLICT DO NOTHING)
+INSERT INTO "ExerciseCategory" ("id", "name", "slug", "color", "icon", "order", "sportId", "createdAt", "updatedAt") VALUES
+    -- Volleyball categories
+    ('cat_vb_service', 'Service', 'service', '#3b82f6', '🎯', 1, 'sport_volleyball', NOW(), NOW()),
+    ('cat_vb_reception', 'Réception', 'reception', '#10b981', '🛡️', 2, 'sport_volleyball', NOW(), NOW()),
+    ('cat_vb_attack', 'Attaque', 'attack', '#ef4444', '⚡', 3, 'sport_volleyball', NOW(), NOW()),
+    ('cat_vb_block', 'Contre', 'block', '#8b5cf6', '🧱', 4, 'sport_volleyball', NOW(), NOW()),
+    ('cat_vb_defense', 'Défense', 'defense', '#f59e0b', '🛡️', 5, 'sport_volleyball', NOW(), NOW()),
+    ('cat_vb_setting', 'Passe', 'setting', '#06b6d4', '🤲', 6, 'sport_volleyball', NOW(), NOW()),
+
+    -- Football categories
+    ('cat_fb_dribbling', 'Dribble', 'dribbling', '#3b82f6', '⚡', 1, 'sport_football', NOW(), NOW()),
+    ('cat_fb_passing', 'Passes', 'passing', '#10b981', '🎯', 2, 'sport_football', NOW(), NOW()),
+    ('cat_fb_shooting', 'Tirs', 'shooting', '#ef4444', '⚽', 3, 'sport_football', NOW(), NOW()),
+    ('cat_fb_defense', 'Défense', 'defense', '#f59e0b', '🛡️', 4, 'sport_football', NOW(), NOW()),
+    ('cat_fb_tactics', 'Tactique', 'tactics', '#8b5cf6', '📋', 5, 'sport_football', NOW(), NOW()),
+
+    -- Basketball categories
+    ('cat_bb_dribbling', 'Dribble', 'dribbling', '#3b82f6', '⚡', 1, 'sport_basketball', NOW(), NOW()),
+    ('cat_bb_passing', 'Passes', 'passing', '#10b981', '🤝', 2, 'sport_basketball', NOW(), NOW()),
+    ('cat_bb_shooting', 'Tirs', 'shooting', '#ef4444', '🎯', 3, 'sport_basketball', NOW(), NOW()),
+    ('cat_bb_defense', 'Défense', 'defense', '#f59e0b', '🛡️', 4, 'sport_basketball', NOW(), NOW()),
+    ('cat_bb_rebounding', 'Rebonds', 'rebounding', '#8b5cf6', '↕️', 5, 'sport_basketball', NOW(), NOW()),
+    ('cat_bb_tactics', 'Tactique', 'tactics', '#06b6d4', '📋', 6, 'sport_basketball', NOW(), NOW()),
+
+    -- Handball categories
+    ('cat_hb_dribbling', 'Dribble', 'dribbling', '#3b82f6', '⚡', 1, 'sport_handball', NOW(), NOW()),
+    ('cat_hb_passing', 'Passes', 'passing', '#10b981', '🤝', 2, 'sport_handball', NOW(), NOW()),
+    ('cat_hb_shooting', 'Tirs', 'shooting', '#ef4444', '🎯', 3, 'sport_handball', NOW(), NOW()),
+    ('cat_hb_defense', 'Défense', 'defense', '#f59e0b', '🛡️', 4, 'sport_handball', NOW(), NOW()),
+    ('cat_hb_tactics', 'Tactique', 'tactics', '#8b5cf6', '📋', 5, 'sport_handball', NOW(), NOW()),
+
+    -- Tennis categories
+    ('cat_tn_serve', 'Service', 'serve', '#3b82f6', '🎾', 1, 'sport_tennis', NOW(), NOW()),
+    ('cat_tn_forehand', 'Coup droit', 'forehand', '#10b981', '➡️', 2, 'sport_tennis', NOW(), NOW()),
+    ('cat_tn_backhand', 'Revers', 'backhand', '#ef4444', '⬅️', 3, 'sport_tennis', NOW(), NOW()),
+    ('cat_tn_volley', 'Volée', 'volley', '#f59e0b', '⚡', 4, 'sport_tennis', NOW(), NOW()),
+    ('cat_tn_smash', 'Smash', 'smash', '#8b5cf6', '💥', 5, 'sport_tennis', NOW(), NOW()),
+    ('cat_tn_tactics', 'Tactique', 'tactics', '#06b6d4', '📋', 6, 'sport_tennis', NOW(), NOW())
+ON CONFLICT (slug, "sportId") DO NOTHING;
+
+-- Insert seed data for Age Categories (idempotent with ON CONFLICT DO NOTHING)
+INSERT INTO "AgeCategory" ("id", "name", "slug", "minAge", "maxAge", "order", "sportId", "createdAt", "updatedAt") VALUES
+    -- Volleyball age categories
+    ('age_vb_u11', 'U11 (Poussins)', 'u11', NULL, 11, 1, 'sport_volleyball', NOW(), NOW()),
+    ('age_vb_u13', 'U13 (Benjamins)', 'u13', 11, 13, 2, 'sport_volleyball', NOW(), NOW()),
+    ('age_vb_u15', 'U15 (Minimes)', 'u15', 13, 15, 3, 'sport_volleyball', NOW(), NOW()),
+    ('age_vb_u17', 'U17 (Cadets)', 'u17', 15, 17, 4, 'sport_volleyball', NOW(), NOW()),
+    ('age_vb_u18', 'U18 (Juniors)', 'u18', 17, 18, 5, 'sport_volleyball', NOW(), NOW()),
+    ('age_vb_u20', 'U20 (Espoirs)', 'u20', 18, 20, 6, 'sport_volleyball', NOW(), NOW()),
+    ('age_vb_seniors', 'Seniors', 'seniors', 18, NULL, 7, 'sport_volleyball', NOW(), NOW()),
+    ('age_vb_veterans', 'Vétérans', 'veterans', 35, NULL, 8, 'sport_volleyball', NOW(), NOW()),
+    ('age_vb_all', 'Tous âges', 'all-ages', NULL, NULL, 9, 'sport_volleyball', NOW(), NOW()),
+
+    -- Football age categories
+    ('age_fb_u9', 'U9', 'u9', NULL, 9, 1, 'sport_football', NOW(), NOW()),
+    ('age_fb_u11', 'U11', 'u11', 9, 11, 2, 'sport_football', NOW(), NOW()),
+    ('age_fb_u13', 'U13', 'u13', 11, 13, 3, 'sport_football', NOW(), NOW()),
+    ('age_fb_u15', 'U15', 'u15', 13, 15, 4, 'sport_football', NOW(), NOW()),
+    ('age_fb_u17', 'U17', 'u17', 15, 17, 5, 'sport_football', NOW(), NOW()),
+    ('age_fb_seniors', 'Seniors', 'seniors', 17, NULL, 6, 'sport_football', NOW(), NOW()),
+    ('age_fb_all', 'Tous âges', 'all-ages', NULL, NULL, 7, 'sport_football', NOW(), NOW()),
+
+    -- Basketball age categories
+    ('age_bb_u11', 'U11 (Poussins)', 'u11', NULL, 11, 1, 'sport_basketball', NOW(), NOW()),
+    ('age_bb_u13', 'U13 (Benjamins)', 'u13', 11, 13, 2, 'sport_basketball', NOW(), NOW()),
+    ('age_bb_u15', 'U15 (Minimes)', 'u15', 13, 15, 3, 'sport_basketball', NOW(), NOW()),
+    ('age_bb_u17', 'U17 (Cadets)', 'u17', 15, 17, 4, 'sport_basketball', NOW(), NOW()),
+    ('age_bb_seniors', 'Seniors', 'seniors', 17, NULL, 5, 'sport_basketball', NOW(), NOW()),
+    ('age_bb_all', 'Tous âges', 'all-ages', NULL, NULL, 6, 'sport_basketball', NOW(), NOW()),
+
+    -- Handball age categories
+    ('age_hb_u11', 'U11 (Poussins)', 'u11', NULL, 11, 1, 'sport_handball', NOW(), NOW()),
+    ('age_hb_u13', 'U13 (Benjamins)', 'u13', 11, 13, 2, 'sport_handball', NOW(), NOW()),
+    ('age_hb_u15', 'U15 (Minimes)', 'u15', 13, 15, 3, 'sport_handball', NOW(), NOW()),
+    ('age_hb_u17', 'U17 (Cadets)', 'u17', 15, 17, 4, 'sport_handball', NOW(), NOW()),
+    ('age_hb_seniors', 'Seniors', 'seniors', 17, NULL, 5, 'sport_handball', NOW(), NOW()),
+    ('age_hb_veterans', 'Vétérans', 'veterans', 35, NULL, 6, 'sport_handball', NOW(), NOW()),
+    ('age_hb_all', 'Tous âges', 'all-ages', NULL, NULL, 7, 'sport_handball', NOW(), NOW()),
+
+    -- Tennis age categories
+    ('age_tn_u10', 'U10 (10 ans et moins)', 'u10', NULL, 10, 1, 'sport_tennis', NOW(), NOW()),
+    ('age_tn_u12', 'U12 (11-12 ans)', 'u12', 10, 12, 2, 'sport_tennis', NOW(), NOW()),
+    ('age_tn_u14', 'U14 (13-14 ans)', 'u14', 12, 14, 3, 'sport_tennis', NOW(), NOW()),
+    ('age_tn_u16', 'U16 (15-16 ans)', 'u16', 14, 16, 4, 'sport_tennis', NOW(), NOW()),
+    ('age_tn_u18', 'U18 (17-18 ans)', 'u18', 16, 18, 5, 'sport_tennis', NOW(), NOW()),
+    ('age_tn_seniors', 'Seniors (18+)', 'seniors', 18, NULL, 6, 'sport_tennis', NOW(), NOW()),
+    ('age_tn_veterans35', 'Vétérans 35+', 'veterans-35', 35, NULL, 7, 'sport_tennis', NOW(), NOW()),
+    ('age_tn_all', 'Tous âges', 'all-ages', NULL, NULL, 8, 'sport_tennis', NOW(), NOW())
+ON CONFLICT (slug, "sportId") DO NOTHING;

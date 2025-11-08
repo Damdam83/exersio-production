@@ -57,6 +57,8 @@ export function Navigation({ isMobile, onLogout }: NavigationProps) {
             />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onTouchStart={() => {}} // Fix for Android touch events
+              style={{ WebkitTapHighlightColor: 'transparent' }}
               className="p-2 rounded-xl hover:bg-white/10 transition-all duration-200"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -72,6 +74,8 @@ export function Navigation({ isMobile, onLogout }: NavigationProps) {
                 <button
                   key={item.id}
                   onClick={() => handleNavigate(item.id)}
+                  onTouchStart={() => {}} // Fix for Android touch events
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                   className={`flex items-center gap-4 px-4 py-4 rounded-2xl mb-3 text-lg transition-all duration-200 ${
                     currentPage === item.id
                       ? "bg-gradient-to-r from-blue-500 to-emerald-500 text-white shadow-lg"
@@ -96,6 +100,8 @@ export function Navigation({ isMobile, onLogout }: NavigationProps) {
                     </div>
                     <button
                       onClick={onLogout}
+                      onTouchStart={() => {}} // Fix for Android touch events
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
                       className="p-2 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all duration-200"
                       title={t('auth.logout')}
                     >

@@ -1,0 +1,21 @@
+Files needing Android touch fix:
+1. ✅ Navigation.tsx (already fixed)
+2. ✅ MobileHeader.tsx (3 buttons - FIXED)
+3. ✅ HomePage.tsx (4 buttons - FIXED)
+4. ✅ SessionsPage.tsx (8 buttons - FIXED)
+5. ExercisesPage.tsx
+6. HistoryPage.tsx
+7. SessionDetailView.tsx
+8. ExerciseDetailView.tsx  
+9. SessionCreatePage.tsx
+10. ExerciseCreatePage.tsx
+11. AuthForm.tsx
+12. ProfilePage.tsx
+13. NotificationCenter.tsx
+14. NotificationSettingsPage.tsx
+15. AdminNotificationsPage.tsx
+16. UpdateModal.tsx
+17. SportSelectionModal.tsx
+18. MobileFilters.tsx
+19. ExerciseEditor/Toolbar.tsx
+20. ExerciseEditor/SportToolbar.tsx

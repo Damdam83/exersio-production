@@ -230,6 +230,8 @@ export function SessionsPage() {
               </p>
               <button
                 onClick={() => navigate('session-create')}
+                onTouchStart={() => {}} // Fix for Android touch events
+                style={{ WebkitTapHighlightColor: 'transparent' }}
                 className="bg-[#00d4aa] hover:bg-[#00b894] text-slate-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-medium transition-colors"
               >
                 ➕ Créer une séance
@@ -324,6 +326,8 @@ export function SessionsPage() {
                         e.stopPropagation();
                         navigate('session-detail', { sessionId: session.id });
                       }}
+                      onTouchStart={() => {}} // Fix for Android touch events
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
                       className="p-1.5 sm:p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
                       title="Voir détails"
                     >
@@ -334,6 +338,8 @@ export function SessionsPage() {
                         e.stopPropagation();
                         navigate('session-create', { sessionId: session.id, mode: 'edit' });
                       }}
+                      onTouchStart={() => {}} // Fix for Android touch events
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
                       className="p-1.5 sm:p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors text-sm"
                       title="Modifier"
                     >
@@ -378,14 +384,22 @@ export function SessionsPage() {
             </div>
           </div>
           <div className="flex gap-2 lg:gap-3 flex-wrap lg:flex-nowrap">
-            <button className="hidden lg:flex px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer bg-white/8 text-white border border-white/12 items-center gap-2 hover:bg-white/12 transition-colors">
+            <button
+              onTouchStart={() => {}} // Fix for Android touch events
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+              className="hidden lg:flex px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer bg-white/8 text-white border border-white/12 items-center gap-2 hover:bg-white/12 transition-colors">
               📤 Exporter
             </button>
-            <button className="hidden lg:flex px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer bg-white/8 text-white border border-white/12 items-center gap-2 hover:bg-white/12 transition-colors">
+            <button
+              onTouchStart={() => {}} // Fix for Android touch events
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+              className="hidden lg:flex px-5 py-3 rounded-2xl text-sm font-semibold cursor-pointer bg-white/8 text-white border border-white/12 items-center gap-2 hover:bg-white/12 transition-colors">
               📋 Dupliquer
             </button>
             <button
               onClick={() => navigate('session-create')}
+              onTouchStart={() => {}} // Fix for Android touch events
+              style={{ WebkitTapHighlightColor: 'transparent' }}
               className="lg:px-5 lg:py-3 p-2 lg:rounded-2xl rounded-full text-sm lg:text-sm font-semibold cursor-pointer border-none bg-gradient-to-r from-blue-500 to-emerald-500 text-white flex items-center justify-center gap-0 lg:gap-2 w-10 h-10 lg:w-auto lg:h-auto hover:opacity-90 transition-opacity"
               title="Nouvelle séance"
             >
@@ -415,6 +429,7 @@ export function SessionsPage() {
             }}>
               <button
                 onClick={() => setActiveView('list')}
+                onTouchStart={() => {}} // Fix for Android touch events
                 style={{
                   padding: isMobile ? '6px 12px' : '8px 16px',
                   borderRadius: '8px',
@@ -424,13 +439,15 @@ export function SessionsPage() {
                   transition: 'all 0.3s ease',
                   border: 'none',
                   background: activeView === 'list' ? 'linear-gradient(135deg, #3b82f6, #10b981)' : 'transparent',
-                  color: activeView === 'list' ? 'white' : '#94a3b8'
+                  color: activeView === 'list' ? 'white' : '#94a3b8',
+                  WebkitTapHighlightColor: 'transparent'
                 }}
               >
                 📋 Liste
               </button>
               <button
                 onClick={() => setActiveView('calendar')}
+                onTouchStart={() => {}} // Fix for Android touch events
                 style={{
                   padding: isMobile ? '6px 12px' : '8px 16px',
                   borderRadius: '8px',
@@ -440,7 +457,8 @@ export function SessionsPage() {
                   transition: 'all 0.3s ease',
                   border: 'none',
                   background: activeView === 'calendar' ? 'linear-gradient(135deg, #3b82f6, #10b981)' : 'transparent',
-                  color: activeView === 'calendar' ? 'white' : '#94a3b8'
+                  color: activeView === 'calendar' ? 'white' : '#94a3b8',
+                  WebkitTapHighlightColor: 'transparent'
                 }}
               >
                 📅 Calendrier
@@ -599,8 +617,9 @@ export function SessionsPage() {
                   Aucune séance trouvée
                 </h3>
                 <p>Aucune séance ne correspond à vos critères de recherche.</p>
-                <button 
+                <button
                   onClick={() => navigate('session-create')}
+                  onTouchStart={() => {}} // Fix for Android touch events
                   style={{
                     marginTop: '16px',
                     padding: '12px 20px',
@@ -610,7 +629,8 @@ export function SessionsPage() {
                     color: 'white',
                     fontSize: '14px',
                     fontWeight: '600',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent'
                   }}
                 >
                   ➕ Créer une séance
