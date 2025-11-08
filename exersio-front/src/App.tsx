@@ -73,13 +73,27 @@ function AppContent() {
       // Ne charger que les sessions automatiquement
       // Les exercices et favoris seront chargés seulement quand l'utilisateur navigue vers la page exercices
       sesActions.loadSessions();
-      
+
       // Initialiser les notifications (seulement locales, pas de Firebase)
       notificationService.initialize().catch(error => {
         console.error('Error initializing notifications:', error);
       });
     }
   }, [auth.isAuthenticated]);
+
+  // Vérifier si l'URL contient des paramètres d'authentification spéciaux
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlToken = urlParams.get('token');
+  const urlAction = urlParams.get('action');
+  const isAuthAction = urlToken && (urlAction === 'reset-password' || urlAction === 'confirm-email');
+
+  // Si l'utilisateur a un lien d'action auth (reset password, confirm email) et est connecté,
+  // le déconnecter pour afficher le formulaire approprié
+  useEffect(() => {
+    if (isAuthAction && auth.isAuthenticated) {
+      authActions.logout();
+    }
+  }, [isAuthAction, auth.isAuthenticated]);
 
   // Routes publiques (accessibles sans authentification)
   const pathname = window.location.pathname;
@@ -116,7 +130,7 @@ function AppContent() {
     );
   }
 
-  if (!auth.isAuthenticated) {
+  if (!auth.isAuthenticated || isAuthAction) {
     return (
       <>
         <AuthForm
