@@ -123,6 +123,8 @@ export function Navigation({ isMobile, onLogout }: NavigationProps) {
                 <button
                   key={item.id}
                   onClick={() => handleNavigate(item.id)}
+                  onTouchStart={() => {}} // Fix for Android touch events
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                   className={`relative flex flex-col items-center gap-1 p-3 rounded-2xl transition-all duration-200 min-w-0 flex-1 ${
                     currentPage === item.id
                       ? "bg-gradient-to-r from-blue-500 to-emerald-500 text-white shadow-lg transform -translate-y-1"
