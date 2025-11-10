@@ -111,6 +111,10 @@ export class SessionsService {
     const upd: any = { ...data };
     if (upd.date) upd.date = new Date(upd.date);
     if (upd.status) upd.status = normalizeStatus(upd.status);
+
+    // Remove exercises from update data - handled separately below
+    delete upd.exercises;
+
     const session = await this.prisma.session.update({
       where: { id },
       data: upd,

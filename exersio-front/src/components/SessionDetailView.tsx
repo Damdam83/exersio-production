@@ -136,9 +136,18 @@ export function SessionDetailView({
           title={session.name}
           showBack
           onBack={onBack}
-          onAction={session.status === 'planned' ? handleStartSession : undefined}
-          actionIcon={session.status === 'planned' ? <span className="text-lg">▶️</span> : undefined}
-          actionLabel={session.status === 'planned' ? "Commencer" : undefined}
+          actions={[
+            session.status !== 'in-progress' && onEditSession && {
+              icon: <span className="text-lg">✏️</span>,
+              onClick: onEditSession,
+              label: "Éditer"
+            },
+            session.status === 'planned' && {
+              icon: <span className="text-lg">▶️</span>,
+              onClick: handleStartSession,
+              label: "Commencer"
+            }
+          ].filter(Boolean)}
         />
 
         {/* Infos rapides en haut */}
@@ -244,11 +253,38 @@ export function SessionDetailView({
                     'bg-slate-600'
                   }`}></div>
 
-                  {/* Terrain mobile plus petit et adapté */}
-                  <div className="h-24 bg-gradient-to-br from-slate-700 to-slate-600 relative overflow-hidden">
-                    <div className="absolute inset-0 opacity-60" style={{ transform: 'scale(0.7)' }}>
+                  {/* Visualisation du terrain - style adapté d'ExercisesPage */}
+                  <div style={{
+                    height: '140px',
+                    background: 'linear-gradient(135deg, #1e293b, #334155)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: `
+                        linear-gradient(45deg, transparent 49%, rgba(59, 130, 246, 0.1) 50%, transparent 51%),
+                        linear-gradient(-45deg, transparent 49%, rgba(16, 185, 129, 0.1) 50%, transparent 51%)
+                      `,
+                      backgroundSize: '20px 20px'
+                    }}></div>
+
+                    {/* Diagramme de l'exercice */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0
+                    }}>
                       {createCourtDiagram(exercise)}
                     </div>
+
+                    {/* Badge durée */}
                     <div className="absolute top-2 right-2">
                       <div className="bg-amber-500/20 text-amber-400 px-2 py-1 rounded text-xs font-semibold">
                         {exercise.duration} min
