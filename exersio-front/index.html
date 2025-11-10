@@ -20,27 +20,37 @@
         }
       })();
 
-      // Delegated tap-to-click handler for reliable touch events
+      // Delegated touch-to-click handler for reliable touch events on Android
       (function () {
         var startX = 0, startY = 0, startedOn;
 
-        document.addEventListener('pointerdown', function (e) {
-          startedOn = e.target;
-          startX = e.clientX;
-          startY = e.clientY;
-        }, true);
+        // Use touchstart/touchend for better Android WebView compatibility
+        document.addEventListener('touchstart', function (e) {
+          if (e.touches.length > 0) {
+            startedOn = e.target;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+          }
+        }, { passive: true, capture: true });
 
-        document.addEventListener('pointerup', function (e) {
+        document.addEventListener('touchend', function (e) {
           if (!startedOn) return;
 
-          var dx = e.clientX - startX, dy = e.clientY - startY;
-          var moved = (dx*dx + dy*dy) > (12*12);
-          if (moved) {
-            startedOn = null;
-            return;
+          // Check if finger moved (detect swipe vs tap)
+          var touch = e.changedTouches[0];
+          if (touch) {
+            var dx = touch.clientX - startX;
+            var dy = touch.clientY - startY;
+            var moved = (dx*dx + dy*dy) > (12*12);
+
+            if (moved) {
+              startedOn = null;
+              return;
+            }
           }
 
-          var el = e.target;
+          // Find clickable element
+          var el = startedOn;
           while (el && el !== document) {
             if (el.disabled) {
               el = el.parentElement;
@@ -51,18 +61,21 @@
                 el.getAttribute('role') === 'button' ||
                 el.classList.contains('cursor-pointer') ||
                 el.dataset.clickable === 'true') {
-              var evt = new MouseEvent('click', {
-                bubbles: true,
-                cancelable: true,
-                view: window
-              });
-              el.dispatchEvent(evt);
+
+              // Prevent default touch behavior and stop propagation
+              e.preventDefault();
+              e.stopPropagation();
+
+              // Trigger click event
+              el.click();
+
+              console.log('[TouchFix] Click triggered on:', el.tagName, el.className);
               break;
             }
             el = el.parentElement;
           }
           startedOn = null;
-        }, true);
+        }, { passive: false, capture: true });
       })();
     </script>
 

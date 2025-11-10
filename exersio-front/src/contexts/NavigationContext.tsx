@@ -2,6 +2,11 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { NavigationPage } from '../types';
 
+// Detect if running in Capacitor (mobile app)
+const isCapacitor = window.location.protocol === 'capacitor:' ||
+                    window.location.protocol === 'ionic:' ||
+                    window.location.protocol === 'file:';
+
 // Pages additionnelles non listées dans le menu principal
 type ExtraPages = 'exercise-create' | 'exercise-edit' | 'exercise-detail' | 'session-create' | 'session-detail';
 type Page = NavigationPage | ExtraPages;
@@ -109,8 +114,15 @@ const buildPath = (page: Page, params?: RouteParams | null): string => {
 };
 
 const parseCurrentPath = (): { page: Page; params: RouteParams | null } => {
-  const path = window.location.pathname;
-  const searchParams = new URLSearchParams(window.location.search);
+  // Use hash for Capacitor, pathname for web
+  const path = isCapacitor
+    ? (window.location.hash.replace('#', '') || '/')
+    : window.location.pathname;
+  const searchParams = new URLSearchParams(
+    isCapacitor
+      ? window.location.hash.split('?')[1] || ''
+      : window.location.search
+  );
   
   // Parser les query params communs
   const baseParams: RouteParams = {};
@@ -207,16 +219,34 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       setParams(urlParams);
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    const handleHashChange = () => {
+      const { page, params: urlParams } = parseCurrentPath();
+      setCurrentPage(page);
+      setParams(urlParams);
+    };
+
+    if (isCapacitor) {
+      // Listen to hash changes for Capacitor
+      window.addEventListener('hashchange', handleHashChange);
+      return () => window.removeEventListener('hashchange', handleHashChange);
+    } else {
+      // Listen to popstate for web
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    }
   }, []);
 
   const navigate = (page: Page, nextParams: RouteParams | null = null) => {
     const newPath = buildPath(page, nextParams);
-    
-    // Utiliser pushState pour changer l'URL sans recharger la page
-    window.history.pushState({ page, params: nextParams }, '', newPath);
-    
+
+    if (isCapacitor) {
+      // Use hash-based routing for Capacitor (mobile)
+      window.location.hash = newPath;
+    } else {
+      // Use pushState for web
+      window.history.pushState({ page, params: nextParams }, '', newPath);
+    }
+
     setCurrentPage(page);
     setParams(nextParams ?? null);
   };
@@ -228,10 +258,17 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       returnTo: currentPage,
       returnParams: params
     };
-    
+
     const newPath = buildPath(page, paramsWithReturn);
-    window.history.pushState({ page, params: paramsWithReturn }, '', newPath);
-    
+
+    if (isCapacitor) {
+      // Use hash-based routing for Capacitor (mobile)
+      window.location.hash = newPath;
+    } else {
+      // Use pushState for web
+      window.history.pushState({ page, params: paramsWithReturn }, '', newPath);
+    }
+
     setCurrentPage(page);
     setParams(paramsWithReturn);
   };
