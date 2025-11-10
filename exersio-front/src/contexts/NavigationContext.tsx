@@ -158,47 +158,50 @@ const parseCurrentPath = (): { page: Page; params: RouteParams | null } => {
     return { page: 'profile', params: Object.keys(baseParams).length ? baseParams : null };
   }
   
-  // Routes avec paramètres
-  const sessionDetailMatch = path.match(/^\/sessions\/([^\/]+)$/);
-  if (sessionDetailMatch) {
-    return { 
-      page: 'session-detail', 
-      params: { ...baseParams, sessionId: sessionDetailMatch[1] } 
-    };
-  }
-  
-  const sessionEditMatch = path.match(/^\/sessions\/([^\/]+)\/edit$/);
-  if (sessionEditMatch) {
-    return { 
-      page: 'session-create', 
-      params: { ...baseParams, sessionId: sessionEditMatch[1] } 
-    };
-  }
-  
+  // Routes avec paramètres - IMPORTANT: tester /new AVANT /:id pour éviter confusion
+
+  // Sessions: tester /new AVANT /:id
   const sessionNewMatch = path.match(/^\/sessions\/new$/);
   if (sessionNewMatch) {
     return { page: 'session-create', params: Object.keys(baseParams).length ? baseParams : null };
   }
-  
-  const exerciseDetailMatch = path.match(/^\/exercises\/([^\/]+)$/);
-  if (exerciseDetailMatch) {
-    return { 
-      page: 'exercise-detail', 
-      params: { ...baseParams, exerciseId: exerciseDetailMatch[1] } 
+
+  const sessionEditMatch = path.match(/^\/sessions\/([^\/]+)\/edit$/);
+  if (sessionEditMatch) {
+    return {
+      page: 'session-create',
+      params: { ...baseParams, sessionId: sessionEditMatch[1] }
     };
   }
-  
-  const exerciseEditMatch = path.match(/^\/exercises\/([^\/]+)\/edit$/);
-  if (exerciseEditMatch) {
-    return { 
-      page: 'exercise-edit', 
-      params: { ...baseParams, exerciseId: exerciseEditMatch[1] } 
+
+  const sessionDetailMatch = path.match(/^\/sessions\/([^\/]+)$/);
+  if (sessionDetailMatch) {
+    return {
+      page: 'session-detail',
+      params: { ...baseParams, sessionId: sessionDetailMatch[1] }
     };
   }
-  
+
+  // Exercises: tester /new AVANT /:id
   const exerciseNewMatch = path.match(/^\/exercises\/new$/);
   if (exerciseNewMatch) {
     return { page: 'exercise-create', params: Object.keys(baseParams).length ? baseParams : null };
+  }
+
+  const exerciseEditMatch = path.match(/^\/exercises\/([^\/]+)\/edit$/);
+  if (exerciseEditMatch) {
+    return {
+      page: 'exercise-edit',
+      params: { ...baseParams, exerciseId: exerciseEditMatch[1] }
+    };
+  }
+
+  const exerciseDetailMatch = path.match(/^\/exercises\/([^\/]+)$/);
+  if (exerciseDetailMatch) {
+    return {
+      page: 'exercise-detail',
+      params: { ...baseParams, exerciseId: exerciseDetailMatch[1] }
+    };
   }
   
   // Fallback

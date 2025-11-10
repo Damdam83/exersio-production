@@ -147,11 +147,11 @@ function ExerciseDetailPageWrapper({ exerciseId }: { exerciseId?: string }) {
   useEffect(() => {
     const loadExercise = async () => {
       // Ne charger que si :
-      // 1. On a un exerciceId
+      // 1. On a un exerciseId valide (pas "new" en mode création)
       // 2. L'exercice n'est pas dans la liste
       // 3. On n'a pas déjà tenté de charger
       // 4. Pas déjà en cours de chargement
-      if (exerciseId && !exercises.find(ex => ex.id === exerciseId) && !hasAttemptedLoad && !isLoading) {
+      if (exerciseId && exerciseId !== 'new' && !exercises.find(ex => ex.id === exerciseId) && !hasAttemptedLoad && !isLoading) {
         setIsLoading(true);
         setHasAttemptedLoad(true);
         try {
