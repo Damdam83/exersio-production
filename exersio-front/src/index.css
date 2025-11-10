@@ -6,3 +6,25 @@ body {
   margin: 0;
   font-family: sans-serif;
 }
+
+/* --- TAP STABILITY PATCH FOR ANDROID WEBVIEW --- */
+.absolute, .fixed .absolute, .decorative, .bg-glass-card > .absolute {
+  pointer-events: none;
+}
+
+button, [role="button"], a, .cursor-pointer, [data-clickable="true"] {
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 20;
+}
+
+[aria-hidden="true"] {
+  pointer-events: none !important;
+}
+
+.no-backdrop .bg-glass-card {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}

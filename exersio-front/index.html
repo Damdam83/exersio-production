@@ -7,6 +7,65 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Android WebView tap stability fixes -->
+    <script>
+      // Detect backdrop-filter support
+      (function () {
+        var supportsBackdrop = (CSS && CSS.supports &&
+          (CSS.supports('backdrop-filter', 'blur(1px)') ||
+           CSS.supports('-webkit-backdrop-filter', 'blur(1px)')));
+        if (!supportsBackdrop) {
+          document.documentElement.classList.add('no-backdrop');
+        }
+      })();
+
+      // Delegated tap-to-click handler for reliable touch events
+      (function () {
+        var startX = 0, startY = 0, startedOn;
+
+        document.addEventListener('pointerdown', function (e) {
+          startedOn = e.target;
+          startX = e.clientX;
+          startY = e.clientY;
+        }, true);
+
+        document.addEventListener('pointerup', function (e) {
+          if (!startedOn) return;
+
+          var dx = e.clientX - startX, dy = e.clientY - startY;
+          var moved = (dx*dx + dy*dy) > (12*12);
+          if (moved) {
+            startedOn = null;
+            return;
+          }
+
+          var el = e.target;
+          while (el && el !== document) {
+            if (el.disabled) {
+              el = el.parentElement;
+              continue;
+            }
+
+            if (el.tagName === 'BUTTON' || el.tagName === 'A' ||
+                el.getAttribute('role') === 'button' ||
+                el.classList.contains('cursor-pointer') ||
+                el.dataset.clickable === 'true') {
+              var evt = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+              });
+              el.dispatchEvent(evt);
+              break;
+            }
+            el = el.parentElement;
+          }
+          startedOn = null;
+        }, true);
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
