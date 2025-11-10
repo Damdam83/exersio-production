@@ -1,7 +1,8 @@
-import { AlertTriangle, Bell, Building2, Check, Copy, Crown, Edit3, Globe, Mail, Plus, Settings, Shield, Trash2, User as UserIcon, UserPlus, Users, X } from 'lucide-react';
+import { AlertTriangle, Bell, Building2, Check, Copy, Crown, Dumbbell, Edit3, Globe, Mail, Plus, Settings, Shield, Trash2, User as UserIcon, UserPlus, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useSports } from '../contexts/SportsContext';
 import { clubsService } from '../services/clubsService';
 import { invitationsService } from '../services/invitationsService';
 import { usersService } from '../services/usersService';
@@ -20,6 +21,7 @@ export function ProfilePage() {
   const { setCurrentPage } = useNavigation();
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
+  const { state: sportsState, loadSports } = useSports();
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isCreatingClub, setIsCreatingClub] = useState(false);
@@ -31,8 +33,10 @@ export function ProfilePage() {
   const [invitations, setInvitations] = useState<typeof import('../types').Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Charger les invitations au montage du composant
+  // Charger les sports et invitations au montage du composant
   React.useEffect(() => {
+    loadSports();
+
     const loadInvitations = async () => {
       if (auth.user) {
         try {
@@ -46,7 +50,7 @@ export function ProfilePage() {
       }
     };
     loadInvitations();
-  }, [auth.user]);
+  }, [auth.user, loadSports]);
 
   if (!auth.user) {
     return (
@@ -79,6 +83,18 @@ export function ProfilePage() {
       setIsEditingProfile(false);
     } catch (error) {
       console.error(t('profile.errors.updateProfile'), error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChangePreferredSport = async (sportId: string) => {
+    setIsLoading(true);
+    try {
+      await usersService.update(auth.user!.id, { preferredSportId: sportId });
+      authActions.updateUser({ preferredSportId: sportId });
+    } catch (error) {
+      console.error('Error updating preferred sport:', error);
     } finally {
       setIsLoading(false);
     }
@@ -407,6 +423,40 @@ export function ProfilePage() {
                     <div className="text-xs opacity-70">{lang.code.toUpperCase()}</div>
                   </div>
                   {currentLanguage === lang.code && (
+                    <Check className="w-5 h-5 ml-auto text-[#00d4aa]" />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sélecteur de sport préféré */}
+        <div className="mb-6">
+          <h4 className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-3">
+            <div className="w-4 h-4 bg-gradient-to-br from-[#00d4aa] to-[#00b894] rounded-sm flex items-center justify-center">
+              <Dumbbell className="w-2 h-2 text-white" />
+            </div>
+            {t('profile.preferredSport') || 'Sport préféré'}
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            {sportsState.sports.data && sportsState.sports.data.map((sport) => (
+              <button
+                key={sport.id}
+                onClick={() => handleChangePreferredSport(sport.id)}
+                disabled={isLoading}
+                className={`p-4 rounded-xl border transition-all ${
+                  auth.user?.preferredSportId === sport.id
+                    ? 'bg-gradient-to-r from-[#00d4aa]/20 to-[#00b894]/20 border-[#00d4aa]/50 text-white'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-2xl">{sport.icon}</span>
+                  <div className="text-left flex-1">
+                    <div className="font-semibold">{sport.name}</div>
+                  </div>
+                  {auth.user?.preferredSportId === sport.id && (
                     <Check className="w-5 h-5 ml-auto text-[#00d4aa]" />
                   )}
                 </div>

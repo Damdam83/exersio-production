@@ -5,6 +5,7 @@ import { useExercises } from '../contexts/ExercisesContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useSessions } from '../contexts/SessionsContext';
 import { useCategories } from '../contexts/CategoriesContext';
+import { useSports } from '../contexts/SportsContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { MobileHeader } from './MobileHeader';
 
@@ -15,9 +16,11 @@ export function SessionCreatePage() {
   const { setCurrentPage, params, navigateWithReturn } = useNavigation();
   const { exercises } = useExercises();
   const { state: categoriesState } = useCategories();
+  const { state: sportsState, loadSports } = useSports();
   const isMobile = useIsMobile();
-  
+
   const currentUserId = authState.user?.id || '';
+  const user = authState.user;
   
   // Détection des différents modes
   const mode = params?.mode || 'create'; // 'create', 'edit', 'draft', 'edit-draft'
@@ -48,12 +51,34 @@ export function SessionCreatePage() {
   const [generalIntensity, setGeneralIntensity] = useState('moyenne');
   const [exerciseSearch, setExerciseSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
-  
+
+  // Sport sélectionné pour filtrer les catégories d'âge
+  const [selectedSportId, setSelectedSportId] = useState<string>(() => {
+    return user?.preferredSportId || '';
+  });
+
   // Timeline des exercices sélectionnés
   const [sessionExercises, setSessionExercises] = useState<string[]>([]);
-  
+
   // Popup state
   const [isExercisePopupOpen, setIsExercisePopupOpen] = useState(false);
+
+  // Filtrer les catégories d'âge par sport sélectionné
+  const filteredAgeCategories = categoriesState.ageCategories.data.filter(
+    cat => cat.sportId === selectedSportId
+  );
+
+  // Charger les sports au montage
+  useEffect(() => {
+    loadSports();
+  }, [loadSports]);
+
+  // Initialiser selectedSportId quand les sports sont chargés
+  useEffect(() => {
+    if (sportsState.sports.data && sportsState.sports.data.length > 0 && !selectedSportId) {
+      setSelectedSportId(user?.preferredSportId || sportsState.sports.data[0].id);
+    }
+  }, [sportsState.sports.data, selectedSportId, user?.preferredSportId]);
 
   // Charger les sessions si nécessaire
   useEffect(() => {
@@ -336,20 +361,37 @@ export function SessionCreatePage() {
               <textarea ref={descriptionInputRef} placeholder={t('sessions.descriptionPlaceholder')} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
 
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{t('sessions.sport') || 'Sport'}</label>
+              <select
+                value={selectedSportId}
+                onChange={(e) => setSelectedSportId(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '10px',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
+              >
+                {sportsState.sports.data && sportsState.sports.data.map(sport => (
+                  <option key={sport.id} value={sport.id}>{sport.name}</option>
+                ))}
+              </select>
+            </div>
+
             <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
               <div>
                 <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{t('sessions.ageCategory')}</label>
                 <select value={ageCategory} onChange={(e) => setAgeCategory(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}>
-                  {categoriesState.ageCategories.data.map(category => (
+                  {filteredAgeCategories.map(category => (
                     <option key={category.id} value={category.name.toLowerCase()}>{category.name}</option>
                   ))}
-                  {categoriesState.ageCategories.data.length === 0 && (
-                    <>
-                      <option value="seniors">Seniors</option>
-                      <option value="minimes">Minimes</option>
-                      <option value="enfants">Enfants</option>
-                      <option value="mixte">Mixte</option>
-                    </>
+                  {filteredAgeCategories.length === 0 && (
+                    <option value="seniors">Seniors</option>
                   )}
                 </select>
               </div>
@@ -724,6 +766,30 @@ export function SessionCreatePage() {
                 />
               </div>
 
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                  Sport
+                </label>
+                <select
+                  value={selectedSportId}
+                  onChange={(e) => setSelectedSportId(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none'
+                  }}
+                >
+                  {sportsState.sports.data && sportsState.sports.data.map(sport => (
+                    <option key={sport.id} value={sport.id}>{sport.name}</option>
+                  ))}
+                </select>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
@@ -743,18 +809,13 @@ export function SessionCreatePage() {
                       outline: 'none'
                     }}
                   >
-                    {categoriesState.ageCategories.data.map(category => (
+                    {filteredAgeCategories.map(category => (
                       <option key={category.id} value={category.name.toLowerCase()}>
                         {category.name}
                       </option>
                     ))}
-                    {categoriesState.ageCategories.data.length === 0 && (
-                      <>
-                        <option value="seniors">Seniors</option>
-                        <option value="minimes">Minimes</option>
-                        <option value="enfants">Enfants</option>
-                        <option value="mixte">Mixte</option>
-                      </>
+                    {filteredAgeCategories.length === 0 && (
+                      <option value="seniors">Seniors</option>
                     )}
                   </select>
                 </div>

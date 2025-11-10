@@ -313,69 +313,6 @@ export const NotificationSettingsPage: React.FC<NotificationSettingsPageProps> =
           </div>
         )}
 
-        {/* Test Section - TEMPORAIRE pour tester EventEmitter */}
-        <div className="bg-slate-800 rounded-lg shadow p-6 border border-slate-700">
-          <div className="flex items-center space-x-3 mb-4">
-            <Settings className="w-5 h-5 text-blue-400" />
-            <h2 className="text-lg font-semibold text-white">Test Notifications (DEV)</h2>
-          </div>
-          <p className="text-sm text-gray-300 mb-4">
-            Créer des notifications de test pour vérifier le système EventEmitter
-          </p>
-          <div className="space-y-3">
-            <button
-              onClick={async () => {
-                try {
-                  await fetch('http://localhost:3000/api/notifications/admin/send-notification', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                    },
-                    body: JSON.stringify({
-                      title: 'Test notification',
-                      message: 'Ceci est une notification de test pour vérifier le système EventEmitter',
-                      type: 'system_notification'
-                    })
-                  });
-                  alert('Notification créée ! Ouvre le centre de notifications pour la voir.');
-                } catch (error) {
-                  alert('Erreur: ' + error);
-                }
-              }}
-              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              Créer 1 notification de test
-            </button>
-            <button
-              onClick={async () => {
-                try {
-                  for (let i = 1; i <= 5; i++) {
-                    await fetch('http://localhost:3000/api/notifications/admin/send-notification', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                      },
-                      body: JSON.stringify({
-                        title: `Test notification ${i}`,
-                        message: `Notification de test numéro ${i} pour vérifier le badge`,
-                        type: 'system_notification'
-                      })
-                    });
-                  }
-                  alert('5 notifications créées ! Ouvre le centre de notifications.');
-                } catch (error) {
-                  alert('Erreur: ' + error);
-                }
-              }}
-              className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            >
-              Créer 5 notifications de test
-            </button>
-          </div>
-        </div>
-
         {hasChanges() && isMobile && (
           <div className="pb-6">
             <button
