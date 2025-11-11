@@ -33,10 +33,13 @@ export function ProfilePage() {
   const [invitations, setInvitations] = useState<typeof import('../types').Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Charger les sports et invitations au montage du composant
+  // Charger les sports au montage
   React.useEffect(() => {
     loadSports();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Charger les invitations quand l'utilisateur change
+  React.useEffect(() => {
     const loadInvitations = async () => {
       if (auth.user) {
         try {
@@ -50,7 +53,7 @@ export function ProfilePage() {
       }
     };
     loadInvitations();
-  }, [auth.user, loadSports]);
+  }, [auth.user, t]);
 
   if (!auth.user) {
     return (
@@ -331,7 +334,7 @@ export function ProfilePage() {
           </div>
           <Button variant="outline" onClick={() => setIsEditingProfile(true)} className="border-white/20 text-white hover:bg-white/10">
             <Settings className="w-4 h-4 mr-2" />
-            Modifier
+            {t('profile.modifyProfile')}
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -484,7 +487,7 @@ export function ProfilePage() {
           {!auth.club && (
             <Button variant="outline" onClick={() => setIsCreatingClub(true)} className="border-white/20 text-white hover:bg-white/10">
               <Plus className="w-4 h-4 mr-2" />
-              Créer un club
+              {t('profile.createClub')}
             </Button>
           )}
         </div>
@@ -560,7 +563,7 @@ export function ProfilePage() {
               {(auth.user.role === 'admin' || auth.user.role === 'coach') && (
                 <Button variant="outline" onClick={() => setIsInvitingUser(true)} className="border-white/20 text-white hover:bg-white/10">
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Inviter un utilisateur
+                  {t('profile.inviteMember')}
                 </Button>
               )}
             </div>
@@ -600,7 +603,7 @@ export function ProfilePage() {
 
                 <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500" onClick={() => setIsCreatingClub(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Créer mon club
+                  {t('profile.createClub')}
                 </Button>
               </div>
             </div>

@@ -68,12 +68,15 @@ export function ExercisesPage() {
     setSelectedAge('all');
   }, [selectedSport]);
 
-  // Charger les exercices et favoris au montage et quand le scope change
+  // Charger les favoris au montage
+  useEffect(() => {
+    favoritesActions.loadFavorites();
+  }, []);
+
+  // Charger les exercices au montage et quand le scope change
   useEffect(() => {
     actions.setFilters({ scope: currentScope });
     actions.loadExercises();
-    // Charger aussi les favoris depuis l'API pour synchroniser
-    favoritesActions.loadFavorites();
   }, [currentScope]);
 
   // Générer les filtres de sports depuis le backend (SportsContext)

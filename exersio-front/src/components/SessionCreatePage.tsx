@@ -8,13 +8,14 @@ import { useCategories } from '../contexts/CategoriesContext';
 import { useSports } from '../contexts/SportsContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { MobileHeader } from './MobileHeader';
+import { ExerciseSelectionModal } from './ExerciseSelectionModal';
 
 export function SessionCreatePage() {
   const { t } = useTranslation();
   const { actions: sessionsActions, state: sessionsState, sessionDraft } = useSessions();
   const { state: authState } = useAuth();
   const { setCurrentPage, params, navigateWithReturn } = useNavigation();
-  const { exercises } = useExercises();
+  const { exercises, actions: exerciseActions } = useExercises();
   const { state: categoriesState } = useCategories();
   const { state: sportsState, loadSports } = useSports();
   const isMobile = useIsMobile();
@@ -68,10 +69,15 @@ export function SessionCreatePage() {
     cat => cat.sportId === selectedSportId
   );
 
-  // Charger les sports au montage
+  // Charger les sports au montage (une seule fois)
   useEffect(() => {
     loadSports();
-  }, [loadSports]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Charger les exercices au montage (une seule fois)
+  useEffect(() => {
+    exerciseActions.loadExercises();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialiser selectedSportId quand les sports sont chargés
   useEffect(() => {
@@ -396,7 +402,7 @@ export function SessionCreatePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">Niveau</label>
+                <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{t('sessions.level')}</label>
                 <select value={level} onChange={(e) => setLevel(e.target.value)} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}>
                   {categoriesState.levels.data.map(levelOption => (
                     <option key={levelOption.id} value={levelOption.name.toLowerCase()}>{levelOption.name}</option>
@@ -446,8 +452,8 @@ export function SessionCreatePage() {
             </div>
 
             <div>
-              <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">Matériel nécessaire</label>
-              <textarea ref={equipmentInputRef} placeholder="Lister le matériel requis..." style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
+              <label className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{t('sessions.requirementsList')}</label>
+              <textarea ref={equipmentInputRef} placeholder={t('sessions.listEquipment')} style={{ width: '100%', padding: '10px 12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none', resize: 'vertical', minHeight: '60px' }} />
             </div>
           </div>
 
@@ -473,7 +479,7 @@ export function SessionCreatePage() {
               <div onClick={openExercisePopup} style={{ border: '2px dashed rgba(255, 255, 255, 0.2)', background: 'rgba(255, 255, 255, 0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80px', cursor: 'pointer', borderRadius: '12px', marginBottom: '16px' }}>
                 <div style={{ textAlign: 'center', color: '#94a3b8' }}>
                   <div style={{ fontSize: '20px', marginBottom: '6px' }}>➕</div>
-                  <div style={{ fontSize: '14px', fontWeight: '500' }}>Ajouter exercices</div>
+                  <div style={{ fontSize: '14px', fontWeight: '500' }}>{t('sessions.addExercisesButton')}</div>
                 </div>
               </div>
             ) : (
@@ -518,60 +524,14 @@ export function SessionCreatePage() {
           </div>
         </div>
 
-        {/* Popup mobile exercices */}
-        {isExercisePopupOpen && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.8)', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)', height: '100%', display: 'flex', flexDirection: 'column' }}>
-              {/* Header popup mobile */}
-              <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'white', margin: 0 }}>Ajouter un exercice</h3>
-                <button onClick={closeExercisePopup} style={{ width: '32px', height: '32px', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '8px', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-              </div>
-              
-              {/* Recherche mobile */}
-              <div style={{ padding: '16px' }}>
-                <div style={{ position: 'relative', marginBottom: '16px' }}>
-                  <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '14px' }}>🔍</div>
-                  <input type="text" value={exerciseSearch} onChange={(e) => setExerciseSearch(e.target.value)} placeholder={t('sessions.searchExercises')} style={{ width: '100%', padding: '12px 16px 12px 40px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', color: 'white', fontSize: '14px', outline: 'none' }} />
-                </div>
-                
-                {/* Filtres mobile */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                  {filters.map(filter => (
-                    <button key={filter} onClick={() => setSelectedFilter(filter)} style={{ padding: '8px 12px', background: selectedFilter === filter ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2))' : 'rgba(255, 255, 255, 0.05)', border: selectedFilter === filter ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', fontSize: '12px', fontWeight: '600', color: selectedFilter === filter ? '#3b82f6' : '#94a3b8', cursor: 'pointer', textTransform: 'capitalize' }}>
-                      {filter === 'all' ? 'Tous' : filter}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Liste exercices mobile */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px' }}>
-                {filteredExercises.length === 0 ? (
-                  <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>{t('sessions.noExercisesFound')}</p>
-                ) : (
-                  filteredExercises.map(exercise => (
-                    <div key={exercise.id} onClick={() => addExerciseToSession(exercise.id)} style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '16px', marginBottom: '12px', cursor: 'pointer', opacity: sessionExercises.includes(exercise.id) ? 0.5 : 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                        <div style={{ flex: 1, marginRight: '12px' }}>
-                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#ffffff', marginBottom: '2px' }}>{exercise.name}</div>
-                          <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>{exercise.category}</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', padding: '3px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '600' }}>{exercise.duration}min</div>
-                          {sessionExercises.includes(exercise.id) && (<span style={{ color: '#10b981', fontSize: '12px', fontWeight: '600' }}>✓</span>)}
-                        </div>
-                      </div>
-                      {exercise.description && (
-                        <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.4', marginBottom: '8px' }}>{exercise.description}</div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Modal de sélection d'exercices */}
+        <ExerciseSelectionModal
+          isOpen={isExercisePopupOpen}
+          onClose={closeExercisePopup}
+          onSelectExercise={addExerciseToSession}
+          selectedSportId={selectedSportId}
+          selectedExercises={sessionExercises}
+        />
 
         <style>{`
           .custom-number-input { position: relative; }
@@ -1363,214 +1323,14 @@ export function SessionCreatePage() {
           </div>
         </div>
 
-        {/* Popup pour sélectionner un exercice */}
-        {isExercisePopupOpen && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
-          }}>
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '20px',
-              padding: '25px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-              maxWidth: '600px',
-              width: '100%',
-              maxHeight: '80vh',
-              overflowY: 'auto'
-            }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginBottom: '20px',
-                paddingBottom: '15px',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-              }}>
-                <div style={{ 
-                  fontSize: '18px', 
-                  fontWeight: '700', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '10px' 
-                }}>
-                  <div style={{ 
-                    width: '20px', 
-                    height: '20px', 
-                    background: 'linear-gradient(135deg, #3b82f6, #10b981)', 
-                    borderRadius: '5px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    fontSize: '10px' 
-                  }}>📚</div>
-                  Bibliothèque d'exercices
-                </div>
-                <button
-                  onClick={closeExercisePopup}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '8px',
-                    color: '#94a3b8',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Recherche */}
-              <div style={{ position: 'relative', marginBottom: '20px' }}>
-                <div style={{
-                  position: 'absolute',
-                  left: '14px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#94a3b8',
-                  fontSize: '14px'
-                }}>🔍</div>
-                <input
-                  type="text"
-                  value={exerciseSearch}
-                  onChange={(e) => setExerciseSearch(e.target.value)}
-                  placeholder="Rechercher un exercice..."
-                  style={{
-                    width: '100%',
-                    padding: '10px 16px 10px 40px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '14px',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-
-              {/* Filtres */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
-                {filters.map(filter => (
-                  <button
-                    key={filter}
-                    onClick={() => setSelectedFilter(filter)}
-                    style={{
-                      padding: '6px 12px',
-                      background: selectedFilter === filter ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2))' : 'rgba(255, 255, 255, 0.05)',
-                      border: selectedFilter === filter ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '16px',
-                      fontSize: '11px',
-                      fontWeight: '600',
-                      color: selectedFilter === filter ? '#3b82f6' : '#94a3b8',
-                      cursor: 'pointer',
-                      textTransform: 'capitalize'
-                    }}
-                  >
-                    {filter === 'all' ? 'Tous' : filter}
-                  </button>
-                ))}
-              </div>
-
-              {/* Liste des exercices */}
-              <div>
-                {filteredExercises.length === 0 ? (
-                  <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>{t('sessions.noExercisesFound')}</p>
-                ) : (
-                  filteredExercises.map(exercise => (
-                    <div
-                      key={exercise.id}
-                      onClick={() => addExerciseToSession(exercise.id)}
-                      className="exercise-item"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '12px',
-                        padding: '15px',
-                        marginBottom: '12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        opacity: sessionExercises.includes(exercise.id) ? 0.5 : 1
-                      }}
-                    >
-                      <div className="exercise-item-header" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'flex-start', 
-                        marginBottom: '8px' 
-                      }}>
-                        <div>
-                          <div className="exercise-item-name" style={{ 
-                            fontSize: '14px', 
-                            fontWeight: '600', 
-                            color: '#ffffff', 
-                            marginBottom: '2px' 
-                          }}>
-                            {exercise.name}
-                          </div>
-                          <div className="exercise-item-category" style={{ 
-                            fontSize: '10px', 
-                            color: '#94a3b8', 
-                            textTransform: 'uppercase' 
-                          }}>
-                            {exercise.category}
-                          </div>
-                        </div>
-                        <div className="exercise-item-duration" style={{
-                          background: 'rgba(245, 158, 11, 0.2)',
-                          color: '#f59e0b',
-                          padding: '2px 6px',
-                          borderRadius: '6px',
-                          fontSize: '10px',
-                          fontWeight: '600'
-                        }}>
-                          {exercise.duration}min
-                        </div>
-                      </div>
-                      {exercise.description && (
-                        <div className="exercise-item-description" style={{ 
-                          fontSize: '12px', 
-                          color: '#94a3b8', 
-                          lineHeight: '1.4', 
-                          marginBottom: '8px' 
-                        }}>
-                          {exercise.description}
-                        </div>
-                      )}
-                      <div className="exercise-item-meta" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        fontSize: '10px', 
-                        color: '#94a3b8' 
-                      }}>
-                        <span>Intensité: {exercise.intensity}</span>
-                        {sessionExercises.includes(exercise.id) && (
-                          <span style={{ color: '#10b981', fontWeight: '600' }}>✓ Ajouté</span>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Nouvelle modal de sélection d'exercices */}
+        <ExerciseSelectionModal
+          isOpen={isExercisePopupOpen}
+          onClose={closeExercisePopup}
+          onSelectExercise={addExerciseToSession}
+          selectedSportId={selectedSportId}
+          selectedExercises={sessionExercises}
+        />
 
         {/* CSS pour corriger les styles des éléments natifs */}
         <style>{`
