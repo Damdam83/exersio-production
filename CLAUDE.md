@@ -2,8 +2,8 @@
 
 > Documentation pour maintenir le contexte entre les sessions de développement avec Claude Code
 
-**Dernière mise à jour :** 04/11/2025
-**Session actuelle :** SPLASH SCREEN + VERSION CHECK COMPLET
+**Dernière mise à jour :** 11/11/2025
+**Session actuelle :** CORRECTIONS MAJEURES - sportId, pagination, categoryId, filtres
 **Documents de référence** :
 - [ETAT-AVANCEMENT-PROJET.md](ETAT-AVANCEMENT-PROJET.md) - Synthèse complète projet
 - [SPLASH-SCREEN-VERSION-CHECK.md](exersio-front/SPLASH-SCREEN-VERSION-CHECK.md) - Documentation splash screen (04/11/2025)
@@ -34,14 +34,85 @@
 
 ## ✅ Problèmes résolus récemment
 
-### 1. Requêtes API dupliquées au démarrage
+### 1. Filtre sportId ne retournait aucun résultat (11/11/2025) ✅
+**Problème :** La requête `GET /api/exercises?sportId=sport-volleyball` retournait 0 résultats alors qu'il y avait 12 exercices de volleyball en base
+**Cause racine :** Le DTO backend (`exercise.dto.ts`) ne contenait pas le champ `sportId`, donc le backend ignorait ce champ lors de la création/modification d'exercices
+**Solution :**
+- Ajouté `@ApiPropertyOptional({ example: 'sport-volleyball' }) @IsOptional() @IsString() sportId?: string;` au DTO (ligne 16)
+- Créé script de migration `prisma/migrate-sport-ids.ts` pour corriger les 12 exercices existants
+- Migration exécutée avec succès : tous les exercices ont maintenant le bon `sportId`
+**Fichiers modifiés :**
+- `exersio-back/src/modules/exercises/dto/exercise.dto.ts` : Ajout champ sportId
+- `exersio-back/prisma/migrate-sport-ids.ts` : Script migration (nouveau)
+**Impact :** Les filtres par sport fonctionnent maintenant correctement, les nouveaux exercices sont créés avec le bon sportId
+
+### 2. Doubles requêtes API lors changement de filtres (11/11/2025) ✅
+**Problème :** Quand un filtre changeait sur ExercisesPage, 2 requêtes API identiques étaient envoyées
+**Cause racine :** Le useEffect appelait `setFilters()` puis `loadExercises()` immédiatement dans le même effet
+**Solution :**
+- Séparé le chargement des favoris (une fois au montage) du chargement des exercices
+- Le useEffect pour les exercices ne se déclenche que quand `currentScope` change (filtrage serveur)
+- Les autres filtres (sport, catégorie, âge, recherche) restent côté client pour éviter des requêtes multiples
+**Fichier modifié :**
+- `exersio-front/src/components/ExercisesPage.tsx` : Refactorisation useEffect lignes 71-80
+**Impact :** Une seule requête API par changement de scope, filtrage instantané côté client pour les autres critères
+
+### 3. Bug categoryId incorrect - catégories du mauvais sport (11/11/2025) ✅
+**Problème :** Exercices de volleyball créés avec `categoryId="cat-fb-pass"` (Football) au lieu de `cat-vb-pass`, filtres par catégorie ne retournaient aucun résultat
+**Cause racine :** `getCategoryIds()` cherchait première catégorie avec slug "passe" sans filtrer par sport
+**Solution :**
+- Modifié `getCategoryIds()` pour filtrer par `cat.sportId === sportId` lors de la recherche
+- Ajouté même filtre pour ageCategoryId
+- Sport trouvé en premier, puis catégories filtrées par sportId
+**Fichier modifié :**
+- `exersio-front/src/components/ExerciseCreatePage.tsx` : getCategoryIds() lignes 574-590
+**Impact :** Nouveaux exercices auront categoryId cohérent avec sport sélectionné, filtres fonctionnent correctement
+
+### 4. Appels multiples à loadSports/loadExercises (11/11/2025) ✅
+**Problème :** 6 appels à `/sports` et 2 appels à `/exercises` lors de l'ouverture de /sessions/new
+**Cause racine :** useEffect avec dépendances sur fonctions non-mémorisées (`loadSports`, `loadExercises`), créant boucles de re-render
+**Solution :**
+- **SessionCreatePage.tsx** : Changé useEffect dependencies de `[loadSports]` et `[exerciseActions.loadExercises]` vers `[]` (mount only)
+- **ProfilePage.tsx** : Séparé useEffect loadSports (mount only) et loadInvitations (quand auth.user change)
+- Ajouté `// eslint-disable-line react-hooks/exhaustive-deps` pour désactiver warnings React
+**Fichiers modifiés :**
+- `exersio-front/src/components/SessionCreatePage.tsx` : useEffect lignes 73-80
+- `exersio-front/src/components/ProfilePage.tsx` : useEffect lignes 37-56
+**Impact :** Un seul appel par ressource au chargement, pas de boucles infinies
+
+### 5. Type PaginatedResponse incorrect + pagination modal invisible (11/11/2025) ✅
+**Problème :** Pagination ne s'affichait pas dans ExerciseSelectionModal, console montrait `total: undefined`
+**Cause racine :** Type `PaginatedResponse` déclarait `meta.total` mais API backend retourne `pagination.total`
+**Solution :**
+- Changé interface `PaginatedResponse` de `meta` → `pagination` dans `services/api.ts`
+- Modifié `getExercises()` pour utiliser `response.pagination.total`
+- Modifié `ExercisesContext` pour utiliser `response.pagination.total`
+- Ajouté reset `currentPage = 1` lors changement filtres (évite rester sur page inexistante)
+**Fichiers modifiés :**
+- `exersio-front/src/services/api.ts` : Interface PaginatedResponse ligne 22-30
+- `exersio-front/src/services/exercisesService.ts` : getExercises() ligne 72-84
+- `exersio-front/src/contexts/ExercisesContext.tsx` : loadExercises() ligne 279
+- `exersio-front/src/components/ExerciseSelectionModal.tsx` : Reset page lignes 105-109
+**Impact :** Pagination modale fonctionne correctement, affiche boutons quand totalPages > 1
+
+### 6. ExercisesContext utilise getAll() avec limit=1000 (11/11/2025) ✅
+**Problème :** `loadExercises()` utilisait `getAll()` qui charge 1000 exercices au lieu de vraie pagination
+**Solution :**
+- Modifié `loadExercises()` pour utiliser `exercisesService.list(page, limit, filters)`
+- Utilise `state.pagination.page` et `state.pagination.limit` du contexte
+- Dispatch `SET_PAGINATION` avec `total` de la réponse
+**Fichier modifié :**
+- `exersio-front/src/contexts/ExercisesContext.tsx` : loadExercises() lignes 259-299
+**Impact :** API ne charge que 20 exercices par page au lieu de 1000, meilleure performance
+
+### 7. Requêtes API dupliquées au démarrage
 **Problème :** 2 requêtes favorites/exercises se lançaient au démarrage de l'app
-**Solution :** 
+**Solution :**
 - Supprimé `exActions.loadExercises()` du useEffect de connexion dans App.tsx
 - Modifié FavoritesContext pour ne charger que le localStorage au démarrage
 - Les API calls se font maintenant uniquement lors de la navigation vers la page Exercices
 
-### 2. Endpoint favorites manquant
+### 8. Endpoint favorites manquant
 **Problème :** `Cannot GET /api/user/favorites/exercises`
 **Solution :**
 - Ajouté modèle `UserExerciseFavorite` au schema Prisma
