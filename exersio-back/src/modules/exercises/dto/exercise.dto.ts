@@ -13,6 +13,7 @@ export class CreateExerciseDto {
   // Nouveaux champs (préférés)
   @ApiPropertyOptional({ example: 'cat_cuid123' }) @IsOptional() @IsString() categoryId?: string;
   @ApiPropertyOptional({ example: 'age_cuid456' }) @IsOptional() @IsString() ageCategoryId?: string;
+  @ApiPropertyOptional({ example: 'sport-volleyball' }) @IsOptional() @IsString() sportId?: string;
 
   @ApiProperty({ example: 'volleyball' }) @IsString() sport: string;
   @ApiProperty({ type: [String], example: ['Étape 1','Étape 2'] }) @IsArray() instructions: string[];
