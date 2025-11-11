@@ -95,16 +95,21 @@ export function ExerciseSelectionModal({
   }, [searchQuery, selectedCategory, selectedAgeCategory, selectedIntensity, selectedSportId, isOpen]);
 
   // Recharger quand la page change ou quand la modal s'ouvre
-  // (Le changement de filtres déclenche le reset de page ci-dessus, qui déclenche ce useEffect)
+  useEffect(() => {
+    if (!isOpen) return;
+    loadExercises();
+  }, [currentPage, isOpen]);
+
+  // Debounce pour la recherche et les filtres
   useEffect(() => {
     if (!isOpen) return;
 
     const timer = setTimeout(() => {
       loadExercises();
-    }, 300); // Debounce pour la recherche
+    }, 300);
 
     return () => clearTimeout(timer);
-  }, [currentPage, isOpen]);
+  }, [searchQuery, selectedCategory, selectedAgeCategory, selectedIntensity, selectedSportId]);
 
   const handleSelectExercise = (exerciseId: string) => {
     if (!selectedExercises.includes(exerciseId)) {
