@@ -25,17 +25,18 @@ export interface UpdateExerciseData extends Partial<CreateExerciseData> {}
 
 export interface ExerciseFilters {
   search?: string;
-  
+
   // Nouveaux filtres par ID de catégorie
   categoryId?: string;
   ageCategoryId?: string;
+  sportId?: string;
   categoryIds?: string[]; // Multiples catégories
   ageCategoryIds?: string[]; // Multiples catégories d'âge
-  
+
   // Anciens filtres pour rétrocompatibilité
   category?: string;
   ageCategory?: string;
-  
+
   sport?: string;
   level?: string;
   intensity?: string;
@@ -43,6 +44,10 @@ export interface ExerciseFilters {
   clubId?: string;
   createdById?: string;
   scope?: 'personal' | 'club' | 'all';
+
+  // Pagination
+  page?: number;
+  limit?: number;
 }
 
 export class ExercisesService {
@@ -58,6 +63,23 @@ export class ExercisesService {
     } catch (error) {
       console.error('Get all exercises error:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Récupérer les exercices avec filtres et pagination (interface simplifiée pour la modal)
+   */
+  async getExercises(params: ExerciseFilters): Promise<{ exercises: Exercise[]; total: number }> {
+    try {
+      const { page = 1, limit = 10, ...filters } = params;
+      const response = await this.list(page, limit, filters);
+      return {
+        exercises: response.data,
+        total: response.pagination.total
+      };
+    } catch (error) {
+      console.error('Get exercises error:', error);
+      return { exercises: [], total: 0 };
     }
   }
 
@@ -308,4 +330,5 @@ export class ExercisesService {
 
 // Instance singleton
 export const exercisesService = new ExercisesService();
+export const exercisesApi = exercisesService; // Alias pour compatibilité
 export default exercisesService;

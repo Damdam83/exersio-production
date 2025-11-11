@@ -268,14 +268,20 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
         return;
       }
 
-      // Si online, charger depuis l'API
-      const exercises = await exercisesService.getAll(state.filters);
-      dispatch({ type: 'LOAD_SUCCESS', payload: exercises });
+      // Si online, charger depuis l'API avec pagination
+      const response = await exercisesService.list(
+        state.pagination.page,
+        state.pagination.limit,
+        state.filters
+      );
+
+      dispatch({ type: 'LOAD_SUCCESS', payload: response.data });
+      dispatch({ type: 'SET_PAGINATION', payload: { total: response.pagination.total } });
 
       // Sauvegarder tous les exercices chargés dans IndexedDB pour le mode offline
-      if (exercises && exercises.length > 0) {
+      if (response.data && response.data.length > 0) {
         await Promise.all(
-          exercises.map(exercise => offlineStorage.saveExercise(exercise, 'synced'))
+          response.data.map(exercise => offlineStorage.saveExercise(exercise, 'synced'))
         );
       }
     } catch (error) {
@@ -290,7 +296,7 @@ export function ExercisesProvider({ children }: ExercisesProviderProps) {
         dispatch({ type: 'LOAD_ERROR', payload: error as ApiError });
       }
     }
-  }, [state.filters]);
+  }, [state.filters, state.pagination.page, state.pagination.limit]);
 
   const loadExerciseById = useCallback(async (id: string): Promise<Exercise | null> => {
     try {

@@ -21,7 +21,7 @@ export interface ApiError {
 // Types pour la pagination (basés sur le backend NestJS)
 export interface PaginatedResponse<T> {
   data: T[];
-  meta: {
+  pagination: {
     page: number;
     limit: number;
     total: number;
