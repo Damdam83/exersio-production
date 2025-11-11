@@ -576,16 +576,27 @@ export function ExerciseCreatePage() {
     const ageSlug = exerciseData.ageCategory;
     const sports = sportsState.sports.data || [];
 
-    const categoryId = categorySlug
-      ? categoriesState.exerciseCategories.data?.find(cat => cat.slug === categorySlug)?.id
-      : null;
-
-    const ageCategoryId = ageSlug
-      ? categoriesState.ageCategories.data?.find(age => age.slug === ageSlug)?.id
-      : null;
-
+    // Trouver d'abord le sport pour filtrer les catégories
     const currentSport = sports.find(s => s.slug === selectedSport);
     const sportId = currentSport?.id || null;
+
+    // IMPORTANT: Filtrer les catégories par sportId pour éviter les incohérences
+    const categoryId = categorySlug && sportId
+      ? categoriesState.exerciseCategories.data?.find(cat => cat.slug === categorySlug && cat.sportId === sportId)?.id
+      : null;
+
+    const ageCategoryId = ageSlug && sportId
+      ? categoriesState.ageCategories.data?.find(age => age.slug === ageSlug && age.sportId === sportId)?.id
+      : null;
+
+    console.log('getCategoryIds DEBUG:', {
+      selectedSport,
+      sports,
+      currentSport,
+      sportId,
+      categoryId,
+      ageCategoryId
+    });
 
     return { categoryId, ageCategoryId, sportId };
   };
