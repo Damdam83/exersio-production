@@ -286,11 +286,20 @@
     "changeSport": "Changer de sport",
     "fieldStats": "Joueurs: {{players}} | Flèches: {{arrows}} | Ballons: {{balls}} | Zones: {{zones}}",
     "filters": {
+      "title": "Filtres",
       "sport": "Sport",
       "category": "Catégorie",
       "ageRange": "Tranche d'âge",
-      "favorites": "Favoris"
+      "favorites": "Favoris",
+      "allCategories": "Toutes les catégories",
+      "allAges": "Tous les âges",
+      "allIntensities": "Toutes les intensités"
     },
+    "resetFilters": "Réinitialiser",
+    "selected": "Sélectionné",
+    "showing": "Affichage",
+    "of": "de",
+    "exercisesAvailable": "exercice(s) disponible(s)",
     "errors": {
       "share": "Erreur lors du partage",
       "favorite": "Erreur lors de la modification du favori"

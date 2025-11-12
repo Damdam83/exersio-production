@@ -286,11 +286,20 @@
     "changeSport": "Change sport",
     "fieldStats": "Players: {{players}} | Arrows: {{arrows}} | Balls: {{balls}} | Zones: {{zones}}",
     "filters": {
+      "title": "Filters",
       "sport": "Sport",
       "category": "Category",
       "ageRange": "Age range",
-      "favorites": "Favorites"
+      "favorites": "Favorites",
+      "allCategories": "All categories",
+      "allAges": "All ages",
+      "allIntensities": "All intensities"
     },
+    "resetFilters": "Reset",
+    "selected": "Selected",
+    "showing": "Showing",
+    "of": "of",
+    "exercisesAvailable": "exercise(s) available",
     "errors": {
       "share": "Error sharing",
       "favorite": "Error modifying favorite"
